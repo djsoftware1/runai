@@ -1,19 +1,18 @@
 # (C) David Joffe / DJ Software
 # Import necessary libraries
 import sys
-#import argparse
-
 import autogen
-
 import os
 import json
 import requests
 
-# Configuration
-worktree = "tlex"
-files_to_send = ["DicLib/djNode.h", "DicLib/djNode.cpp"]
-targetfolder = "modified_tlex"
+from helper_functions import create_files_from_ai_output
 
+# Configuration
+worktree = "tlex/DicLib"
+files_to_send = ["djNode.h", "djNode.cpp"]
+files_to_create = ["djVec3d.h", "djVec3d.h"]
+targetfolder = "modified_tlex/DicLib"
 
 #"model": ["gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
 config_list = autogen.config_list_from_json(
@@ -22,13 +21,6 @@ config_list = autogen.config_list_from_json(
 		"model": ["gpt-4", "gpt-3.5-turbo", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
     },
 )
-
-
-# Define the command line arguments
-#parser = argparse.ArgumentParser(description='Send files for code modification tasks.')
-#parser.add_argument('task_description', type=str, help='Description of the task to be performed')
-#parser.add_argument('header_file', type=str, help='Header file to be modified')
-#parser.add_argument('source_file', type=str, help='Source file to be modified')
 
 # Read task from tasks.txt
 #with open('tasks.txt', 'r') as file:
@@ -43,14 +35,14 @@ with open('task.txt', 'r') as file:
 # * Refactor wxString-based code to std::wstring
 # * Refactor std::wstring to std::string utf8 in some cases
 # * Refactor djLog's into tlLOG that are not printf-formattig-based code (instead use safer better alternatives like e.g. std to_string, plain string concatenation)
+# * Refactor tStrAppend into non-printf-formatted code
 # * Refactor wxString::Format into equivalent
+# * Create new .h/.cpp files and new classes
 # * Split large .cpp files into smaller sections
 # * Harden some parts of code to be more thread-safe
 # * Python-related work? ML work?
 # * Build testing
 # * Add more unit tests
-
-#args = parser.parse_args()
 
 # Function to simulate sending files and receiving modified files
 # In a real scenario, this function would interact with an external service like Taskweaver
@@ -137,7 +129,13 @@ if __name__ == '__main__':
     )
 
     # Call the function to process files
-    process_files(files_to_send, worktree, targetfolder, task)
+    if files_to_create:
+        create_task_message = f"Please create the following files: {', '.join(files_to_create)} with the following specifications: {task}"
+        user_proxy.initiate_chat(assistant, message=create_task_message)
+    else:
+        # If no files to create, process existing files
+        process_files(files_to_send, worktree, targetfolder, task)
+
     #result = send_files_for_modification(args.task_description, args.header_file, args.source_file)
     #print(f'Modified files received: {result}')
-    print("All files processed.")
+    print("Done! All tasks processed.")

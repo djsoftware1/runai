@@ -3,9 +3,15 @@ Refactor code that uses wxString to std::wstring and double-check the changes lo
 # * Refactor wxString-based code to std::wstring
 # * Refactor std::wstring to std::string utf8 in some cases
 # * Refactor djLog's into tlLOG that are not printf-formattig-based code (instead use safer better alternatives like e.g. std to_string, plain string concatenation)
+# * Refactor tStrAppend into non-printf-formatted code
 # * Refactor wxString::Format into equivalent
+# * Create new .h/.cpp files and new classes
 # * Split large .cpp files into smaller sections
 # * Harden some parts of code to be more thread-safe
 # * Python-related work? ML work?
 # * Build testing
 # * Add more unit tests
+
+
+Refactor code that uses wxString to std::wstring and double-check the changes look correct
+Please create a full vec3d class for 3D math purposes with operator overloads etc.
