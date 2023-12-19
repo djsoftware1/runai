@@ -8,19 +8,59 @@ import requests
 import io
 import datetime
 
+# custom dual output to capture output and echo it to console so we can both log it and extract code from it but also see it in real-time
+from dual_output import DualOutput
 from helper_functions import create_files_from_ai_output
 
 # Configuration
 worktree = "tlex/DicLib"
 files_to_send = ["djNode.h", "djNode.cpp"]
-files_to_create = ["djVec3d.h", "djVec3d.h"]
+files_to_create = ["djVec3d.h", "djVec3d.cpp"]
+files_to_create = ["djQuaternion.h", "djQuaternion.cpp"]
 targetfolder = "modified_tlex/DicLib"
+
+
+# [dj2023-12] local LiteLLM instances ...
+config_list_localgeneral=[
+    {
+        'base_url':"http://10.0.0.13:8000",
+        'api_key':"NULL"
+    }
+]
+config_list_localcoder=[
+    {
+        'base_url':"http://127.0.0.1:8000",
+        'api_key':"NULL"
+    }
+]
+config_list_localcoder=[
+    {
+        'base_url':"http://10.0.0.10:8000",
+        'api_key':"NULL"
+    }
+]
+llm_config_localgeneral={
+    "config_list":config_list_localgeneral
+}
+llm_config_localcoder={
+    "config_list":config_list_localcoder
+}
+
+
+
 
 #"model": ["gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
 config_list = autogen.config_list_from_json(
     "OAI_CONFIG_LIST",
     filter_dict={
 		"model": ["gpt-4", "gpt-3.5-turbo", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
+    },
+)
+# try use gpt-3.5-turbo instead of gpt-4 as seems costly to use gpt-4 on OpenAI
+config_list = autogen.config_list_from_json(
+    "OAI_CONFIG_LIST",
+    filter_dict={
+        "model": ["gpt-3.5-turbo"],
     },
 )
 
@@ -114,15 +154,23 @@ if __name__ == '__main__':
     assistant = autogen.AssistantAgent(
         name="assistant",
         llm_config={
-            "cache_seed": 48,  # seed for caching and reproducibility
-            "config_list": config_list,  # a list of OpenAI API configurations
+            "cache_seed": 155,  # seed for caching and reproducibility
+            #"config_list": config_list,  # a list of OpenAI API configurations
+            # above line for OPENAI and this below line for our LOCAL LITE LLM:
+            "config_list": config_list_localgeneral,  # a list of OpenAI API configurations
             "temperature": 0,  # temperature for sampling
         },  # configuration for autogen's enhanced inference API which is compatible with OpenAI API
+    )
+    # Create a coder agent
+    coder = autogen.AssistantAgent(
+        name="coder",
+        llm_config=llm_config_localcoder
     )
     # create a UserProxyAgent instance named "user_proxy"
     user_proxy = autogen.UserProxyAgent(
         name="user_proxy",
         human_input_mode="NEVER",
+        llm_config=llm_config_localgeneral,
         max_consecutive_auto_reply=10,
         is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
         code_execution_config={
@@ -130,33 +178,71 @@ if __name__ == '__main__':
             "use_docker": False,  # set to True or image name like "python:3" to use docker
         },
     )
-    # the assistant receives a message from the user_proxy, which contains the task description
-    user_proxy.initiate_chat(
-        assistant,
-        message=f"Please do the following task: {task}",
-    )
 
+    # dj try make setting to control if we have lots or fewer etc. of AIs to use:
+    # this needs further work though
+    coder_only = True
+    """
+    if coder_only:
+        # the assistant receives a message from the user_proxy, which contains the task description
+        #user_proxy.initiate_chat(
+        coder.initiate_chat(
+            coder,
+            message=f"Please do the following task: {task}",
+        )
+    else:
+        # the assistant receives a message from the user_proxy, which contains the task description
+        user_proxy.initiate_chat(
+            assistant,
+            message=f"Please do the following task: {task}",
+        )
+    """
+
+    groupchat = autogen.GroupChat(agents=[user_proxy, coder, assistant], messages=[])
+    manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config_localgeneral)
 
     # [IO redirect begin] Backup the original stdout
-    original_stdout = sys.stdout
+    ####original_stdout = sys.stdout
     # [IO redirect begin] Create a StringIO object to capture output
-    captured_output = io.StringIO()
-    sys.stdout = captured_output
+    ####captured_output = io.StringIO()
+    ####sys.stdout = captured_output
 
+    # Redirect output to both console and StringIO
+    dual_output = DualOutput()
+    sys.stdout = dual_output
 
     # Call the function to process files
     if files_to_create:
         create_task_message = f"Please create the following files: {', '.join(files_to_create)} with the following specifications: {task}"
-        user_proxy.initiate_chat(assistant, message=create_task_message)
+        #user_proxy.initiate_chat(assistant, message=create_task_message)
+        if coder_only:
+            # the assistant receives a message from the user_proxy, which contains the task description
+            #user_proxy.initiate_chat(
+            user_proxy.initiate_chat(
+                coder,
+                message=create_task_message,
+            )
+        else:
+            # the assistant receives a message from the user_proxy, which contains the task description
+            user_proxy.initiate_chat(
+                assistant,
+                message=create_task_message,
+            )
     else:
         # If no files to create, process existing files
         process_files(files_to_send, worktree, targetfolder, task)
 
 
     # [IO redirect] Reset stdout to original
-    sys.stdout = original_stdout
+    ####sys.stdout = original_stdout
     # [IO redirect] Get the content from the captured output
-    ai_output = captured_output.getvalue()
+    ####ai_output = captured_output.getvalue()
+
+    # Reset stdout to original and get captured output
+    sys.stdout = dual_output.console
+    #captured_output = dual_output.getvalue()
+    ai_output = dual_output.getvalue()
+
 
     # Create the log filename
     log_filename_base = f"dj_AI_log.txt"

@@ -19,3 +19,6 @@ Please create a full vec3d class for 3D math purposes with operator overloads et
 Please create a full vec3d class for 3D math purposes with operator overloads etc. and save as new files for me djVec3d.h/djVec3d.cpp
 
 Please create a full djUTF8.cpp file with a function "std::string tToUTF8(const std::wstring& sStrIn) with a full roll-our-own conversion from wchar_t to utf8
+
+Please give me C++ code a file named djQuaternion.cpp file with a full quaternion helper class named tcQuaternion
+files_to_create = ["djQuaternion.h", "djQuaternion.cpp"]
