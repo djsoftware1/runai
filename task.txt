@@ -1,1 +1,1 @@
-Refactor code that uses wxString to std::wstring and double-check the changes look correct
+Please create a full djUTF8.cpp file with a function "std::string tToUTF8(const std::wstring& sStrIn) with a full roll-our-own conversion from wchar_t to utf8 and do not use <codecvt> I want our own actual utf8 generating code

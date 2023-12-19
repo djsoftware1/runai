@@ -15,3 +15,7 @@ Refactor code that uses wxString to std::wstring and double-check the changes lo
 
 Refactor code that uses wxString to std::wstring and double-check the changes look correct
 Please create a full vec3d class for 3D math purposes with operator overloads etc.
+
+Please create a full vec3d class for 3D math purposes with operator overloads etc. and save as new files for me djVec3d.h/djVec3d.cpp
+
+Please create a full djUTF8.cpp file with a function "std::string tToUTF8(const std::wstring& sStrIn) with a full roll-our-own conversion from wchar_t to utf8

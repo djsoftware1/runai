@@ -5,6 +5,8 @@ import autogen
 import os
 import json
 import requests
+import io
+import datetime
 
 from helper_functions import create_files_from_ai_output
 
@@ -21,6 +23,12 @@ config_list = autogen.config_list_from_json(
 		"model": ["gpt-4", "gpt-3.5-turbo", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
     },
 )
+
+# Get date/time to use in filenames and directories and session logfiles etc.
+task_datetime = datetime.datetime.now()
+task_formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
+task_output_directory='output_files' + '/' + task_formatted_datetime
+
 
 # Read task from tasks.txt
 #with open('tasks.txt', 'r') as file:
@@ -106,7 +114,7 @@ if __name__ == '__main__':
     assistant = autogen.AssistantAgent(
         name="assistant",
         llm_config={
-            "cache_seed": 42,  # seed for caching and reproducibility
+            "cache_seed": 48,  # seed for caching and reproducibility
             "config_list": config_list,  # a list of OpenAI API configurations
             "temperature": 0,  # temperature for sampling
         },  # configuration for autogen's enhanced inference API which is compatible with OpenAI API
@@ -128,6 +136,14 @@ if __name__ == '__main__':
         message=f"Please do the following task: {task}",
     )
 
+
+    # [IO redirect begin] Backup the original stdout
+    original_stdout = sys.stdout
+    # [IO redirect begin] Create a StringIO object to capture output
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+
+
     # Call the function to process files
     if files_to_create:
         create_task_message = f"Please create the following files: {', '.join(files_to_create)} with the following specifications: {task}"
@@ -135,6 +151,50 @@ if __name__ == '__main__':
     else:
         # If no files to create, process existing files
         process_files(files_to_send, worktree, targetfolder, task)
+
+
+    # [IO redirect] Reset stdout to original
+    sys.stdout = original_stdout
+    # [IO redirect] Get the content from the captured output
+    ai_output = captured_output.getvalue()
+
+    # Create the log filename
+    log_filename_base = f"dj_AI_log.txt"
+    # Write the AI output to the log file
+    with open(log_filename_base, 'a') as log_file:
+        log_file.write("Captured AI Output:\n")
+        log_file.write(ai_output)
+
+    # Create the output directory if it doesn't exist
+    if not os.path.exists(task_output_directory):
+        os.makedirs(task_output_directory)
+
+    # Create the log filename
+    log_filename1 = f"{task_output_directory}/dj_AI_log.txt"
+    # Write the AI output to the log file
+    with open(log_filename1, 'w') as log_file:
+        log_file.write("Captured AI Output:\n")
+        log_file.write(ai_output)
+
+    # Use ai_output with create_files_from_ai_output function in order to actually create any files in the returned code
+    create_files_from_ai_output(ai_output, task_output_directory)
+
+    # Print the captured output to the console
+    print("Captured AI Output:")
+    print(ai_output)
+
+
+    # Get the current date and time
+    current_datetime = task_datetime
+    formatted_datetime = current_datetime.strftime("%Y-%m-%d %H-%M-%S")
+
+    # Create the log filename
+    log_filename = f"dj AI log - {formatted_datetime}.txt"
+    # Write the AI output to the log file
+    with open(log_filename, 'w') as log_file:
+        log_file.write("Captured AI Output:\n")
+        log_file.write(ai_output)
+    print(f"Log saved in file: {log_filename}")
 
     #result = send_files_for_modification(args.task_description, args.header_file, args.source_file)
     #print(f'Modified files received: {result}')
