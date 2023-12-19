@@ -1,1 +1,1 @@
-Please give me C++ code a file named djQuaternion.cpp file with a full quaternion helper class named tcQuaternion
+Please give me C++ code a file named djQuaternion.cpp file with a full quaternion helper class named tcQuaternion (you do not need to try execute the code just review it once or twice for obvious mistakes or things that could be improved but you do not have C++ execution environment so that's fine)

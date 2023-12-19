@@ -18,7 +18,13 @@ files_to_send = ["djNode.h", "djNode.cpp"]
 files_to_create = ["djVec3d.h", "djVec3d.cpp"]
 files_to_create = ["djQuaternion.h", "djQuaternion.cpp"]
 targetfolder = "modified_tlex/DicLib"
-
+# settings
+# I need to experiment a bit more to see exactly the implications of not creating groups (or creating groups), both if I only have 1 AI agent available or if I have 2 or 3 machines I can use ..
+NoGroup=True
+#MaxAgents=1
+# dj try make setting to control if we have lots or fewer etc. of AIs to use:
+# this needs further work though
+coder_only=True
 
 # [dj2023-12] local LiteLLM instances ...
 config_list_localgeneral=[
@@ -39,11 +45,20 @@ config_list_localcoder=[
         'api_key':"NULL"
     }
 ]
+config_list_local3=[
+    {
+        'base_url':"http://air.local:8000",
+        'api_key':"NULL"
+    }
+]
 llm_config_localgeneral={
     "config_list":config_list_localgeneral
 }
 llm_config_localcoder={
     "config_list":config_list_localcoder
+}
+llm_config_local3={
+    "config_list":config_list_local3
 }
 
 
@@ -179,9 +194,6 @@ if __name__ == '__main__':
         },
     )
 
-    # dj try make setting to control if we have lots or fewer etc. of AIs to use:
-    # this needs further work though
-    coder_only = True
     """
     if coder_only:
         # the assistant receives a message from the user_proxy, which contains the task description
@@ -198,8 +210,12 @@ if __name__ == '__main__':
         )
     """
 
-    groupchat = autogen.GroupChat(agents=[user_proxy, coder, assistant], messages=[])
-    manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config_localgeneral)
+    if not NoGroup:
+        groupchat = autogen.GroupChat(agents=[user_proxy, coder, assistant], messages=[])
+        manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config_localgeneral)
+    else:
+        groupchat = None
+        manager = None
 
     # [IO redirect begin] Backup the original stdout
     ####original_stdout = sys.stdout
@@ -217,9 +233,9 @@ if __name__ == '__main__':
         #user_proxy.initiate_chat(assistant, message=create_task_message)
         if coder_only:
             # the assistant receives a message from the user_proxy, which contains the task description
-            #user_proxy.initiate_chat(
+            #coder.initiate_chat(
             user_proxy.initiate_chat(
-                coder,
+                coder if manager is None else manager,
                 message=create_task_message,
             )
         else:
