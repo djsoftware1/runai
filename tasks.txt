@@ -1,6 +1,16 @@
 Refactor code that uses wxString to std::wstring and double-check the changes look correct
 # Types of tasks:
 # * Refactor wxString-based code to std::wstring
+# * Update copyright year 'smartly': Copyright (C) 2003-2022 TshwaneDJe HLT
+# * Update expdate
+# * idea: add start/end special comment blocks like "
+[//todo-auto: Inbetween here implement this function]
+void tFetchURL()
+{
+	
+}
+[/todo]
+then could scan code to identify start/end of code block to copy and feed AI to ask it to do stuff inbetween that start/end
 # * Refactor std::wstring to std::string utf8 in some cases
 # * Refactor djLog's into tlLOG that are not printf-formattig-based code (instead use safer better alternatives like e.g. std to_string, plain string concatenation)
 # * Refactor tStrAppend into non-printf-formatted code
@@ -10,7 +20,9 @@ Refactor code that uses wxString to std::wstring and double-check the changes lo
 # * Harden some parts of code to be more thread-safe
 # * Python-related work? ML work?
 # * Build testing
-# * Add more unit tests
+# * Add more unit tests?
+# * Add a stress-test that connects to API client?
+! LiteLLM support! API client
 
 Refactor code that uses wxString to std::wstring and double-check the changes look correct
 Please create a full vec3d class for 3D math purposes with operator overloads etc.
