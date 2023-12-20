@@ -1,17 +1,25 @@
 import sys
 import io
 
+from helper_functions import create_files_from_ai_output
+
 class DualOutput:
     def __init__(self):
         self.console = sys.stdout
         self.capture = io.StringIO()
+        self.str_total = ''
 
     def write(self, message):
         self.console.write(message)
         self.capture.write(message)
         # todo we want to check if we see start of ``` and end ``` blocks and then write to a file
-        with open('log_capture_output_dj.txt', 'a') as log_file_capture_output_dj:
+        with open('log_capture_output_dj_full.txt', 'a') as log_file_capture_output_dj:
             log_file_capture_output_dj.write(message)
+        # create_files_from_ai_output
+        self.str_total = self.str_total + message
+        # create_files_from_ai_output
+        #create_files_from_ai_output(self.str_total, output_directory='output_files/files')
+
 
     def getvalue(self):
         return self.capture.getvalue()

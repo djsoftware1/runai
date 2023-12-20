@@ -15,8 +15,10 @@ from helper_functions import create_files_from_ai_output
 # Configuration
 worktree = "tlex/DicLib"
 files_to_send = ["djNode.h", "djNode.cpp"]
+files_to_send = None
 files_to_create = ["djVec3d.h", "djVec3d.cpp"]
 files_to_create = ["djQuaternion.h", "djQuaternion.cpp"]
+files_to_create = ["refactored_lines.cpp"]
 targetfolder = "modified_tlex/DicLib"
 # settings
 # I need to experiment a bit more to see exactly the implications of not creating groups (or creating groups), both if I only have 1 AI agent available or if I have 2 or 3 machines I can use ..
@@ -161,15 +163,16 @@ def process_files(files_to_send, worktree, targetfolder, task):
 
 # Main script execution
 if __name__ == '__main__':
-    for file_name in files_to_send:
-        print(f"SETTINGS:File={file_name}...")
+    if files_to_send:
+        for file_name in files_to_send:
+            print(f"SETTINGS:File={file_name}...")
     print(f"SETTINGS: Task={task}")
 
     # create an AssistantAgent named "assistant"
     assistant = autogen.AssistantAgent(
         name="assistant",
         llm_config={
-            "cache_seed": 155,  # seed for caching and reproducibility
+            "cache_seed": 1055,  # seed for caching and reproducibility
             #"config_list": config_list,  # a list of OpenAI API configurations
             # above line for OPENAI and this below line for our LOCAL LITE LLM:
             "config_list": config_list_localgeneral,  # a list of OpenAI API configurations
@@ -229,24 +232,40 @@ if __name__ == '__main__':
 
     # Call the function to process files
     if files_to_create:
-        create_task_message = f"Please create the following files: {', '.join(files_to_create)} with the following specifications: {task}"
+        task_message = f"Please create the following files: {', '.join(files_to_create)} with the following specifications: {task}"
         #user_proxy.initiate_chat(assistant, message=create_task_message)
         if coder_only:
             # the assistant receives a message from the user_proxy, which contains the task description
             #coder.initiate_chat(
             user_proxy.initiate_chat(
                 coder if manager is None else manager,
-                message=create_task_message,
+                message=task_message,
             )
         else:
             # the assistant receives a message from the user_proxy, which contains the task description
             user_proxy.initiate_chat(
                 assistant,
-                message=create_task_message,
+                message=task_message,
             )
-    else:
-        # If no files to create, process existing files
+    elif files_to_send:
+        # If no files to create, do requested task
+        print(f"=== Processing files: {', '.join(files_to_send)}")
         process_files(files_to_send, worktree, targetfolder, task)
+    else:
+        # If no files to create, do requested task
+        print(f"=== Processing task: {task}")
+        task_message=task
+        if coder_only:
+            # the assistant receives a message from the user_proxy, which contains the task description
+            #coder.initiate_chat(
+            user_proxy.initiate_chat(
+                coder if manager is None else manager,message=task,
+            )
+        else:
+            # the assistant receives a message from the user_proxy, which contains the task description
+            user_proxy.initiate_chat(
+                assistant,message=task,
+            )
 
 
     # [IO redirect] Reset stdout to original
@@ -282,7 +301,7 @@ if __name__ == '__main__':
     create_files_from_ai_output(ai_output, task_output_directory)
 
     # Print the captured output to the console
-    print("Captured AI Output:")
+    print("=== Captured AI Output:")
     print(ai_output)
 
 
@@ -296,8 +315,8 @@ if __name__ == '__main__':
     with open(log_filename, 'w') as log_file:
         log_file.write("Captured AI Output:\n")
         log_file.write(ai_output)
-    print(f"Log saved in file: {log_filename}")
+    print(f"=== Log saved in file: {log_filename}")
 
     #result = send_files_for_modification(args.task_description, args.header_file, args.source_file)
     #print(f'Modified files received: {result}')
-    print("Done! All tasks processed.")
+    print("=== Done! All tasks processed.")
