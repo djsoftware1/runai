@@ -1,4 +1,4 @@
-# (C) David Joffe / DJ Software
+# Copyright (C) 2023 David Joffe / DJ Software
 # Import necessary libraries
 import sys
 import autogen
@@ -19,14 +19,18 @@ files_to_send = None
 files_to_create = ["djVec3d.h", "djVec3d.cpp"]
 files_to_create = ["djQuaternion.h", "djQuaternion.cpp"]
 files_to_create = ["refactored_lines.cpp"]
+files_to_create=None
 targetfolder = "modified_tlex/DicLib"
 # settings
 # I need to experiment a bit more to see exactly the implications of not creating groups (or creating groups), both if I only have 1 AI agent available or if I have 2 or 3 machines I can use ..
 NoGroup=True
+#NoGroup=False
 #MaxAgents=1
 # dj try make setting to control if we have lots or fewer etc. of AIs to use:
 # this needs further work though
 coder_only=True
+no_user_proxy=True
+no_user_proxy=False
 
 # [dj2023-12] local LiteLLM instances ...
 config_list_localgeneral=[
@@ -85,13 +89,21 @@ config_list = autogen.config_list_from_json(
 task_datetime = datetime.datetime.now()
 task_formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
 task_output_directory='output_files' + '/' + task_formatted_datetime
+# Create the output directory if it doesn't exist
+if not os.path.exists(task_output_directory):
+    os.makedirs(task_output_directory)
 
 
 # Read task from tasks.txt
 #with open('tasks.txt', 'r') as file:
+###with open('task.txt', 'r') as file:
+###    task = file.read().strip()
+###    print(f"===== agent TASK:{task}")
+# Read all task lines from tasks.txt
+task = ""
 with open('task.txt', 'r') as file:
-    task = file.read().strip()
-    print(f"===== agent TASK:{task}")
+    for line in file:
+        task += line.strip() + "\n"  # Appending each line to the task string
 
 # Simulate command line argument input (this would normally come from sys.argv)
 # Here we provide an example of arguments
@@ -172,7 +184,7 @@ if __name__ == '__main__':
     assistant = autogen.AssistantAgent(
         name="assistant",
         llm_config={
-            "cache_seed": 1055,  # seed for caching and reproducibility
+            "cache_seed": 451,  # seed for caching and reproducibility
             #"config_list": config_list,  # a list of OpenAI API configurations
             # above line for OPENAI and this below line for our LOCAL LITE LLM:
             "config_list": config_list_localgeneral,  # a list of OpenAI API configurations
@@ -227,14 +239,17 @@ if __name__ == '__main__':
     ####sys.stdout = captured_output
 
     # Redirect output to both console and StringIO
-    dual_output = DualOutput()
+    dual_output = DualOutput(task_output_directory)
     sys.stdout = dual_output
 
     # Call the function to process files
     if files_to_create:
         task_message = f"Please create the following files: {', '.join(files_to_create)} with the following specifications: {task}"
         #user_proxy.initiate_chat(assistant, message=create_task_message)
-        if coder_only:
+        if coder_only and no_user_proxy:
+            response = coder.handle_task(task_message)
+            print(response)
+        elif coder_only:
             # the assistant receives a message from the user_proxy, which contains the task description
             #coder.initiate_chat(
             user_proxy.initiate_chat(
@@ -255,7 +270,11 @@ if __name__ == '__main__':
         # If no files to create, do requested task
         print(f"=== Processing task: {task}")
         task_message=task
-        if coder_only:
+        if coder_only and no_user_proxy:
+            response = coder.handle_task(task)
+            print(response)
+        elif coder_only:
+            # Can we just let coder chat with itself to solve problems?
             # the assistant receives a message from the user_proxy, which contains the task description
             #coder.initiate_chat(
             user_proxy.initiate_chat(
@@ -286,10 +305,6 @@ if __name__ == '__main__':
         log_file.write("Captured AI Output:\n")
         log_file.write(ai_output)
 
-    # Create the output directory if it doesn't exist
-    if not os.path.exists(task_output_directory):
-        os.makedirs(task_output_directory)
-
     # Create the log filename
     log_filename1 = f"{task_output_directory}/dj_AI_log.txt"
     # Write the AI output to the log file
@@ -297,8 +312,9 @@ if __name__ == '__main__':
         log_file.write("Captured AI Output:\n")
         log_file.write(ai_output)
 
+    # We're effectively doing below twice now ..
     # Use ai_output with create_files_from_ai_output function in order to actually create any files in the returned code
-    create_files_from_ai_output(ai_output, task_output_directory)
+    create_files_from_ai_output(ai_output, task_output_directory + '/outfiles_final')
 
     # Print the captured output to the console
     print("=== Captured AI Output:")
@@ -306,11 +322,9 @@ if __name__ == '__main__':
 
 
     # Get the current date and time
-    current_datetime = task_datetime
-    formatted_datetime = current_datetime.strftime("%Y-%m-%d %H-%M-%S")
-
+    formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
     # Create the log filename
-    log_filename = f"dj AI log - {formatted_datetime}.txt"
+    log_filename = f"dj AI final log - {formatted_datetime}.txt"
     # Write the AI output to the log file
     with open(log_filename, 'w') as log_file:
         log_file.write("Captured AI Output:\n")

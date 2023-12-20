@@ -12,7 +12,6 @@ Refactor code that uses wxString to std::wstring and double-check the changes lo
 # * Build testing
 # * Add more unit tests
 
-
 Refactor code that uses wxString to std::wstring and double-check the changes look correct
 Please create a full vec3d class for 3D math purposes with operator overloads etc.
 
@@ -22,3 +21,41 @@ Please create a full djUTF8.cpp file with a function "std::string tToUTF8(const 
 
 Please give me C++ code a file named djQuaternion.cpp file with a full quaternion helper class named tcQuaternion
 files_to_create = ["djQuaternion.h", "djQuaternion.cpp"]
+
+Please give me C++ code a file named djUTF8.cpp file with a C++ function tToUTF8 that converts a wchar_t* to std::string utf8
+
+Refactor "djLog()" calls which take wchar_t print formatting with "tlLOG" which takes std::wstring (or utf8 std::string). Give just the refactored code, no explanations. Double-check the refactored code looks correct.
+
+experimental prompt/task instruction:
+Guide: We want to replace all "djLog()" calls in our code (which take wchar_t* and take printf style formatting with our better function "tlLOG()" instead, which just takes a plain std::wstring (no formatting) and string concatenation and functions like to_string instead of %d, so for example if we give you the code "djLog(L"EXEC:%s", tws2C(sCommand))" an example of how it SHOULD LOOK is please give back: ```tlLOG(L"EXEC" + sCommand)```. Give just the refactored code, no explanations, as it must be used drop-in replacement. Double-check the refactored code looks correct. FYI tws2C(s) takes a std::wstring and is defined as: #define tws2C(s) (s).c_str() and wx2C() is just (s).wc_str() for a wxString. Task: Refactor the following line of code to use tlLOG instead of djLog and return just the modified code in a code block: djLog(L"MIN,MAX:[%s - %s]", twx2C(sMin), twx2C(sMax));
+
+
+
+Guide: We want to replace all "djLog()" calls in our code (which take wchar_t* and take printf style formatting with our better function "tlLOG()" instead, which just takes a plain std::wstring (no formatting) and string concatenation and functions like to_string instead of %d, so for example if we give you the code "djLog(L"EXEC:%s", tws2C(sCommand))" an example of how it SHOULD LOOK is please give back: ```tlLOG(L"EXEC" + sCommand)```. Give just the refactored code, no explanations, as it must be used drop-in replacement. Double-check the refactored code looks correct. FYI tws2C(s) takes a std::wstring and is defined as: #define tws2C(s) (s).c_str() and wx2C() is just (s).wc_str() for a wxString. Task: Refactor the following line of code to use tlLOG instead of djLog and return just the modified code in a code block: djLog(L"MIN,MAX:[%s - %s]", twx2C(sMin), twx2C(sMax));
+
+
+
+
+
+
+Refactor to not use printf-style formatting tStrAppend just plain string functions in C++:
+```cpp
+					tStrAppend(sHTML, "<tr>");
+					tStrAppend(sHTML, "<td%s>&nbsp;</td>", sStyleTD.c_str());
+					tStrAppend(sHTML, "<td%s>&nbsp;</td>", sStyleTD.c_str());
+					tStrAppend(sHTML, "<td%s><font face=\"%s\"><b>%s</b></font></td>", sStyleTD.c_str(), sFont.c_str(), (sCategory.length()==0 ? "&nbsp;" : tHTMLCONVws(sCategory)));
+					tStrAppend(sHTML, "</tr>\r\n");
+```
+
+
+Convert this to use std::wstring and modern C++ non-printf-based equivalents instead of wxString:
+```
+				wxString sRet;
+				for ( std::vector<int>::const_iterator iter=panItems->begin(); iter!=panItems->end(); ++iter )
+				{
+					if (!sRet.empty())
+						sRet += L",";
+					sRet += wxString::Format(L"%d", *iter);
+				}
+				return sRet;
+```

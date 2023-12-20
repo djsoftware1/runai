@@ -1,24 +1,44 @@
+# Copyright (C) 2023 David Joffe / DJ Software
 import sys
 import io
 
 from helper_functions import create_files_from_ai_output
 
 class DualOutput:
-    def __init__(self):
+    def __init__(self, outfiles_directory):
         self.console = sys.stdout
         self.capture = io.StringIO()
         self.str_total = ''
+        self.str_building = ''
+        self.outfiles_directory = outfiles_directory
 
     def write(self, message):
         self.console.write(message)
         self.capture.write(message)
-        # todo we want to check if we see start of ``` and end ``` blocks and then write to a file
         with open('log_capture_output_dj_full.txt', 'a') as log_file_capture_output_dj:
             log_file_capture_output_dj.write(message)
-        # create_files_from_ai_output
+        with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a') as log2:
+            log2.write(message)
+
+        # full log string of all output from AI
         self.str_total = self.str_total + message
-        # create_files_from_ai_output
-        #create_files_from_ai_output(self.str_total, output_directory='output_files/files')
+
+        # Try already save code blocks returned 'so far', to files, and then clear the string
+        # so we can see and maybe use or evaluate the files as quick as possible already
+        # notwithstanding they may be non-final from AI agents hence maybe still have errors while task runs
+
+        # Here we check if we see start of ``` and end ``` blocks and then write to a file
+        # by using create_files_from_ai_output() which returns whether it saved code blocks
+        # as it returns an array of filenames it created
+
+        # Compile partial string so far, to check for code blocks ..
+        # if we parse out code blocks to files then clear the already done saved code blocks by clearing string
+        # str_building meaning we are building up a string of code blocks to save to files
+        self.str_building = self.str_building + message
+        ret_created_files = create_files_from_ai_output(self.str_building, self.outfiles_directory)
+        # if we saved code blocks to files then clear the already done saved code blocks by clearing string
+        if len(ret_created_files) > 0:
+            self.str_building = ''
 
 
     def getvalue(self):

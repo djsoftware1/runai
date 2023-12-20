@@ -1,3 +1,4 @@
+# Copyright (C) 2023 David Joffe / DJ Software
 import re
 import os
 """
@@ -10,6 +11,7 @@ coder (to user_proxy):
 #include <cmath>
 """
 
+# Return array of created files (if any) else return empty array
 def create_files_from_ai_output(ai_output, output_directory='output_files'):
     """
     Parses the AI output string for filenames and content, and creates files with that content.
@@ -35,7 +37,9 @@ def create_files_from_ai_output(ai_output, output_directory='output_files'):
     # Create the output directory if it doesn't exist
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-
+    
+    # Return array of created files (if any) else return empty array
+    ret_created_files = []
     for match in matches:
         language, _, filename, content = match
         # Strip whitespace and unwanted characters from filename
@@ -63,5 +67,7 @@ def create_files_from_ai_output(ai_output, output_directory='output_files'):
         with open(file_path, 'w') as file:
             file.write(content)
 
-        print(f"File created: {file_path}")
+        ret_created_files.append(file_path)
+        #print(f"File created: {file_path}")
+    return ret_created_files
 
