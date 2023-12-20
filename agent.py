@@ -225,6 +225,11 @@ if __name__ == '__main__':
         )
     """
 
+    # Log the task to keep a record of what we're doing and help study/analyze results
+    log_task = f"{task_output_directory}/task.txt"
+    with open(log_task, 'a') as log_file:
+        log_file.write(task)
+
     if not NoGroup:
         groupchat = autogen.GroupChat(agents=[user_proxy, coder, assistant], messages=[])
         manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config_localgeneral)
