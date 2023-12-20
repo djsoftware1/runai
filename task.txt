@@ -1,8 +1,8 @@
-Refactor to not use printf-style formatting tStrAppend just plain string functions in C++:
+You are a C++ refactoring expert, give code only no explanations. Refactor to not use printf-style formatting tStrAppend just plain string functions in C++:
 ```cpp
-					tStrAppend(sHTML, "<tr>");
-					tStrAppend(sHTML, "<td%s>&nbsp;</td>", sStyleTD.c_str());
-					tStrAppend(sHTML, "<td%s>&nbsp;</td>", sStyleTD.c_str());
-					tStrAppend(sHTML, "<td%s><font face=\"%s\"><b>%s</b></font></td>", sStyleTD.c_str(), sFont.c_str(), (sCategory.length()==0 ? "&nbsp;" : tHTMLCONVws(sCategory)));
-					tStrAppend(sHTML, "</tr>\r\n");
+tStrAppend(sHTML, "<tr>");
+tStrAppend(sHTML, "<td%s>&nbsp;</td>", sStyleTD.c_str());
+tStrAppend(sHTML, "<td%s>&nbsp;</td>", sStyleTD.c_str());
+tStrAppend(sHTML, "<td%s><font face=\"%s\"><b>%s</b></font></td>", sStyleTD.c_str(), sFont.c_str(), (sCategory.length()==0 ? "&nbsp;" : tHTMLCONVws(sCategory)));
+tStrAppend(sHTML, "</tr>\r\n");
 ```

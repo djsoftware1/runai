@@ -7,13 +7,35 @@ import json
 import requests
 import io
 import datetime
+import refactor
+from globals import g_ai_output_saved_last_code_block
 
 # custom dual output to capture output and echo it to console so we can both log it and extract code from it but also see it in real-time
 from dual_output import DualOutput
 from helper_functions import create_files_from_ai_output
 
+# dj2023-12 This anyway only works for Python currently and the user agent goes back and forth with coder and coder thinks there's a problem and sends the code again and again because user agent couldn't execute
+# Even if it could exec C++ I don't currently want it to for these tasks so let's make this a parameter
+# Maybe in future for some tasks it should be true eg simpler Python stuff it can exec or if it gets better in future
+code_execution_enabled=False
+# TODO also try let coder handle things more directly?
+#max_consecutive_auto_replies=10
+max_consecutive_auto_replies=0
+
 # Configuration
-worktree = "tlex/DicLib"
+worktree = "tlex"
+#refactor_wildcard = ["*.cpp", "*.h"]
+refactor_wildcard = "*.cpp"
+refactor_codetype = "cpp"
+do_refactor=True
+if do_refactor:
+    taskfile='task_refactor.txt'
+else:
+    taskfile='task.txt'
+
+# Slightly gross but use this global to capture output from AI of last most recent final code block it sent
+#g_ai_output_saved_last_code_block=None
+
 files_to_send = ["djNode.h", "djNode.cpp"]
 files_to_send = None
 files_to_create = ["djVec3d.h", "djVec3d.cpp"]
@@ -101,7 +123,7 @@ if not os.path.exists(task_output_directory):
 ###    print(f"===== agent TASK:{task}")
 # Read all task lines from tasks.txt
 task = ""
-with open('task.txt', 'r') as file:
+with open(taskfile, 'r') as file:
     for line in file:
         task += line.strip() + "\n"  # Appending each line to the task string
 
@@ -184,7 +206,7 @@ if __name__ == '__main__':
     assistant = autogen.AssistantAgent(
         name="assistant",
         llm_config={
-            "cache_seed": 451,  # seed for caching and reproducibility
+            "cache_seed": 42,  # seed for caching and reproducibility
             #"config_list": config_list,  # a list of OpenAI API configurations
             # above line for OPENAI and this below line for our LOCAL LITE LLM:
             "config_list": config_list_localgeneral,  # a list of OpenAI API configurations
@@ -200,13 +222,15 @@ if __name__ == '__main__':
     user_proxy = autogen.UserProxyAgent(
         name="user_proxy",
         human_input_mode="NEVER",
-        llm_config=llm_config_localgeneral,
-        max_consecutive_auto_reply=10,
+        #llm_config=llm_config_localgeneral,
+        #code_execution_config=code_execution_enabled,
+        max_consecutive_auto_reply=max_consecutive_auto_replies,
         is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
-        code_execution_config={
-            "work_dir": "coding",
-            "use_docker": False,  # set to True or image name like "python:3" to use docker
-        },
+        code_execution_config=False,
+        #code_execution_config={
+        #    "work_dir": "coding",
+        #    "use_docker": False,  # set to True or image name like "python:3" to use docker
+        #},
     )
 
     """
@@ -247,8 +271,10 @@ if __name__ == '__main__':
     dual_output = DualOutput(task_output_directory)
     sys.stdout = dual_output
 
-    # Call the function to process files
-    if files_to_create:
+    if do_refactor:
+        #refactor.Refactor(worktree, refactor_wildcard, "^[ \t]*tStrAppend", task, user_proxy, coder)
+        refactor.Refactor(worktree, refactor_wildcard, " tStrAppend", task, user_proxy, coder)
+    elif files_to_create:
         task_message = f"Please create the following files: {', '.join(files_to_create)} with the following specifications: {task}"
         #user_proxy.initiate_chat(assistant, message=create_task_message)
         if coder_only and no_user_proxy:
@@ -270,6 +296,8 @@ if __name__ == '__main__':
     elif files_to_send:
         # If no files to create, do requested task
         print(f"=== Processing files: {', '.join(files_to_send)}")
+        # Call the function to process files
+        # This is maybe not going to be used anymore, not sure..
         process_files(files_to_send, worktree, targetfolder, task)
     else:
         # If no files to create, do requested task

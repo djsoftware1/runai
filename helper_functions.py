@@ -1,6 +1,9 @@
 # Copyright (C) 2023 David Joffe / DJ Software
 import re
 import os
+import sys
+from globals import g_ai_output_saved_last_code_block
+import globals
 """
 --------------------------------------------------------------------------------
 coder (to user_proxy):
@@ -10,6 +13,9 @@ coder (to user_proxy):
 
 #include <cmath>
 """
+
+# global variable to save last code block from AI
+#g_ai_output_saved_last_code_block = None
 
 # Return array of created files (if any) else return empty array
 def create_files_from_ai_output(ai_output, output_directory='output_files'):
@@ -33,6 +39,8 @@ def create_files_from_ai_output(ai_output, output_directory='output_files'):
     #pattern = r"```(.*?)\n(// filename: (.*?)\n)?(.*?)```"
     pattern = r"```(.*?)\n([/#][/#]? filename: (.*?)\n)?(.*?)```"
     matches = re.findall(pattern, ai_output, re.DOTALL)
+
+    global g_ai_output_saved_last_code_block
 
     # Create the output directory if it doesn't exist
     if not os.path.exists(output_directory):
@@ -62,6 +70,17 @@ def create_files_from_ai_output(ai_output, output_directory='output_files'):
 
         # Create full path for the file
         #file_path = os.path.join(output_directory, filename)
+
+        if content is not None and content!='':
+            globals.g_ai_output_saved_last_code_block = content
+        #g_ai_output_saved_last_code_block = "["+content+"]"
+        with open('DEBUGLOG.txt', 'a') as file1:
+            file1.write("\n<CAPTURE1>\n")
+            file1.write(content)
+            file1.write("</CAPTURE1>\n")
+        #    file1.write("\n<CAPTURE2>g_ai_output_saved_last_code_block=\n")
+        #    file1.write(globals.g_ai_output_saved_last_code_block)
+        #    file1.write("\n</CAPTURE2>\n")
 
         # Write the content to the file
         with open(file_path, 'w') as file:
