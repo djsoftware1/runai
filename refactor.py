@@ -38,7 +38,8 @@ def refactor_code(original_code, task, autogen_user_proxy, autogen_coder):
     #if (re.match(r'^\s*//', origin)
 
     # todo low) "cpp" hardcoded as code type here for now
-    task_message = task + "\n" + "```cpp" + "\n" + original_code + "\n" + "```\nEnd your reply with the word TERMINATE"
+    #task_message = task + "\n" + "```cpp" + "\n" + original_code + "\n" + "```\nEnd your reply with the word TERMINATE"
+    task_message = task + "\n" + "```cpp" + "\n" + original_code + "```"
     #print("===TASK_MESSAGE:" + task_message)
 
     with open('DEBUGLOG.txt', 'a') as file1:
@@ -80,6 +81,8 @@ def refactor_code(original_code, task, autogen_user_proxy, autogen_coder):
     if str_modified_code is not None and str_modified_code!='':
         #print("===REFACTOR:Using saved last code block from AI" + str_modified_code)
         modified_code = str_modified_code
+        # Try convert CRLF to LF
+        modified_code = modified_code.replace('\r\n', '\n')
     else:
         # If anything went wrong just skip and don't replace
         #print("===REFACTOR:Something went wrong restoring original code")
