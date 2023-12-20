@@ -1,3 +1,4 @@
+# Copyright (C) 2023 David Joffe / DJ Software
 import os
 import re
 import fnmatch
@@ -95,8 +96,14 @@ def Refactor(in_folder, wildcard, needle, sTask, autogen_user_proxy, autogen_cod
         if not occurrences:
             continue  # Skip files without the needle
 
-        with open(file_path, 'r') as file:
-            lines = file.readlines()
+        # Getting encoding errors reading some files so first try utf8 if that fails try cp1252 etc. - probably have to refine this further
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                lines = file.readlines()
+        except UnicodeDecodeError:
+            # Fallback to a different encoding, or handle the error as appropriate
+            with open(file_path, 'r', encoding='cp1252') as file:
+                lines = file.readlines()
 
         # Iterate over occurrences in reverse order to make it easier to deal with line numbers changing as we do replacements
         for line_num, line_content in reversed(occurrences):
@@ -115,11 +122,24 @@ def Refactor(in_folder, wildcard, needle, sTask, autogen_user_proxy, autogen_cod
             if modified_code!=line_content:
                 print(f"===REFACTOR:Replacing line {line_num} in file {file_path}")
 
+                # If we sent it e.g. " Copyright (C) 2022 David Joffe" and it sent back
+                # " Copyright (C) 2023 David Joffe" we don't want to just append its space and get:
+                # "  Copyright (C) 2023 David Joffe"
+                # In effect if it returns indentation matching the original let's not add any more
+                leading_whitespace_returned = re.match(r'^(\s*)', modified_code)
+                indent_modified = leading_whitespace_returned.group(1) if leading_whitespace_returned else ''
+
+
                 # Apply the leading whitespace to each line of modified_code
-                modified_lines = [indent + line if line.strip() else '' for line in modified_code.split('\n')]
+                if (indent_modified==indent):
+                    modified_lines = [line if line.strip() else '' for line in modified_code.split('\n')]
+                else:
+                    modified_lines = [indent + line if line.strip() else '' for line in modified_code.split('\n')]
 
                 # Remove an extra newline at the end if present
                 # (litellm with ollama/codemistral at least for me returning lots of this extra blank line at end of code block so strip it out)
+                if modified_lines and modified_lines[-1] == '':
+                    modified_lines.pop()
                 if modified_lines and modified_lines[-1] == '':
                     modified_lines.pop()
                 
@@ -133,7 +153,7 @@ def Refactor(in_folder, wildcard, needle, sTask, autogen_user_proxy, autogen_cod
                 os.makedirs(os.path.dirname(out_file_path), exist_ok=True)
                 # Save the modified file
                 print(f"===REFACTOR:Saving file: {out_file_path}")
-                with open(out_file_path, 'w') as file:
+                with open(out_file_path, 'w', encoding='utf-8') as file:
                     for line in lines:
                         file.write(line if line.endswith('\n') else line + '\n')
 

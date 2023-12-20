@@ -27,6 +27,10 @@ worktree = "tlex"
 #refactor_wildcard = ["*.cpp", "*.h"]
 refactor_wildcard = "*.cpp"
 refactor_codetype = "cpp"
+refactor_matches = "^[ \t]*tStrAppend"
+refactor_matches = "tStrAppend"
+refactor_matches = " tStrAppend"
+refactor_matches = " Copyright (C)"
 do_refactor=True
 if do_refactor:
     taskfile='task_refactor.txt'
@@ -273,7 +277,7 @@ if __name__ == '__main__':
 
     if do_refactor:
         #refactor.Refactor(worktree, refactor_wildcard, "^[ \t]*tStrAppend", task, user_proxy, coder)
-        refactor.Refactor(worktree, refactor_wildcard, " tStrAppend", task, user_proxy, coder)
+        refactor.Refactor(worktree, refactor_wildcard, refactor_matches, task, user_proxy, coder)
     elif files_to_create:
         task_message = f"Please create the following files: {', '.join(files_to_create)} with the following specifications: {task}"
         #user_proxy.initiate_chat(assistant, message=create_task_message)
