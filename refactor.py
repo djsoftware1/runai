@@ -28,7 +28,12 @@ def refactor_code(original_code, task, autogen_user_proxy, autogen_coder):
 
     # todo low) "cpp" hardcoded as code type here for now
     #task_message = task + "\n" + "```cpp" + "\n" + original_code + "\n" + "```\nEnd your reply with the word TERMINATE"
-    task_message = task + "\n" + "```cpp" + "\n" + original_code + "```"
+    # check if ends with "\n" and if not add it for "```"
+    newline_char = "\n"
+    if not original_code.endswith("\n"):
+        task_message = task + newline_char + "```cpp" + newline_char + original_code + newline_char + "```"
+    else:
+        task_message = task + newline_char + "```cpp" + newline_char + original_code + "```"
     #print("===TASK_MESSAGE:" + task_message)
 
     with open('DEBUGLOG.txt', 'a') as file1:
@@ -85,7 +90,8 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, sTask, autogen_us
     for file_path in file_list:
         # maybe multiline matching should be an option
         #occurrences = djgrep.grep_file(file_path, needle)
-        occurrences = djgrep.grep_multiline(file_path, needle)
+        occurrences = djgrep.grep_multiline2(file_path, needle)
+        #occurrences = djgrep.grep_multiline(file_path, needle)
 
         if not occurrences:
             continue  # Skip files without the needle
@@ -101,7 +107,7 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, sTask, autogen_us
                 lines = file.readlines()
 
         # Iterate over occurrences in reverse order to make it easier to deal with line numbers changing as we do replacements
-        for line_num, line_content in reversed(occurrences):
+        for line_num, line_content, num_lines in reversed(occurrences):
             # Skip commented lines
             # THIS ISN'T quite correct for multi-line, hmm
             # Also sometimes we may actually want to target comment lines so let's make this configurable via new negmatches setting:
@@ -118,11 +124,11 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, sTask, autogen_us
             leading_whitespace = re.match(r'^(\s*)', line_content)
             indent = leading_whitespace.group(1) if leading_whitespace else ''
 
-            print(f"===REFACTOR:Try refactor line {line_num} in file {file_path}")
+            print(f"===REFACTOR:Try refactor line {line_num} in file {file_path} num_lines {num_lines}")
             # Refactor code
             modified_code = refactor_code(line_content, sTask, autogen_user_proxy, autogen_coder)
             if modified_code!=line_content:
-                print(f"===REFACTOR:Replacing line {line_num} in file {file_path}")
+                print(f"===REFACTOR:Replacing line {line_num} in file {file_path} num_lines {num_lines}")
 
                 # If we sent it e.g. " Copyright (C) 2022 David Joffe" and it sent back
                 # " Copyright (C) 2023 David Joffe" we don't want to just append its space and get:
@@ -148,7 +154,14 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, sTask, autogen_us
 
                 # This accounts for the modified code having a different number of lines
                 # Replace original line(s) with modified lines
-                lines[line_num - 1:line_num] = modified_lines
+                #lines[line_num - 1:line_num] = modified_lines
+
+                # Calculate the slice range for the original lines to be replaced
+                original_lines_start = line_num - 1
+                original_lines_end = original_lines_start + num_lines
+
+                # Replace the original line(s) with modified lines
+                lines[original_lines_start:original_lines_end] = modified_lines
 
                 out_folder = in_folder#"out_folder"  # Define your output folder
                 out_file_path = os.path.join(out_folder, os.path.relpath(file_path, in_folder))

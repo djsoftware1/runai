@@ -38,6 +38,43 @@ def grep_multiline(filename, pattern):
 
     return match_info
 
+def grep_multiline2(filename, pattern):
+    """Searches for a pattern in a file and returns line numbers with full line matches."""
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            content = file.read()
+    except UnicodeDecodeError:
+        with open(filename, 'r', encoding='cp1252') as file:
+            content = file.read()
+
+    #matches = list(re.finditer(pattern, content, re.MULTILINE))
+    matches = list(re.finditer(pattern, content, re.DOTALL))
+    print(f"Found {len(matches)} matches for pattern '{pattern}' in file {filename}")
+
+    lines = content.split('\n')
+    match_info = []
+    for match in matches:
+        start_index = match.start()
+        end_index = match.end()
+
+        # Find the start and end of the line(s)
+        line_start = content.rfind('\n', 0, start_index) + 1
+        line_end = content.find('\n', end_index)
+        line_end = len(content) if line_end == -1 else line_end
+
+        # Extract the full line(s)
+        full_line = content[line_start:line_end]
+
+        # Determine line numbers and count of lines matched
+        line_number_start = content.count('\n', 0, start_index) + 1
+        line_number_end = content.count('\n', 0, end_index) + 1
+        num_lines = line_number_end - line_number_start + 1
+
+        match_info.append((line_number_start, full_line, num_lines))
+
+    return match_info
+
+
 """
 # Example usage
 pattern = r'/\*.*?\*/'  # Regular expression for C++ block comments
