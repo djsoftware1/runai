@@ -22,18 +22,23 @@ code_execution_enabled=False
 #max_consecutive_auto_replies=10
 max_consecutive_auto_replies=0
 
+task_folder = "tasks/copyright"
+
 # Configuration
 worktree = "tlex"
 #refactor_wildcard = ["*.cpp", "*.h"]
 refactor_wildcard = "*.cpp"
+#refactor_wildcard = "*.h"
 refactor_codetype = "cpp"
-refactor_matches = "^[ \t]*tStrAppend"
-refactor_matches = "tStrAppend"
-refactor_matches = " tStrAppend"
-refactor_matches = " Copyright (C)"
+refactor_codetype = "cpp"
+#refactor_matches = "^[ \t]*tStrAppend"
+refactor_matches = "tStrAppend("
+#refactor_matches = " tStrAppend"
+#refactor_matches = " Copyright (C)"
 do_refactor=True
 if do_refactor:
     taskfile='task_refactor.txt'
+    #taskfile='task_refactor_copyright.txt'
 else:
     taskfile='task.txt'
 
