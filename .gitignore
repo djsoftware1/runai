@@ -1,2 +1,4 @@
 
+# place source in that you want gitignore'd under src eg src/tlex
+src/*
 env/*

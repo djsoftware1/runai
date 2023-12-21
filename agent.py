@@ -25,14 +25,18 @@ max_consecutive_auto_replies=0
 task_folder = "tasks/copyright"
 
 # Configuration
-worktree = "tlex"
-#refactor_wildcard = ["*.cpp", "*.h"]
+worktree = "src/tlex"
+# can also override in your settings.py passed in as parameter:
+refactor_wildcards = ["*.cpp", "*.h"]
 refactor_wildcard = "*.cpp"
 #refactor_wildcard = "*.h"
 refactor_codetype = "cpp"
-refactor_codetype = "cpp"
 #refactor_matches = "^[ \t]*tStrAppend"
 refactor_matches = "tStrAppend("
+# Don't change the actual function itself
+#refactor_negmatches =["void tStrAppend("]
+# can also override in your settings.py passed in as parameter:
+refactor_negmatches =[]
 #refactor_matches = " tStrAppend"
 #refactor_matches = " Copyright (C)"
 do_refactor=True
@@ -41,6 +45,32 @@ if do_refactor:
     #taskfile='task_refactor_copyright.txt'
 else:
     taskfile='task.txt'
+
+# Parameter 1: taskfile with task prompt (defaults to task.txt)
+if len(sys.argv) > 1:
+    print(f"=== Using taskfile: {sys.argv[1]}")
+    taskfile = sys.argv[1]
+else:
+    taskfile = 'task.txt'  # Or set a default value as needed
+
+# Parameter 2: target folder to operate on, for example your codebase e.g. "src/tlex" defaults to 'src'
+if len(sys.argv) > 2:
+    print(f"=== Using target folder: {sys.argv[2]}")
+    worktree = sys.argv[2]
+else:
+    taskfile = 'src'
+
+# Parameter 3: task settings.py to run
+if len(sys.argv) > 3:
+    print(f"=== Using task settings.py: {sys.argv[3]}")
+    settings_pyscript = sys.argv[3]
+    if os.path.exists(settings_pyscript):
+        # Read the settings.py file
+        with open(settings_pyscript, 'r') as file:
+            settings_py = file.read()
+        # Execute the settings.py file
+        exec(settings_py)
+
 
 # Slightly gross but use this global to capture output from AI of last most recent final code block it sent
 #g_ai_output_saved_last_code_block=None
@@ -281,8 +311,11 @@ if __name__ == '__main__':
     sys.stdout = dual_output
 
     if do_refactor:
-        #refactor.Refactor(worktree, refactor_wildcard, "^[ \t]*tStrAppend", task, user_proxy, coder)
-        refactor.Refactor(worktree, refactor_wildcard, refactor_matches, task, user_proxy, coder)
+        #refactor.Refactor(worktree, refactor_wildcard, refactor_negmatches, "^[ \t]*tStrAppend", task, user_proxy, coder)
+        # Iterate over array of wildcards e.g. "*.h" "*.cpp"
+        for wildcard in refactor_wildcards:
+            print("=== Processing wildcard: " + wildcard)
+            refactor.Refactor(worktree, wildcard, refactor_matches, refactor_negmatches, task, user_proxy, coder)
     elif files_to_create:
         task_message = f"Please create the following files: {', '.join(files_to_create)} with the following specifications: {task}"
         #user_proxy.initiate_chat(assistant, message=create_task_message)

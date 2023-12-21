@@ -2,10 +2,10 @@
 import os
 import re
 import fnmatch
+import djgrep
 import autogen
 import helper_functions
 # regular expressions
-import re
 import globals
 from globals import g_ai_output_saved_last_code_block
 # Global variable initialization at the top level of the module
@@ -17,20 +17,9 @@ def find_files(directory, pattern):
         for basename in files:
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
+                print(filename)
                 yield filename
 
-def grep_file(filename, needle):
-    """Searches for a needle in a file and returns line numbers and lines."""
-    # Getting encoding errors reading some files so first try utf8 if that fails try cp1252 etc. - probably have to refine this further
-    try:
-        with open(filename, 'r', encoding='utf-8') as file:
-            lines = file.readlines()
-    except UnicodeDecodeError:
-        # Fallback to a different encoding, or handle the error as appropriate
-        with open(filename, 'r', encoding='cp1252') as file:
-            lines = file.readlines()
-
-    return [(index + 1, line) for index, line in enumerate(lines) if needle in line]
 
 def refactor_code(original_code, task, autogen_user_proxy, autogen_coder):
     """Sends code to autogen for refactoring and returns the modified code."""
@@ -90,15 +79,18 @@ def refactor_code(original_code, task, autogen_user_proxy, autogen_coder):
 
     return modified_code
 
-def Refactor(in_folder, wildcard, needle, sTask, autogen_user_proxy, autogen_coder):
+def Refactor(in_folder, wildcard, needle, refactor_negmatches, sTask, autogen_user_proxy, autogen_coder):
     file_list = find_files(in_folder, wildcard)
 
     for file_path in file_list:
-        occurrences = grep_file(file_path, needle)
+        # maybe multiline matching should be an option
+        #occurrences = djgrep.grep_file(file_path, needle)
+        occurrences = djgrep.grep_multiline(file_path, needle)
 
         if not occurrences:
             continue  # Skip files without the needle
 
+        #debug:print(f"===REFACTOR:Found {len(occurrences)} occurrences in file {file_path}")
         # Getting encoding errors reading some files so first try utf8 if that fails try cp1252 etc. - probably have to refine this further
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -112,8 +104,15 @@ def Refactor(in_folder, wildcard, needle, sTask, autogen_user_proxy, autogen_cod
         for line_num, line_content in reversed(occurrences):
             # Skip commented lines
             # THIS ISN'T quite correct for multi-line, hmm
-            if (re.match(r'^\s*//', line_content)):
-                continue
+            # Also sometimes we may actually want to target comment lines so let's make this configurable via new negmatches setting:
+            #if (re.match(r'^\s*//', line_content)):
+            #    continue
+
+            # Skip other optional custom 'negative-matches' if any
+            # For example if we are refactoring a function call we might want to skip the function definition and only refactor usages of a function not the actual definition itself
+            for negmatch in refactor_negmatches:
+                if (re.match(negmatch, line_content)):
+                    continue
 
             # Capture leading whitespace (spaces and tabs) so we can re-apply original indentation to replaced code (at least crudely first line for now)
             leading_whitespace = re.match(r'^(\s*)', line_content)

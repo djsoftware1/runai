@@ -1,8 +1,1 @@
-You are a C++ refactoring expert, give code only no explanations. Refactor to not use printf-style formatting tStrAppend just plain string functions in C++:
-```cpp
-tStrAppend(sHTML, "<tr>");
-tStrAppend(sHTML, "<td%s>&nbsp;</td>", sStyleTD.c_str());
-tStrAppend(sHTML, "<td%s>&nbsp;</td>", sStyleTD.c_str());
-tStrAppend(sHTML, "<td%s><font face=\"%s\"><b>%s</b></font></td>", sStyleTD.c_str(), sFont.c_str(), (sCategory.length()==0 ? "&nbsp;" : tHTMLCONVws(sCategory)));
-tStrAppend(sHTML, "</tr>\r\n");
-```
+You are a C++ refactoring coder helping refactor selected lines from existing C++ codebase. Do NOT add a main function and do not include headers. Give only code. DO not give any code explanations. The code should be exact drop-in replacement for existing lines in a codebase so don't add or remove anything. Refactor to not use printf-style formatting tStrAppend just plain string functions in C++ (and std::to_string for ints):
