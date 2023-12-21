@@ -47,7 +47,6 @@ def grep_multiline2(filename, pattern):
         with open(filename, 'r', encoding='cp1252') as file:
             content = file.read()
 
-    #matches = list(re.finditer(pattern, content, re.MULTILINE))
     matches = list(re.finditer(pattern, content, re.DOTALL))
     print(f"Found {len(matches)} matches for pattern '{pattern}' in file {filename}")
 
@@ -62,12 +61,16 @@ def grep_multiline2(filename, pattern):
         line_end = content.find('\n', end_index)
         line_end = len(content) if line_end == -1 else line_end
 
+        # Adjust to ensure only the matched lines are included
+        if line_end - line_start > end_index - start_index:
+            line_end = end_index + content[end_index:line_end].find('\n')
+
         # Extract the full line(s)
         full_line = content[line_start:line_end]
 
         # Determine line numbers and count of lines matched
         line_number_start = content.count('\n', 0, start_index) + 1
-        line_number_end = content.count('\n', 0, end_index) + 1
+        line_number_end = content.count('\n', 0, line_end) + 1
         num_lines = line_number_end - line_number_start + 1
 
         match_info.append((line_number_start, full_line, num_lines))
