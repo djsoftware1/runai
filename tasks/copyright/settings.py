@@ -7,4 +7,6 @@ refactor_codetype = "cpp"
 refactor_wildcards = ["*.cpp", "*.h"]
 
 # Don't change the actual function itself
+#refactor_matches = "^[^\n]*Copyright [^\n]*\n"
 refactor_matches = "Copyright "
+#refactor_multiline_matches = []
