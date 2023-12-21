@@ -23,6 +23,7 @@ code_execution_enabled=False
 max_consecutive_auto_replies=0
 
 task_folder = "tasks/copyright"
+use_cache_seed=24
 
 # Configuration
 worktree = "src/tlex"
@@ -245,7 +246,7 @@ if __name__ == '__main__':
     assistant = autogen.AssistantAgent(
         name="assistant",
         llm_config={
-            "cache_seed": 42,  # seed for caching and reproducibility
+            "cache_seed": use_cache_seed,  # seed for caching and reproducibility
             #"config_list": config_list,  # a list of OpenAI API configurations
             # above line for OPENAI and this below line for our LOCAL LITE LLM:
             "config_list": config_list_localgeneral,  # a list of OpenAI API configurations

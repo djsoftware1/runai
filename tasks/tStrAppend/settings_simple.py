@@ -12,8 +12,15 @@ refactor_matches = "tStrAppend\([^\)]+\);"
 #refactor_matches = "tStrAppend("
 # Within small local scopes or function scopes to see:
 
+
 refactor_wildcards = ["*Compare.cpp"]
 refactor_matches = "{[^{}]*tStrAppend\([^{}]*}"
+
+# SIMPLE CASES:
+		#tStrAppend(sHTML, "<p>");
+		#tStrAppend(sHTML, "</body></html>");
+#refactor_matches = "tStrAppend\([^{}\(\)]*}"
+refactor_matches = "tStrAppend\(sHTML, ^{}\(\)]*}"
 
 # Don't change the actual function itself
 refactor_negmatches =["void tStrAppend\(", "^\s*//", "//tStrAppend\("]
