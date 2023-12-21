@@ -7,12 +7,15 @@ refactor_wildcards = ["*.cpp", "*.h"]
 
 refactor_codetype = "cpp"
 #refactor_matches = "^[ \t]*tStrAppend"
-refactor_matches = "tStrAppend("
+# Some go over multiple lines
+refactor_matches = "tStrAppend\([^\)]+\);"
 #refactor_matches = "tStrAppend("
 # Within small local scopes or function scopes to see:
-refactor_matches = "{[^{}]*tStrAppend[^{}]*}"
+
+#refactor_matches = "{[^{}]*tStrAppend\([^{}]*}"
+
 # Don't change the actual function itself
-refactor_negmatches =["void tStrAppend\(", "^\s*//"]
+refactor_negmatches =["void tStrAppend\(", "^\s*//", "//tStrAppend\("]
 # "^\s*//" means Skip instances in comment lines in this case:
 # e.g.
 # // tStrAppend("Hello", "World");

@@ -87,6 +87,9 @@ def refactor_code(original_code, task, autogen_user_proxy, autogen_coder):
 def Refactor(in_folder, wildcard, needle, refactor_negmatches, sTask, autogen_user_proxy, autogen_coder):
     file_list = find_files(in_folder, wildcard)
 
+    # Compile negative match patterns for efficiency
+    negmatch_patterns = [re.compile(negmatch) for negmatch in refactor_negmatches]
+
     for file_path in file_list:
         # maybe multiline matching should be an option
         #occurrences = djgrep.grep_file(file_path, needle)
@@ -116,9 +119,19 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, sTask, autogen_us
 
             # Skip other optional custom 'negative-matches' if any
             # For example if we are refactoring a function call we might want to skip the function definition and only refactor usages of a function not the actual definition itself
-            for negmatch in refactor_negmatches:
-                if (re.match(negmatch, line_content)):
-                    continue
+            # re.match is wrong for neg-matches because it only matches from beginning of string, we want to match anywhere in the string
+            #for negmatch in refactor_negmatches:
+            #    if (re.match(negmatch, line_content)):
+            #        continue
+            # Check against negative match patterns
+            skip_line = False
+            for negmatch_pattern in negmatch_patterns:
+                if negmatch_pattern.search(line_content):
+                    skip_line = True
+                    break  # Break the inner loop
+                
+            if skip_line:
+                continue  # Skip to the next occurrence                
 
             # Capture leading whitespace (spaces and tabs) so we can re-apply original indentation to replaced code (at least crudely first line for now)
             leading_whitespace = re.match(r'^(\s*)', line_content)
