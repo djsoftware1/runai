@@ -160,6 +160,10 @@ if os.path.exists(config_list_path):
         },
     )
     have_openai_config = True
+
+    llm_config_coder_openai={
+        "config_list":config_list
+    }
 else:
     print("Warning: No OpenAI configuration - this is not critical if using local AI instances like LiteLLM")
     have_openai_config = False
@@ -167,9 +171,6 @@ else:
 
 
 
-llm_config_coder_openai={
-    "config_list":config_list
-}
 # Get date/time to use in filenames and directories and session logfiles etc.
 task_datetime = datetime.datetime.now()
 task_formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
