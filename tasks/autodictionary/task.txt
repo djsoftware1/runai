@@ -1,0 +1,4 @@
+Please create a detailed, professional, humorous funny dictionary entry for the word "{$1}" and return in the following XML format between "```" codeblocks:
+```xml
+<entry><sense><word>...</word><definition><en>...</en></definition><example><en>...</en></example></sense></entry>
+```

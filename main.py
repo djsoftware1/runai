@@ -48,12 +48,9 @@ refactor_matches = "tStrAppend("
 refactor_negmatches =[]
 #refactor_matches = " tStrAppend"
 #refactor_matches = " Copyright (C)"
-do_refactor=True
-if do_refactor:
-    taskfile='task_refactor.txt'
-    #taskfile='task_refactor_copyright.txt'
-else:
-    taskfile='task.txt'
+do_refactor=False
+taskfile='task.txt'
+inputfile='input.txt'
 
 # Parameter 1: taskfile with task prompt (defaults to task.txt)
 if len(sys.argv) > 1:
@@ -63,11 +60,11 @@ else:
     taskfile = 'task.txt'  # Or set a default value as needed
 
 # Parameter 2: target folder to operate on, for example your codebase e.g. "src/tlex" defaults to 'src'
+# Work in current folder by default if not specified?
+worktree='.'
 if len(sys.argv) > 2:
     print(f"=== Using target folder: {sys.argv[2]}")
     worktree = sys.argv[2]
-else:
-    taskfile = 'src'
 
 # Parameter 3: task settings.py to run
 if len(sys.argv) > 3:
@@ -273,7 +270,7 @@ if __name__ == '__main__':
         for file_name in files_to_send:
             print(f"SETTINGS:File={file_name}...")
     print(f"SETTINGS: Task={task}")
-    print("USE_OPENAI={use_openai}")
+    print(f"USE_OPENAI={use_openai}")
 
     # create an AssistantAgent named "assistant"
     assistant = autogen.AssistantAgent(
@@ -344,7 +341,48 @@ if __name__ == '__main__':
     dual_output = DualOutput(task_output_directory)
     sys.stdout = dual_output
 
-    if do_refactor:
+    # Check if we have a input.txt file and if so use that as input to the AI to run on all lines of the file
+    inputlines_array = []
+    if os.path.exists(inputfile):
+        print(f"=== Using inputfile: {inputfile}")
+        #input = ""
+        with open(inputfile, 'r', encoding='utf-8') as file:
+            for line in file:
+                line = line.rstrip('\n')
+                inputlines_array.append(line)
+                #inputlines_array.append(line.strip())
+                #input += line.strip() + "\n"
+
+    if len(inputlines_array) > 0:
+        print(f"=== Using inputlines_array size %d" % len(inputlines_array))
+        #input = ""
+        for inputline in inputlines_array:
+            # Replace {$1} in task with the inputline
+            task_line = task
+            task_line = task_line.replace("{$1}", inputline)
+
+            # If no files to create, do requested task
+            #pause_capture in case our own task has code blocks in it - we don't want those auto-saving by mistake
+            dual_output.PauseSaveFiles()
+            print(f"=== Processing task: {task_line}")
+            dual_output.UnpauseSaveFiles()
+
+            if coder_only and no_user_proxy:
+                response = coder.handle_task(task_line)
+                print(response)
+            elif coder_only:
+                # Can we just let coder chat with itself to solve problems?
+                # the assistant receives a message from the user_proxy, which contains the task description
+                #coder.initiate_chat(
+                user_proxy.initiate_chat(
+                    coder if manager is None else manager,message=task_line,
+                )
+            else:
+                # the assistant receives a message from the user_proxy, which contains the task description
+                user_proxy.initiate_chat(
+                    assistant,message=task_line,
+                )
+    elif do_refactor:
         #refactor.Refactor(worktree, refactor_wildcard, refactor_negmatches, "^[ \t]*tStrAppend", task, user_proxy, coder)
         # Iterate over array of wildcards e.g. "*.h" "*.cpp"
         for wildcard in refactor_wildcards:
@@ -377,7 +415,10 @@ if __name__ == '__main__':
         process_files(files_to_send, worktree, targetfolder, task)
     else:
         # If no files to create, do requested task
+        #pause_capture in case our own task has code blocks in it - we don't want those auto-saving by mistake
+        dual_output.PauseSaveFiles()
         print(f"=== Processing task: {task}")
+        dual_output.UnpauseSaveFiles()
         task_message=task
         if coder_only and no_user_proxy:
             response = coder.handle_task(task)

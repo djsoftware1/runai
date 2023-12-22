@@ -52,8 +52,124 @@ def create_files_from_ai_output(ai_output, output_directory='output_files'):
         language, _, filename, content = match
         # Strip whitespace and unwanted characters from filename
         filename = filename.strip().replace('/', os.sep)
+
+        extension = 'txt'  # Default extension if not provided
+        if language=='cpp':
+            extension = 'cpp'
+        elif language=='python':
+            extension = 'py'
+        elif language=='javascript':
+            extension = 'js'
+        elif language=='html':
+            extension = 'html'
+        elif language=='css':
+            extension = 'css'
+        elif language=='json':
+            extension = 'json'
+        elif language=='xml':
+            extension = 'xml'
+        elif language=='markdown':
+            extension = 'md'
+        elif language=='bash':
+            extension = 'sh'
+        elif language=='csharp':
+            extension = 'cs'
+        elif language=='java':
+            extension = 'java'
+        elif language=='php':
+            extension = 'php'
+        elif language=='ruby':
+            extension = 'rb'
+        elif language=='sql':
+            extension = 'sql'
+        elif language=='swift':
+            extension = 'swift'
+        elif language=='typescript':
+            extension = 'ts'
+        elif language=='vbnet':
+            extension = 'vb'
+        elif language=='c':
+            extension = 'c'
+        elif language=='go':
+            extension = 'go'
+        elif language=='kotlin':
+            extension = 'kt'
+        elif language=='r':
+            extension = 'r'
+        elif language=='rust':
+            extension = 'rs'
+        elif language=='scala':
+            extension = 'scala'
+        elif language=='dart':
+            extension = 'dart'
+        elif language=='lua':
+            extension = 'lua'
+        elif language=='perl':
+            extension = 'pl'
+        elif language=='powershell':
+            extension = 'ps1'
+        elif language=='haskell':
+            extension = 'hs'
+        elif language=='elixir':
+            extension = 'ex'
+        elif language=='clojure':
+            extension = 'clj'
+        elif language=='fsharp':
+            extension = 'fs'
+        elif language=='groovy':
+            extension = 'groovy'
+        elif language=='ocaml':
+            extension = 'ml'
+        elif language=='pascal':
+            extension = 'pas'
+        elif language=='racket':
+            extension = 'rkt'
+        elif language=='scheme':
+            extension = 'scm'
+        elif language=='erlang':
+            extension = 'erl'
+        elif language=='julia':
+            extension = 'jl'
+        elif language=='fortran':
+            extension = 'f'
+        elif language=='nim':
+            extension = 'nim'
+        elif language=='crystal':
+            extension = 'cr'
+        elif language=='reason':
+            extension = 're'
+        elif language=='v':
+            extension = 'v'
+        elif language=='haxe':
+            extension = 'hx'
+        elif language=='d':
+            extension = 'd'
+        elif language=='perl6':
+            extension = 'p6'
+        elif language=='elm':
+            extension = 'elm'
+        elif language=='pure':
+            extension = 'pure'
+        elif language=='julia':
+            extension = 'jl'
+        elif language=='coffeescript':
+            extension = 'coffee'
+        elif language=='ocaml':
+            extension = 'ml'
+        elif language=='perl':
+            extension = 'pl'
+        elif language=='h':
+            extension = 'h'
+        elif language=='hpp':
+            extension = 'h'
+        elif language=='c++':
+            extension = 'cpp'
+        elif language=='csv':
+            extension = 'csv'
+
+
         if not filename:
-            filename = "outfile.txt"  # Default filename if not provided
+            filename = "outfile." + extension  # Default filename if not provided
 
         # Strip whitespace and unwanted characters from filename
         filename = filename.strip().replace('/', os.sep)
@@ -84,6 +200,11 @@ def create_files_from_ai_output(ai_output, output_directory='output_files'):
 
         # Write the content to the file, this is the important stuff like the code we want
         with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(content)
+
+        # Write the content to the filename in append mode and in current directory so e.g. if we are getting XML dictionary for many entries the output arrives in here appended each entry
+        # This behaviour needs some fine-tuning/cleaning up etc. but it's a start
+        with open(filename, 'a', encoding='utf-8') as file:
             file.write(content)
 
         ret_created_files.append(file_path)

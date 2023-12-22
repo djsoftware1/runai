@@ -11,6 +11,14 @@ class DualOutput:
         self.str_total = ''
         self.str_building = ''
         self.outfiles_directory = outfiles_directory
+        self.pause_capture = 0 # Whilst echo-ing our input prompt which might contain code blocks to send to the AI we don't want it auto-saving files from the code .. use this to temporarily pause optionally
+
+    def PauseSaveFiles(self):
+        self.pause_capture = self.pause_capture + 1
+
+    def UnpauseSaveFiles(self):
+        if (self.pause_capture > 0):
+            self.pause_capture = self.pause_capture - 1
 
     def write(self, message):
         self.console.write(message)
@@ -34,11 +42,12 @@ class DualOutput:
         # Compile partial string so far, to check for code blocks ..
         # if we parse out code blocks to files then clear the already done saved code blocks by clearing string
         # str_building meaning we are building up a string of code blocks to save to files
-        self.str_building = self.str_building + message
-        ret_created_files = create_files_from_ai_output(self.str_building, self.outfiles_directory)
-        # if we saved code blocks to files then clear the already done saved code blocks by clearing string
-        if len(ret_created_files) > 0:
-            self.str_building = ''
+        if self.pause_capture == 0:
+            self.str_building = self.str_building + message
+            ret_created_files = create_files_from_ai_output(self.str_building, self.outfiles_directory)
+            # if we saved code blocks to files then clear the already done saved code blocks by clearing string
+            if len(ret_created_files) > 0:
+                self.str_building = ''
 
 
     def getvalue(self):
