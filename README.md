@@ -12,6 +12,18 @@ To run:
 python agent.py
 ```
 
+For using runai globally on system etc.:
+
+```
+# python3 -m pip install pyautogen
+# python3 -m pip install -r requirements.txt
+```
+
+```
+# Optional if want to run local AI server:
+# python3 -m pip install litellm
+```
+
 Design thoughts on main task types:
 
 ## Main Task Types:
