@@ -20,7 +20,11 @@ refactor_matches = "{[^{}]*tStrAppend\([^{}]*}"
 		#tStrAppend(sHTML, "<p>");
 		#tStrAppend(sHTML, "</body></html>");
 #refactor_matches = "tStrAppend\([^{}\(\)]*}"
-refactor_matches = "tStrAppend\(sHTML, ^{}\(\)]*}"
+refactor_matches = "tStrAppend\(sHTML, [^{}\(\)\n]*\);"
+#refactor_matches = "tStrAppend\(sHTML, \"[^{}()\\n]*\");"
+
+refactor_matches = "tStrAppend\("
+
 
 # Don't change the actual function itself
 refactor_negmatches =["void tStrAppend\(", "^\s*//", "//tStrAppend\("]

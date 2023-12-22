@@ -24,6 +24,8 @@ max_consecutive_auto_replies=0
 
 task_folder = "tasks/copyright"
 use_cache_seed=24
+use_openai=False
+#use_openai=True
 
 # Configuration
 worktree = "src/tlex"
@@ -67,7 +69,7 @@ if len(sys.argv) > 3:
     settings_pyscript = sys.argv[3]
     if os.path.exists(settings_pyscript):
         # Read the settings.py file
-        with open(settings_pyscript, 'r') as file:
+        with open(settings_pyscript, 'r', encoding='utf-8') as file:
             settings_py = file.read()
         # Execute the settings.py file
         exec(settings_py)
@@ -132,21 +134,26 @@ llm_config_local3={
 
 
 
-#"model": ["gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
-config_list = autogen.config_list_from_json(
-    "OAI_CONFIG_LIST",
-    filter_dict={
-		"model": ["gpt-4", "gpt-3.5-turbo", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
-    },
-)
-# try use gpt-3.5-turbo instead of gpt-4 as seems costly to use gpt-4 on OpenAI
-config_list = autogen.config_list_from_json(
-    "OAI_CONFIG_LIST",
-    filter_dict={
-        "model": ["gpt-3.5-turbo"],
-    },
-)
+    #"model": ["gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
+    config_list = autogen.config_list_from_json(
+        "OAI_CONFIG_LIST",
+        filter_dict={
+            "model": ["gpt-4", "gpt-3.5-turbo", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
+        },
+    )
+    # try use gpt-3.5-turbo instead of gpt-4 as seems costly to use gpt-4 on OpenAI
+    config_list = autogen.config_list_from_json(
+        "OAI_CONFIG_LIST",
+        filter_dict={
+            "model": ["gpt-3.5-turbo"],
+        },
+    )
 
+
+
+llm_config_coder_openai={
+    "config_list":config_list
+}
 # Get date/time to use in filenames and directories and session logfiles etc.
 task_datetime = datetime.datetime.now()
 task_formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
@@ -163,7 +170,7 @@ if not os.path.exists(task_output_directory):
 ###    print(f"===== agent TASK:{task}")
 # Read all task lines from tasks.txt
 task = ""
-with open(taskfile, 'r') as file:
+with open(taskfile, 'r', encoding='utf-8') as file:
     for line in file:
         task += line.strip() + "\n"  # Appending each line to the task string
 
@@ -196,7 +203,7 @@ def send_to_autogen(file_path, task):
     headers = {'Content-Type': 'application/json'}
 
     # Read file content
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='utf-8') as file:
         file_content = file.read()
 
     # Prepare data for AutoGen API
@@ -227,7 +234,7 @@ def process_files(files_to_send, worktree, targetfolder, task):
                 # Save modified file
                 target_path = os.path.join(targetfolder, file_name)
                 os.makedirs(os.path.dirname(target_path), exist_ok=True)
-                with open(target_path, 'w') as file:
+                with open(target_path, 'w', encoding='utf-8') as file:
                     file.write(modified_content)
                 print(f"Saved modified {file_name} to {targetfolder}")
             except Exception as e:
@@ -241,6 +248,7 @@ if __name__ == '__main__':
         for file_name in files_to_send:
             print(f"SETTINGS:File={file_name}...")
     print(f"SETTINGS: Task={task}")
+    print("USE_OPENAI={use_openai}")
 
     # create an AssistantAgent named "assistant"
     assistant = autogen.AssistantAgent(
@@ -256,7 +264,7 @@ if __name__ == '__main__':
     # Create a coder agent
     coder = autogen.AssistantAgent(
         name="coder",
-        llm_config=llm_config_localcoder
+        llm_config=llm_config_coder_openai if use_openai else llm_config_localcoder
     )
     # create a UserProxyAgent instance named "user_proxy"
     user_proxy = autogen.UserProxyAgent(
@@ -291,7 +299,7 @@ if __name__ == '__main__':
 
     # Log the task to keep a record of what we're doing and help study/analyze results
     log_task = f"{task_output_directory}/task.txt"
-    with open(log_task, 'a') as log_file:
+    with open(log_task, 'a', encoding='utf-8') as log_file:
         log_file.write(task)
 
     if not NoGroup:
@@ -377,14 +385,14 @@ if __name__ == '__main__':
     # Create the log filename
     log_filename_base = f"dj_AI_log.txt"
     # Write the AI output to the log file
-    with open(log_filename_base, 'a') as log_file:
+    with open(log_filename_base, 'a', encoding='utf-8') as log_file:
         log_file.write("Captured AI Output:\n")
         log_file.write(ai_output)
 
     # Create the log filename
     log_filename1 = f"{task_output_directory}/dj_AI_log.txt"
     # Write the AI output to the log file
-    with open(log_filename1, 'w') as log_file:
+    with open(log_filename1, 'w', encoding='utf-8') as log_file:
         log_file.write("Captured AI Output:\n")
         log_file.write(ai_output)
 
@@ -402,7 +410,7 @@ if __name__ == '__main__':
     # Create the log filename
     log_filename = f"dj AI final log - {formatted_datetime}.txt"
     # Write the AI output to the log file
-    with open(log_filename, 'w') as log_file:
+    with open(log_filename, 'w', encoding='utf-8') as log_file:
         log_file.write("Captured AI Output:\n")
         log_file.write(ai_output)
     print(f"=== Log saved in file: {log_filename}")

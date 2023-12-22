@@ -36,7 +36,7 @@ def refactor_code(original_code, task, autogen_user_proxy, autogen_coder):
         task_message = task + newline_char + "```cpp" + newline_char + original_code + "```"
     #print("===TASK_MESSAGE:" + task_message)
 
-    with open('DEBUGLOG.txt', 'a') as file1:
+    with open('DEBUGLOG.txt', 'a', encoding='utf-8') as file1:
         file1.write("\n<REFACTORpre>originalcode:\n")
         file1.write(original_code)
         file1.write("</REFACTORpre>\n")
@@ -63,7 +63,7 @@ def refactor_code(original_code, task, autogen_user_proxy, autogen_coder):
     # because our captured output stuff could trigger codeblock saving and change g_ai_output_saved_last_code_block
     #print("===REFACTOR:Last code block from AI is " + g_ai_output_saved_last_code_block)
 
-    with open('DEBUGLOG.txt', 'a') as file1:
+    with open('DEBUGLOG.txt', 'a', encoding='utf-8') as file1:
         file1.write("\n<REFACTOR2>originalcode:\n")
         file1.write(original_code)
         file1.write("</REFACTOR2>\n")

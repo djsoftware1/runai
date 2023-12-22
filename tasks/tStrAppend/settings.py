@@ -9,11 +9,16 @@ refactor_codetype = "cpp"
 #refactor_matches = "^[ \t]*tStrAppend"
 # Some go over multiple lines
 refactor_matches = "tStrAppend\([^\)]+\);"
+refactor_matches = "([^\n]*tStrAppend\([^\)\n]+\);\n)+"
 #refactor_matches = "tStrAppend("
 # Within small local scopes or function scopes to see:
 
-refactor_wildcards = ["*Compare.cpp"]
-refactor_matches = "{[^{}]*tStrAppend\([^{}]*}"
+#refactor_wildcards = ["*Compare.cpp"]
+#refactor_matches = "{[^{}]*tStrAppend\([^{}]*}"
+refactor_wildcards = ["*.cpp", "*.h"]
+
+refactor_matches = "tStrAppend\("
+
 
 # Don't change the actual function itself
 refactor_negmatches =["void tStrAppend\(", "^\s*//", "//tStrAppend\("]

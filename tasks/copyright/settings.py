@@ -10,3 +10,5 @@ refactor_wildcards = ["*.cpp", "*.h"]
 #refactor_matches = "^[^\n]*Copyright [^\n]*\n"
 refactor_matches = "Copyright "
 #refactor_multiline_matches = []
+# If already includes 2023 don't even send it
+refactor_negmatches =["2023"]

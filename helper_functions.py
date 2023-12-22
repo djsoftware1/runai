@@ -74,7 +74,7 @@ def create_files_from_ai_output(ai_output, output_directory='output_files'):
         if content is not None and content!='':
             globals.g_ai_output_saved_last_code_block = content
         #g_ai_output_saved_last_code_block = "["+content+"]"
-        with open('DEBUGLOG.txt', 'a') as file1:
+        with open('DEBUGLOG.txt', 'a', encoding='utf-8') as file1:
             file1.write("\n<CAPTURE1>\n")
             file1.write(content)
             file1.write("</CAPTURE1>\n")
@@ -82,8 +82,8 @@ def create_files_from_ai_output(ai_output, output_directory='output_files'):
         #    file1.write(globals.g_ai_output_saved_last_code_block)
         #    file1.write("\n</CAPTURE2>\n")
 
-        # Write the content to the file
-        with open(file_path, 'w') as file:
+        # Write the content to the file, this is the important stuff like the code we want
+        with open(file_path, 'w', encoding='utf-8') as file:
             file.write(content)
 
         ret_created_files.append(file_path)
