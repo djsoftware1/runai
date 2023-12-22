@@ -14,6 +14,12 @@ from globals import g_ai_output_saved_last_code_block
 from dual_output import DualOutput
 from helper_functions import create_files_from_ai_output
 
+##### system/script init:
+# Get the directory of the current script (runai.py)
+script_dir = os.path.dirname(os.path.abspath(__file__))
+print(f"=== Script directory: {script_dir}")
+
+##### settings defaults
 # dj2023-12 This anyway only works for Python currently and the user agent goes back and forth with coder and coder thinks there's a problem and sends the code again and again because user agent couldn't execute
 # Even if it could exec C++ I don't currently want it to for these tasks so let's make this a parameter
 # Maybe in future for some tasks it should be true eg simpler Python stuff it can exec or if it gets better in future
@@ -96,6 +102,11 @@ coder_only=True
 no_user_proxy=True
 no_user_proxy=False
 
+
+##### Local AI instance configuration (should make this easier in future to chop and change for specific tasks/setups etc.)
+# Either via command-line or extra setuup.py or both etc. or maybe even environment variables
+# e.g. maybe in future could look in local folder for settings.py and if found exec it after these defaults
+
 # [dj2023-12] local LiteLLM instances ...
 config_list_localgeneral=[
     {
@@ -132,8 +143,11 @@ llm_config_local3={
 }
 
 
-
-
+##### OpenAI Configurations (if using OpenAI API, it's optional)
+# Construct the path to the OAI_CONFIG_LIST file
+config_list_path = os.path.join(script_dir, "OAI_CONFIG_LIST")
+# Check if the OAI_CONFIG_LIST file exists
+if os.path.exists(config_list_path):
     #"model": ["gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
     config_list = autogen.config_list_from_json(
         "OAI_CONFIG_LIST",
@@ -148,6 +162,11 @@ llm_config_local3={
             "model": ["gpt-3.5-turbo"],
         },
     )
+    have_openai_config = True
+else:
+    print("Warning: No OpenAI configuration - this is not critical if using local AI instances like LiteLLM")
+    have_openai_config = False
+    use_openai = False
 
 
 
@@ -173,6 +192,12 @@ task = ""
 with open(taskfile, 'r', encoding='utf-8') as file:
     for line in file:
         task += line.strip() + "\n"  # Appending each line to the task string
+
+if task=="":
+    # Define your coding task, for example:
+    print("=== No task specified, using default task")
+    task = "Write a Python function to sort a list of numbers."
+
 
 # Simulate command line argument input (this would normally come from sys.argv)
 # Here we provide an example of arguments
@@ -418,3 +443,9 @@ if __name__ == '__main__':
     #result = send_files_for_modification(args.task_description, args.header_file, args.source_file)
     #print(f'Modified files received: {result}')
     print("=== Done! All tasks processed.")
+
+def get_task_from_user(task):
+    """Checks if the task is empty or None, and prompts the user for input if it is."""
+    while task is None or task.strip() == '':
+        task = input("Please enter a task to perform: ").strip()
+    return task
