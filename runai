@@ -9,14 +9,19 @@ command_exists () {
 }
 
 # Check if python3 is available, else fall back to python
-if command_exists python3 ; then
-    PYTHON_CMD=python3
-elif command_exists python ; then
+if command_exists python ; then
     PYTHON_CMD=python
+elif command_exists python3 ; then
+    PYTHON_CMD=python3
 else
     echo "Python is not installed"
     exit 1
 fi
 
+# Get the directory of the current script
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
 # Run the Python script with arguments
-$PYTHON_CMD /Users/david/agents/main.py "$@"
+$PYTHON_CMD "$SCRIPT_DIR/main.py" "$@"
+# old hardcoded .. enable next line rather if you realy need to hardcode for some reason:
+#$PYTHON_CMD /c/agents/main.py "$@"

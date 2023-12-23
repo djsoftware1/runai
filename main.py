@@ -28,10 +28,11 @@ code_execution_enabled=False
 #max_consecutive_auto_replies=10
 max_consecutive_auto_replies=0
 
+task=''
 task_folder = "tasks/copyright"
 use_cache_seed=24
 use_openai=False
-#use_openai=True
+use_openai=True
 
 # Configuration
 worktree = "src/tlex"
@@ -52,10 +53,24 @@ do_refactor=False
 taskfile='task.txt'
 inputfile='input.txt'
 
+print("=== USAGE: runai (or python main.py) [taskfile] [targetfolder] [settings.py]")
+
 # Parameter 1: taskfile with task prompt (defaults to task.txt)
+force_show_prompt=False
+just_show_settings=False
 if len(sys.argv) > 1:
-    print(f"=== Using taskfile: {sys.argv[1]}")
-    taskfile = sys.argv[1]
+    arg = sys.argv[1]
+    if arg=='-s':
+        # Just show settings and exit
+        print("=== -s Show settings and exit")
+        just_show_settings = True
+    elif arg=='-p':
+        # Force ask for task prompt from input?
+        print("=== -p Ask for prompt")
+        taskfile = ''
+        force_show_prompt = True
+    else:
+        taskfile = arg
 else:
     taskfile = 'task.txt'  # Or set a default value as needed
 
@@ -98,6 +113,25 @@ NoGroup=True
 coder_only=True
 no_user_proxy=True
 no_user_proxy=False
+
+
+def show_settings():
+    # TODO some of these settings may already be unused
+    print(f"=== Taskfile: {taskfile}")
+    print(f"=== Inputfile: {inputfile}")
+    print(f"=== Worktree: {worktree}")
+    print(f"=== Targetfolder: {targetfolder}")
+    print(f"=== Task: {task}")
+    print(f"=== Files to send: {files_to_send}")
+    print(f"=== use_openai: {use_openai}")
+    print(f"=== have_openai_config: {have_openai_config}")
+
+    print(f"=== use_cache_seed: {use_cache_seed}")
+    print(f"=== code_execution_enabled={code_execution_enabled}")
+    print(f"=== max_consecutive_auto_replies={max_consecutive_auto_replies}")
+    # TODO also try let coder handle things more directly?
+    return
+
 
 
 ##### Local AI instance configuration (should make this easier in future to chop and change for specific tasks/setups etc.)
@@ -143,18 +177,19 @@ llm_config_local3={
 ##### OpenAI Configurations (if using OpenAI API, it's optional)
 # Construct the path to the OAI_CONFIG_LIST file
 config_list_path = os.path.join(script_dir, "OAI_CONFIG_LIST")
+print(f"=== config_list_path: {config_list_path}")
 # Check if the OAI_CONFIG_LIST file exists
 if os.path.exists(config_list_path):
     #"model": ["gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
     config_list = autogen.config_list_from_json(
-        "OAI_CONFIG_LIST",
+        config_list_path,
         filter_dict={
             "model": ["gpt-4", "gpt-3.5-turbo", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
         },
     )
     # try use gpt-3.5-turbo instead of gpt-4 as seems costly to use gpt-4 on OpenAI
     config_list = autogen.config_list_from_json(
-        "OAI_CONFIG_LIST",
+        config_list_path,
         filter_dict={
             "model": ["gpt-3.5-turbo"],
         },
@@ -169,7 +204,13 @@ else:
     have_openai_config = False
     use_openai = False
 
+if just_show_settings:
+    show_settings()
+    sys.exit(0)
 
+print("=== SETTINGS:")
+show_settings()
+print("===")
 
 # Get date/time to use in filenames and directories and session logfiles etc.
 task_datetime = datetime.datetime.now()
@@ -187,15 +228,36 @@ if not os.path.exists(task_output_directory):
 ###    print(f"===== agent TASK:{task}")
 # Read all task lines from tasks.txt
 task = ""
-with open(taskfile, 'r', encoding='utf-8') as file:
-    for line in file:
-        task += line.strip() + "\n"  # Appending each line to the task string
+if taskfile!='':
+    if os.path.exists(taskfile):
+        print(f"=== Using taskfile: {taskfile}")
+        with open(taskfile, 'r', encoding='utf-8') as file:
+            for line in file:
+                task += line.strip() + "\n"  # Appending each line to the task string
+    else:
+        print(f"=== WARNING: Taskfile not found: {taskfile}")
 
 if task=="":
     # Define your coding task, for example:
-    print("=== No task specified, using default task")
-    task = "Write a Python function to sort a list of numbers."
+    print("=== No task specified")
+    if not force_show_prompt:
+        print("=== Please specify a task in task.txt (or pass filename as 1st parameter) or use -p to prompt for a task")
+        task = "Write a Python function to sort a list of numbers."
+        print("=== Using default sample task: {task}")
 
+#if task=="":
+#    # Define your coding task, for example:
+#    print("=== No task specified, using default task")
+#    task = "Write a Python function to sort a list of numbers."
+
+# Check if 'task' is an empty string or None
+if task == "" or task is None:
+    task = input("What would you like to do? Please enter a task: ")
+
+    # Check if the user entered nothing
+    if task == "":
+        print("No task entered. Exiting the program.")
+        sys.exit()
 
 # Simulate command line argument input (this would normally come from sys.argv)
 # Here we provide an example of arguments
@@ -326,9 +388,11 @@ if __name__ == '__main__':
         log_file.write(task)
 
     if not NoGroup:
+        print("=== Creating groupchat and manager")
         groupchat = autogen.GroupChat(agents=[user_proxy, coder, assistant], messages=[])
         manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config_localgeneral)
     else:
+        print("=== no groupchat or manager")
         groupchat = None
         manager = None
 
@@ -356,7 +420,6 @@ if __name__ == '__main__':
 
     if len(inputlines_array) > 0:
         print(f"=== Using inputlines_array size %d" % len(inputlines_array))
-        #input = ""
         for inputline in inputlines_array:
             # Replace {$1} in task with the inputline
             task_line = task
@@ -384,13 +447,19 @@ if __name__ == '__main__':
                     assistant,message=task_line,
                 )
     elif do_refactor:
+        print("=== Do refactoring file(s)")
         #refactor.Refactor(worktree, refactor_wildcard, refactor_negmatches, "^[ \t]*tStrAppend", task, user_proxy, coder)
         # Iterate over array of wildcards e.g. "*.h" "*.cpp"
         for wildcard in refactor_wildcards:
             print("=== Processing wildcard: " + wildcard)
             refactor.Refactor(worktree, wildcard, refactor_matches, refactor_negmatches, task, user_proxy, coder)
-    elif files_to_create:
-        task_message = f"Please create the following files: {', '.join(files_to_create)} with the following specifications: {task}"
+    elif files_to_create and len(files_to_create)>=1:
+        dual_output.PauseSaveFiles()
+        if len(files_to_create)==1:
+            task_message = f"Create the following file and return in a ```...``` code block with filename: {', '.join(files_to_create)} with the following specifications: {task}"
+        else:
+            task_message = f"Create the following files and return in ```...``` code blocks with filenames: {', '.join(files_to_create)} with the following specifications: {task}"
+        dual_output.UnpauseSaveFiles()
         #user_proxy.initiate_chat(assistant, message=create_task_message)
         if coder_only and no_user_proxy:
             response = coder.handle_task(task_message)
@@ -408,9 +477,14 @@ if __name__ == '__main__':
                 assistant,
                 message=task_message,
             )
-    elif files_to_send:
+    elif files_to_send and len(files_to_send)>=1:
         # If no files to create, do requested task
-        print(f"=== Processing files: {', '.join(files_to_send)}")
+        dual_output.PauseSaveFiles()
+        if len(files_to_send)==1:
+            print(f"=== Sending file: {', '.join(files_to_send)}")
+        else:
+            print(f"=== Sending files: {', '.join(files_to_send)}")
+        dual_output.UnpauseSaveFiles()
         # Call the function to process files
         # This is maybe not going to be used anymore, not sure..
         process_files(files_to_send, worktree, targetfolder, task)
@@ -491,3 +565,4 @@ def get_task_from_user(task):
     while task is None or task.strip() == '':
         task = input("Please enter a task to perform: ").strip()
     return task
+

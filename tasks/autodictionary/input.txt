@@ -10,3 +10,8 @@ lexicographer
 terminology
 zoo
 abacus
+tlCorpus Concordance Software
+dictionary
+linguist
+coffee
+Java

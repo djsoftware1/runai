@@ -5,9 +5,17 @@ env/*
 
 # output files
 /output_files*
+outfile*
+
+# Logs
+DEBUGLOG*
+dj AI*log*
+dj_log*
+log_capture*
 
 # pyagent cache
 /.cache*
+*/.cache/*
 
 # Python cache
 /__pycache__*
