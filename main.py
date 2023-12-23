@@ -31,7 +31,7 @@ max_consecutive_auto_replies=0
 task_folder = "tasks/copyright"
 use_cache_seed=24
 use_openai=False
-#use_openai=True
+use_openai=True
 
 # Configuration
 worktree = "src/tlex"
@@ -52,11 +52,14 @@ do_refactor=False
 taskfile='task.txt'
 inputfile='input.txt'
 
+print("=== USAGE: runai (or python main.py) [taskfile] [targetfolder] [settings.py]")
+
 # Parameter 1: taskfile with task prompt (defaults to task.txt)
 if len(sys.argv) > 1:
     print(f"=== Using taskfile: {sys.argv[1]}")
     taskfile = sys.argv[1]
 else:
+    #taskfile = 'autotask.txt'  # Or set a default value as needed
     taskfile = 'task.txt'  # Or set a default value as needed
 
 # Parameter 2: target folder to operate on, for example your codebase e.g. "src/tlex" defaults to 'src'
@@ -143,18 +146,19 @@ llm_config_local3={
 ##### OpenAI Configurations (if using OpenAI API, it's optional)
 # Construct the path to the OAI_CONFIG_LIST file
 config_list_path = os.path.join(script_dir, "OAI_CONFIG_LIST")
+print(f"=== config_list_path: {config_list_path}")
 # Check if the OAI_CONFIG_LIST file exists
 if os.path.exists(config_list_path):
     #"model": ["gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
     config_list = autogen.config_list_from_json(
-        "OAI_CONFIG_LIST",
+        config_list_path,
         filter_dict={
             "model": ["gpt-4", "gpt-3.5-turbo", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
         },
     )
     # try use gpt-3.5-turbo instead of gpt-4 as seems costly to use gpt-4 on OpenAI
     config_list = autogen.config_list_from_json(
-        "OAI_CONFIG_LIST",
+        config_list_path,
         filter_dict={
             "model": ["gpt-3.5-turbo"],
         },
@@ -187,15 +191,25 @@ if not os.path.exists(task_output_directory):
 ###    print(f"===== agent TASK:{task}")
 # Read all task lines from tasks.txt
 task = ""
-with open(taskfile, 'r', encoding='utf-8') as file:
-    for line in file:
-        task += line.strip() + "\n"  # Appending each line to the task string
+if os.path.exists(taskfile):
+    print(f"=== Using taskfile: {taskfile}")
+    with open(taskfile, 'r', encoding='utf-8') as file:
+        for line in file:
+            task += line.strip() + "\n"  # Appending each line to the task string
 
-if task=="":
-    # Define your coding task, for example:
-    print("=== No task specified, using default task")
-    task = "Write a Python function to sort a list of numbers."
+#if task=="":
+#    # Define your coding task, for example:
+#    print("=== No task specified, using default task")
+#    task = "Write a Python function to sort a list of numbers."
 
+# Check if 'task' is an empty string or None
+if task == "" or task is None:
+    task = input("What would you like to do? Please enter a task: ")
+
+    # Check if the user entered nothing
+    if task == "":
+        print("No task entered. Exiting the program.")
+        sys.exit()
 
 # Simulate command line argument input (this would normally come from sys.argv)
 # Here we provide an example of arguments
