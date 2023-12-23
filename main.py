@@ -41,6 +41,8 @@ refactor_wildcards = ["*.cpp", "*.h"]
 refactor_codetype = "cpp"
 #refactor_matches = "^[ \t]*tStrAppend"
 refactor_matches = "tStrAppend("
+# Note if replace_with defined then it's a simple regex replace that does not actually need AI and we just do ourselves
+replace_with=''
 # Don't change the actual function itself
 #refactor_negmatches =["void tStrAppend("]
 # can also override in your settings.py passed in as parameter:
@@ -111,6 +113,14 @@ no_user_proxy=True
 # [Setting] Control whether or not to use the autogen user proxy agent
 no_user_proxy=False
 
+# Check if autosettings.py exists in current folder and run it if it does
+if os.path.exists('autosettings.py'):
+    # Read the autosettings.py file
+    with open('autosettings.py', 'r', encoding='utf-8') as file:
+        autosettings_py = file.read()
+    # Execute the autosettings.py file
+    exec(autosettings_py)
+
 # Parameter 3: task settings.py to run
 # Put this just after all basic settings initialization so user can override all/most default settings
 if len(sys.argv) > 3:
@@ -122,6 +132,7 @@ if len(sys.argv) > 3:
             settings_py = file.read()
         # Execute the settings.py file
         exec(settings_py)
+
 
 
 def show_settings():
@@ -140,6 +151,8 @@ def show_settings():
     print(f"=== use_cache_seed: {use_cache_seed}")
     print(f"=== code_execution_enabled={code_execution_enabled}")
     print(f"=== max_consecutive_auto_replies={max_consecutive_auto_replies}")
+    print(f"=== refactor_matches={refactor_matches}")
+    print(f"=== replace_with={replace_with}")
     print("===")
     # TODO also try let coder handle things more directly?
     return
@@ -462,7 +475,8 @@ if __name__ == '__main__':
         # Iterate over array of wildcards e.g. "*.h" "*.cpp"
         for wildcard in refactor_wildcards:
             print("=== Processing wildcard: " + wildcard)
-            refactor.Refactor(worktree, wildcard, refactor_matches, refactor_negmatches, task, user_proxy, coder)
+            # Note if replace_with defined then it's a simple regex replace that does not actually need AI and we just do ourselves
+            refactor.Refactor(worktree, wildcard, refactor_matches, refactor_negmatches, replace_with, task, user_proxy, coder)
     elif files_to_create and len(files_to_create)>=1:
         dual_output.PauseSaveFiles()
         if len(files_to_create)==1:

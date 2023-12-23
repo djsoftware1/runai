@@ -84,7 +84,8 @@ def refactor_code(original_code, task, autogen_user_proxy, autogen_coder):
 
     return modified_code
 
-def Refactor(in_folder, wildcard, needle, refactor_negmatches, sTask, autogen_user_proxy, autogen_coder):
+# Note if replace_with defined then it's a simple regex replace that does not actually need AI and we just do ourselves
+def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTask, autogen_user_proxy, autogen_coder):
     file_list = find_files(in_folder, wildcard)
 
     # Compile negative match patterns for efficiency
@@ -139,7 +140,12 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, sTask, autogen_us
 
             print(f"===REFACTOR:Try refactor line {line_num} in file {file_path} num_lines {num_lines}")
             # Refactor code
-            modified_code = refactor_code(line_content, sTask, autogen_user_proxy, autogen_coder)
+            if replace_with is not None and replace_with!='':
+                # Simple regex replace, no AI needed
+                modified_code = re.sub(needle, replace_with, line_content)
+            else:
+                # Pass to AI to refactor
+                modified_code = refactor_code(line_content, sTask, autogen_user_proxy, autogen_coder)
             if modified_code!=line_content:
                 print(f"===REFACTOR:Replacing line {line_num} in file {file_path} num_lines {num_lines}")
 
