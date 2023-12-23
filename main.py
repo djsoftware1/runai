@@ -561,9 +561,10 @@ if __name__ == '__main__':
     #print(f'Modified files received: {result}')
     print("=== Done! All tasks processed.")
 
+"""
 def get_task_from_user(task):
     """Checks if the task is empty or None, and prompts the user for input if it is."""
     while task is None or task.strip() == '':
         task = input("Please enter a task to perform: ").strip()
     return task
-
+"""
