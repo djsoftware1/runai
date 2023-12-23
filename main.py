@@ -38,26 +38,27 @@ use_openai=True
 worktree = "src/tlex"
 # can also override in your settings.py passed in as parameter:
 refactor_wildcards = ["*.cpp", "*.h"]
-refactor_wildcard = "*.cpp"
-#refactor_wildcard = "*.h"
 refactor_codetype = "cpp"
 #refactor_matches = "^[ \t]*tStrAppend"
 refactor_matches = "tStrAppend("
 # Don't change the actual function itself
 #refactor_negmatches =["void tStrAppend("]
 # can also override in your settings.py passed in as parameter:
-refactor_negmatches =[]
-#refactor_matches = " tStrAppend"
-#refactor_matches = " Copyright (C)"
+refactor_negmatches=[]
+
 do_refactor=False
+# [Setting] task file
 taskfile='task.txt'
+# [Setting] optional input file to run task for every line in file with substitution of "{$1}" in task text with each line
 inputfile='input.txt'
 
 print("=== USAGE: runai (or python main.py) [taskfile] [targetfolder] [settings.py]")
 
-# Parameter 1: taskfile with task prompt (defaults to task.txt)
+# [Application flow control]
 force_show_prompt=False
 just_show_settings=False
+use_sample_default_task=False
+# Parameter 1: taskfile with task prompt (defaults to task.txt)
 if len(sys.argv) > 1:
     arg = sys.argv[1]
     if arg=='-s':
@@ -69,6 +70,10 @@ if len(sys.argv) > 1:
         print("=== -p Ask for prompt")
         taskfile = ''
         force_show_prompt = True
+    elif arg=='-t': # t for 'test task'
+        use_sample_default_task=True
+        task = "Write a Python function to sort a list of numbers."
+        taskfile = ''
     else:
         taskfile = arg
 else:
@@ -82,16 +87,6 @@ if len(sys.argv) > 2:
     print(f"=== Using target folder: {sys.argv[2]}")
     worktree = sys.argv[2]
 
-# Parameter 3: task settings.py to run
-if len(sys.argv) > 3:
-    print(f"=== Using task settings.py: {sys.argv[3]}")
-    settings_pyscript = sys.argv[3]
-    if os.path.exists(settings_pyscript):
-        # Read the settings.py file
-        with open(settings_pyscript, 'r', encoding='utf-8') as file:
-            settings_py = file.read()
-        # Execute the settings.py file
-        exec(settings_py)
 
 
 # Slightly gross but use this global to capture output from AI of last most recent final code block it sent
@@ -113,11 +108,25 @@ NoGroup=True
 # this needs further work though
 coder_only=True
 no_user_proxy=True
+# [Setting] Control whether or not to use the autogen user proxy agent
 no_user_proxy=False
+
+# Parameter 3: task settings.py to run
+# Put this just after all basic settings initialization so user can override all/most default settings
+if len(sys.argv) > 3:
+    print(f"=== Using task settings.py: {sys.argv[3]}")
+    settings_pyscript = sys.argv[3]
+    if os.path.exists(settings_pyscript):
+        # Read the settings.py file
+        with open(settings_pyscript, 'r', encoding='utf-8') as file:
+            settings_py = file.read()
+        # Execute the settings.py file
+        exec(settings_py)
 
 
 def show_settings():
     # TODO some of these settings may already be unused
+    print("=== SETTINGS:")
     print(f"=== Taskfile: {taskfile}")
     print(f"=== Inputfile: {inputfile}")
     print(f"=== Worktree: {worktree}")
@@ -126,10 +135,12 @@ def show_settings():
     print(f"=== Files to send: {files_to_send}")
     print(f"=== use_openai: {use_openai}")
     print(f"=== have_openai_config: {have_openai_config}")
-
+    print(f"=== no_user_proxy: {no_user_proxy}")
+    print(f"=== NoGroup: {NoGroup}")
     print(f"=== use_cache_seed: {use_cache_seed}")
     print(f"=== code_execution_enabled={code_execution_enabled}")
     print(f"=== max_consecutive_auto_replies={max_consecutive_auto_replies}")
+    print("===")
     # TODO also try let coder handle things more directly?
     return
 
@@ -209,9 +220,7 @@ if just_show_settings:
     show_settings()
     sys.exit(0)
 
-print("=== SETTINGS:")
 show_settings()
-print("===")
 
 # Get date/time to use in filenames and directories and session logfiles etc.
 task_datetime = datetime.datetime.now()
@@ -228,7 +237,7 @@ if not os.path.exists(task_output_directory):
 ###    task = file.read().strip()
 ###    print(f"===== agent TASK:{task}")
 # Read all task lines from tasks.txt
-task = ""
+#task = ""
 if taskfile!='':
     if os.path.exists(taskfile):
         print(f"=== Using taskfile: {taskfile}")
@@ -241,10 +250,10 @@ if taskfile!='':
 if task=="":
     # Define your coding task, for example:
     print("=== No task specified")
-    if not force_show_prompt:
-        print("=== Please specify a task in task.txt (or pass filename as 1st parameter) or use -p to prompt for a task")
-        task = "Write a Python function to sort a list of numbers."
-        print("=== Using default sample task: {task}")
+    #if not force_show_prompt:
+        #print("=== Please specify a task in task.txt (or pass filename as 1st parameter) or use -p to prompt for a task or -t for default test/sample task")
+        #task = "Write a Python function to sort a list of numbers."
+        #print("=== Using default sample task: {task}")
 
 #if task=="":
 #    # Define your coding task, for example:
