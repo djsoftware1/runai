@@ -72,6 +72,7 @@ if len(sys.argv) > 1:
     else:
         taskfile = arg
 else:
+    #taskfile = 'autotask.txt'  # Or set a default value as needed
     taskfile = 'task.txt'  # Or set a default value as needed
 
 # Parameter 2: target folder to operate on, for example your codebase e.g. "src/tlex" defaults to 'src'
