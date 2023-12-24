@@ -32,6 +32,25 @@ def create_files_from_ai_output(ai_output, output_directory='output_files'):
     # "# filename.cpp
     # so I added the optional "#" to the regex to match both where it had been "// filename" I made it "[/#][/#]? filename"
 
+
+    """
+    NOTE: For auto-capturing output it sometimes returns like so instead of "```" causing auto-capture AI output to fail:
+    For example:
+    '''cpp
+    std::wstring g_sAppPath = L"";
+    '''
+    should become
+    ```cpp
+    std::wstring g_sAppPath = L"";
+    ```
+    """
+    # Regex to replace triple single quotes with optional language specifier (like 'cpp') with triple backticks
+    # This regex looks for triple single quotes possibly followed by a language specifier
+    # and replaces them with triple backticks.
+    corrected_output = re.sub(r"^\s*'''(?:\w+)?\s*|\s*'''\s*$", "```", ai_output, flags=re.MULTILINE)
+    ai_output = corrected_output
+    #ai_output = ai_output.replace("'''", "```")
+
     # Regular expression to find code blocks and filenames
     #pattern = r"```(.*?)// filename: (.*?)\n(.*?)```"
     #matches = re.findall(pattern, ai_output, re.DOTALL)

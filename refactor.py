@@ -148,6 +148,9 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
                 modified_code = refactor_code(line_content, sTask, autogen_user_proxy, autogen_coder)
             if modified_code!=line_content:
                 print(f"===REFACTOR:Replacing line {line_num} in file {file_path} num_lines {num_lines}")
+                print(f"========START:")
+                print(f"modified_code = {modified_code}")
+                print(f"========END")
 
                 # If we sent it e.g. " Copyright (C) 2022 David Joffe" and it sent back
                 # " Copyright (C) 2023 David Joffe" we don't want to just append its space and get:
@@ -165,10 +168,21 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
 
                 # Remove an extra newline at the end if present
                 # (litellm with ollama/codemistral at least for me returning lots of this extra blank line at end of code block so strip it out)
+                ######print(f"===REFACTOR:modified_lines[-1] is {modified_lines[-1]}")
+                #print(f"##################################################LEN:{len(modified_lines)}")
                 if modified_lines and modified_lines[-1] == '':
                     modified_lines.pop()
                 if modified_lines and modified_lines[-1] == '':
                     modified_lines.pop()
+                #print(f"##################################################LEN:{len(modified_lines)}")
+                add_debug_markers = False
+                if len(modified_lines)>0:
+                    # Append to the first and last some debug text
+                    if add_debug_markers:
+                        modified_lines[0] = "/*<refactor>*/" + modified_lines[0]
+                        modified_lines[-1] = modified_lines[-1] + "/*</refactor>*/"
+                    #for i in range(len(modified_lines)):
+                    #    print(f"LINE:{i} {modified_lines[i]}")
                 
 
                 # This accounts for the modified code having a different number of lines
@@ -178,6 +192,7 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
                 # Calculate the slice range for the original lines to be replaced
                 original_lines_start = line_num - 1
                 original_lines_end = original_lines_start + num_lines
+                print(f"===REFACTOR:original_lines_start {original_lines_start}, original_lines_end {original_lines_end}, num_lines {num_lines}")
 
                 # Replace the original line(s) with modified lines
                 lines[original_lines_start:original_lines_end] = modified_lines

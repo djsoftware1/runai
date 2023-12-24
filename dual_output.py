@@ -14,11 +14,11 @@ class DualOutput:
         self.pause_capture = 0 # Whilst echo-ing our input prompt which might contain code blocks to send to the AI we don't want it auto-saving files from the code .. use this to temporarily pause optionally
 
     def PauseSaveFiles(self):
-        self.pause_capture = self.pause_capture + 1
+        self.pause_capture = 1#self.pause_capture + 1
 
     def UnpauseSaveFiles(self):
-        if (self.pause_capture > 0):
-            self.pause_capture = self.pause_capture - 1
+        #if (self.pause_capture > 0):
+        self.pause_capture = 0#self.pause_capture - 1
 
     def write(self, message):
         self.console.write(message)
