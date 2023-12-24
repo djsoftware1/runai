@@ -1,5 +1,7 @@
 # Copyright (C) 2023 David Joffe / DJ Software
 
+do_refactor = True
+
 #refactor_wildcard = ["*.cpp", "*.h"]
 refactor_wildcard = "*.cpp"
 #refactor_wildcard = "*.h"

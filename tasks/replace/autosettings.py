@@ -32,6 +32,9 @@ replace_with = r'tSTREAMWRITE(\1, \2)'
 refactor_matches = r'tStreamAppend\(m_pStream, ?("[^"]+")\)'
 replace_with = r'tSTREAM_WRITE(m_pStream, \1)'
 
+refactor_matches = 'tStrAppend\(([A-Za-z0-9]+), ?("[^"]+")\)'
+replace_with = r'tSTR_APPEND(\1, \2)'
+
 #refactor_matches = "tStrAppend"
 #replace_with = "tSTR_APPEND"
 
