@@ -70,3 +70,5 @@ Design thoughts on main task types:
    - Automate the deployment of code to production or staging environments.
    - Manage release cycles and deployment schedules.
    - Example: Automatically deploy code to a staging server after passing CI/CD pipelines.
+
+This project Copyright (C) David Joffe 2023
