@@ -111,7 +111,7 @@ NoGroup=True
 coder_only=True
 no_user_proxy=True
 # [Setting] Control whether or not to use the autogen user proxy agent
-no_user_proxy=False
+#no_user_proxy=False
 
 # Check if autosettings.py exists in current folder and run it if it does
 if os.path.exists('autosettings.py'):
