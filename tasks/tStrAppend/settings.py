@@ -1,5 +1,7 @@
 # Copyright (C) 2023 David Joffe / DJ Software
 
+do_refactor=True
+
 #refactor_wildcard = ["*.cpp", "*.h"]
 refactor_wildcard = "*.cpp"
 #refactor_wildcard = "*.h"
@@ -21,7 +23,7 @@ refactor_matches = "tStrAppend\("
 
 
 # Don't change the actual function itself
-refactor_negmatches =["void tStrAppend\(", "^\s*//", "//tStrAppend\("]
+refactor_negmatches =["void tStrAppend\(", "void tStreamAppend\(", "^\s*//", "//tStreamAppend", "//tStrAppend\("]
 # "^\s*//" means Skip instances in comment lines in this case:
 # e.g.
 # // tStrAppend("Hello", "World");
