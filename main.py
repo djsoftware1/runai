@@ -8,11 +8,14 @@ import requests
 import io
 import datetime
 import refactor
+
 from globals import g_ai_output_saved_last_code_block
 
 # custom dual output to capture output and echo it to console so we can both log it and extract code from it but also see it in real-time
 from dual_output import DualOutput
 from helper_functions import create_files_from_ai_output
+# This should probably only import if necessary/used if via commandline --version etc.:
+import djversion
 
 ##### system/script init:
 # Get the directory of the current script (runai.py)
@@ -63,6 +66,9 @@ use_sample_default_task=False
 # Parameter 1: taskfile with task prompt (defaults to task.txt)
 if len(sys.argv) > 1:
     arg = sys.argv[1]
+    if arg=='--version':
+        print(f"[runai] Version: {djversion.Version().get_version()}")
+        sys.exit(0)
     if arg=='-s':
         # Just show settings and exit
         print("=== -s Show settings and exit")
