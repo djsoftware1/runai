@@ -21,7 +21,7 @@ def find_files(directory, pattern):
                 yield filename
 
 
-def refactor_code(original_code, task, autogen_user_proxy, autogen_coder):
+def refactor_file(original_code, task, autogen_user_proxy, autogen_coder, file_path='', file_extension='', line_num=-1, num_lines=-1):
     """Sends code to autogen for refactoring and returns the modified code."""
 
     #if (re.match(r'^\s*//', origin)
@@ -31,15 +31,19 @@ def refactor_code(original_code, task, autogen_user_proxy, autogen_coder):
     # check if ends with "\n" and if not add it for "```"
     newline_char = "\n"
     if not original_code.endswith("\n"):
-        task_message = task + newline_char + "```cpp" + newline_char + original_code + newline_char + "```"
+        task_message = task + newline_char + "Filename " + file_path + newline_char + "```" + file_extension + newline_char + original_code + newline_char + "```"
     else:
-        task_message = task + newline_char + "```cpp" + newline_char + original_code + "```"
-    #print("===TASK_MESSAGE:" + task_message)
+        task_message = task + newline_char + "Filename " + file_path + newline_char + "```" + file_extension + newline_char + original_code + "```"
+    # NB we must be careful if we print the task message our own auto-code-capture thing may kick in in the codeblocks:
+    #print("===TASK_MESSAGE: " + task_message)
+    #time.sleep(
+    #sleep
 
     with open('DEBUGLOG.txt', 'a', encoding='utf-8') as file1:
-        file1.write("\n<REFACTORpre>originalcode:\n")
+        file1.write(f"<task>{task_message}</task>")
+        file1.write("\n<REFACTORpre_original>\n")
         file1.write(original_code)
-        file1.write("</REFACTORpre>\n")
+        file1.write("</REFACTORpre_original>\n")
 
 
     # (1) First let the AI do its thing
@@ -139,14 +143,21 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
             leading_whitespace = re.match(r'^(\s*)', line_content)
             indent = leading_whitespace.group(1) if leading_whitespace else ''
 
+
             print(f"===REFACTOR:Try refactor line {line_num} in file {file_path} num_lines {num_lines}")
             # Refactor code
             if replace_with is not None and replace_with!='':
                 # Simple regex replace, no AI needed
                 modified_code = re.sub(needle, replace_with, line_content)
             else:
+                # Get file extension of file_path so we can pass it and the filename in the task message to help AI understand what file and file type it's working on eg cpp, php, py etc.:
+                file_base, file_extension = os.path.splitext(file_path)
+                if file_extension.startswith('.'):
+                    # Strip leading "." e.g. ".cpp" -> "cpp"
+                    file_extension = file_extension[1:]
                 # Pass to AI to refactor
-                modified_code = refactor_code(line_content, sTask, autogen_user_proxy, autogen_coder)
+                modified_code = refactor_file(line_content, sTask, autogen_user_proxy, autogen_coder, file_path, file_extension, line_num, num_lines)
+
             if modified_code!=line_content:
                 print(f"===REFACTOR:Replacing line {line_num} in file {file_path} num_lines {num_lines}")
                 print(f"========START:")
