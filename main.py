@@ -8,7 +8,7 @@ import requests
 import io
 import datetime
 import refactor
-
+from colorama import Fore, Style
 from globals import g_ai_output_saved_last_code_block
 
 # custom dual output to capture output and echo it to console so we can both log it and extract code from it but also see it in real-time
@@ -20,7 +20,7 @@ import djversion
 ##### system/script init:
 # Get the directory of the current script (runai.py)
 script_dir = os.path.dirname(os.path.abspath(__file__))
-print(f"=== Script directory: {script_dir}")
+print(f"{Fore.GREEN}=== Script directory: {script_dir}{Style.RESET_ALL}")
 
 ##### settings defaults
 # dj2023-12 This anyway only works for Python currently and the user agent goes back and forth with coder and coder thinks there's a problem and sends the code again and again because user agent couldn't execute
@@ -52,8 +52,8 @@ replace_with=''
 refactor_negmatches=[]
 
 do_refactor=False
-# [Setting] task file
-taskfile='task.txt'
+# [Setting] default task file to use if none specified
+taskfile='autotask.txt'
 # [Setting] optional input file to run task for every line in file with substitution of "{$1}" in task text with each line
 inputfile='input.txt'
 
@@ -85,8 +85,9 @@ if len(sys.argv) > 1:
     else:
         taskfile = arg
 else:
-    #taskfile = 'autotask.txt'  # Or set a default value as needed
-    taskfile = 'task.txt'  # Or set a default value as needed
+    if os.path.exists('autotask.txt'):
+        taskfile = 'autotask.txt'  # Or set a default value as needed
+    #taskfile = 'task.txt'  # Or set a default value as needed
 
 # Parameter 2: target folder to operate on, for example your codebase e.g. "src/tlex" defaults to 'src'
 # Work in current folder by default if not specified?
@@ -103,8 +104,8 @@ if len(sys.argv) > 2:
 files_to_send = ["djNode.h", "djNode.cpp"]
 files_to_send = None
 files_to_create = ["djVec3d.h", "djVec3d.cpp"]
-files_to_create = ["djQuaternion.h", "djQuaternion.cpp"]
-files_to_create = ["refactored_lines.cpp"]
+#files_to_create = ["djQuaternion.h", "djQuaternion.cpp"]
+#files_to_create = ["refactored_lines.cpp"]
 files_to_create=None
 targetfolder = "modified_tlex/DicLib"
 # settings
@@ -130,8 +131,8 @@ if os.path.exists('autosettings.py'):
 # Parameter 3: task settings.py to run
 # Put this just after all basic settings initialization so user can override all/most default settings
 if len(sys.argv) > 3:
-    print(f"=== Using task settings.py: {sys.argv[3]}")
     settings_pyscript = sys.argv[3]
+    print(f"{Fore.BLUE}=== Using custom settings.py: {settings_pyscript}{Style.RESET_ALL}")
     if os.path.exists(settings_pyscript):
         # Read the settings.py file
         with open(settings_pyscript, 'r', encoding='utf-8') as file:
@@ -143,7 +144,8 @@ if len(sys.argv) > 3:
 
 def show_settings():
     # TODO some of these settings may already be unused
-    print("=== SETTINGS:")
+    print(f"{Fore.BLUE}____________________________________________________{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}=== SETTINGS:")
     print(f"=== Taskfile: {taskfile}")
     print(f"=== Inputfile: {inputfile}")
     print(f"=== Worktree: {worktree}")
@@ -159,7 +161,7 @@ def show_settings():
     print(f"=== max_consecutive_auto_replies={max_consecutive_auto_replies}")
     print(f"=== refactor_matches={refactor_matches}")
     print(f"=== replace_with={replace_with}")
-    print("===")
+    print(f"==={Style.RESET_ALL}")
     # TODO also try let coder handle things more directly?
     return
 
@@ -264,11 +266,11 @@ if taskfile!='':
             for line in file:
                 task += line.strip() + "\n"  # Appending each line to the task string
     else:
-        print(f"=== WARNING: Taskfile not found: {taskfile}")
+        print(f"=== {Fore.BLUE}Taskfile not found:{Fore.CYAN} {taskfile}{Style.RESET_ALL}")
 
 if task=="":
     # Define your coding task, for example:
-    print("=== No task specified")
+    print(f"=== No task specified")
     #if not force_show_prompt:
         #print("=== Please specify a task in task.txt (or pass filename as 1st parameter) or use -p to prompt for a task or -t for default test/sample task")
         #task = "Write a Python function to sort a list of numbers."
@@ -281,7 +283,7 @@ if task=="":
 
 # Check if 'task' is an empty string or None
 if task == "" or task is None:
-    task = input("What would you like to do? Please enter a task: ")
+    task = input(f"{Fore.BLUE}What would you like to do? Please enter a task:{Style.RESET_ALL} ")
 
     # Check if the user entered nothing
     if task == "":
@@ -357,6 +359,9 @@ def process_files(files_to_send, worktree, targetfolder, task):
             print(f"File not found: {file_name}")
 
 # Main script execution
+from colorama import init
+init()
+
 if __name__ == '__main__':
     if files_to_send:
         for file_name in files_to_send:
