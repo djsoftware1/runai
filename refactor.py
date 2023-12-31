@@ -29,11 +29,21 @@ def refactor_file(original_code, task, autogen_user_proxy, autogen_coder, file_p
     # todo low) "cpp" hardcoded as code type here for now
     #task_message = task + "\n" + "```cpp" + "\n" + original_code + "\n" + "```\nEnd your reply with the word TERMINATE"
     # check if ends with "\n" and if not add it for "```"
+
     newline_char = "\n"
-    if not original_code.endswith("\n"):
-        task_message = task + newline_char + "Filename " + file_path + newline_char + "```" + file_extension + newline_char + original_code + newline_char + "```"
+    # dj2024-01 In theory adding the filename is an extra hint to the AI but in practice it makes each of potentially many tasks slightly different
+    # and I think this may prevent us taking advantage of the autogen caching! So maybe by default let's not do it but later add a setting ...
+    do_add_filename = False
+    if do_add_filename:
+        if not original_code.endswith("\n"):
+            task_message = task + newline_char + "Filename " + file_path + newline_char + "```" + file_extension + newline_char + original_code + newline_char + "```"
+        else:
+            task_message = task + newline_char + "Filename " + file_path + newline_char + "```" + file_extension + newline_char + original_code + "```"
     else:
-        task_message = task + newline_char + "Filename " + file_path + newline_char + "```" + file_extension + newline_char + original_code + "```"
+        if not original_code.endswith("\n"):
+            task_message = task + newline_char + "```" + file_extension + newline_char + original_code + newline_char + "```"
+        else:
+            task_message = task + newline_char + "```" + file_extension + newline_char + original_code + "```"
     # NB we must be careful if we print the task message our own auto-code-capture thing may kick in in the codeblocks:
     #print("===TASK_MESSAGE: " + task_message)
     #time.sleep(
