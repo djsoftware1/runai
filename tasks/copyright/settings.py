@@ -6,7 +6,8 @@ do_refactor = True
 refactor_wildcard = "*.cpp"
 #refactor_wildcard = "*.h"
 refactor_codetype = "cpp"
-refactor_wildcards = ["*.cpp", "*.h"]
+refactor_wildcards = ["*.cpp", "*.h", "*.php"]
+#refactor_wildcards=["*.php"]
 
 # Don't change the actual function itself
 #refactor_matches = "^[^\n]*Copyright [^\n]*\n"

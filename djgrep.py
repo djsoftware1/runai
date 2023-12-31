@@ -81,10 +81,12 @@ def grep_multiline2(filename, pattern):
 
         # Extract the full line(s)
         full_line = content[line_start:line_end]
+        #debug#print(f"!!!!!!full_line: " + full_line)
 
         # Determine line numbers
         line_number_start = content.count('\n', 0, start_index) + 1
         line_number_end = content.count('\n', 0, line_end) + 1
+        #debug#print(f"!!!!!!line_number_start: {line_number_start}-{line_number_end}")
 
         match_info.append((line_number_start, full_line, line_number_end - line_number_start + 1))
 

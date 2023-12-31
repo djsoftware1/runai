@@ -17,7 +17,7 @@ def find_files(directory, pattern):
         for basename in files:
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
-                print(filename)
+                #print(filename)
                 yield filename
 
 
@@ -128,6 +128,7 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
             skip_line = False
             for negmatch_pattern in negmatch_patterns:
                 if negmatch_pattern.search(line_content):
+                    print(f"===REFACTOR:Skipping line {line_num} in file {file_path} num_lines {num_lines} due to negmatch_pattern {negmatch_pattern}")
                     skip_line = True
                     break  # Break the inner loop
                 
@@ -168,21 +169,21 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
 
                 # Remove an extra newline at the end if present
                 # (litellm with ollama/codemistral at least for me returning lots of this extra blank line at end of code block so strip it out)
-                ######print(f"===REFACTOR:modified_lines[-1] is {modified_lines[-1]}")
-                #print(f"##################################################LEN:{len(modified_lines)}")
+                print(f"===REFACTOR:modified_lines[-1] is {modified_lines[-1]}")
+                print(f"##################################################LEN:{len(modified_lines)}")
                 if modified_lines and modified_lines[-1] == '':
                     modified_lines.pop()
                 if modified_lines and modified_lines[-1] == '':
                     modified_lines.pop()
-                #print(f"##################################################LEN:{len(modified_lines)}")
+                print(f"##################################################LEN:{len(modified_lines)}")
                 add_debug_markers = False
                 if len(modified_lines)>0:
                     # Append to the first and last some debug text
                     if add_debug_markers:
                         modified_lines[0] = "/*<refactor>*/" + modified_lines[0]
                         modified_lines[-1] = modified_lines[-1] + "/*</refactor>*/"
-                    #for i in range(len(modified_lines)):
-                    #    print(f"LINE:{i} {modified_lines[i]}")
+                    for i in range(len(modified_lines)):
+                        print(f"LINE:{i} {modified_lines[i]}")
                 
 
                 # This accounts for the modified code having a different number of lines
