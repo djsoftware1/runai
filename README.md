@@ -1,6 +1,12 @@
 ## DJ Software Code Automation
 
-Run:
+General AI-driven automation helper framework for tasks like code refactoring (or many other tasks, including non-coding-related tasks) using autogen.
+
+Optionally integrates into command-line (with a small amount of setup) on Mac, git bash for Windows, or Linux.
+
+This can be configured to use either OpenAI, or your own custom AI instances (for example your own LiteLLM server(s)).
+
+To install requirements (you may either do this in an env, or though is more useful to install globally to allow to easily run "runai" anywhere from command line):
 
 ```
 pip install -r requirements.txt
@@ -12,12 +18,22 @@ To run:
 python agent.py
 ```
 
-For using runai globally on system etc.:
+If using OpenAI, then place your configuration with API key in OAI_CONFIG_LIST
+
+To set it up to run globally from anywhere on your command-line:
 
 ```
-# python3 -m pip install pyautogen
 # python3 -m pip install -r requirements.txt
 ```
+
+Works best if you optionally add to system path like so in e.g. your bashrc or zshrc, then you can call it from anywhere with just 'runai':
+
+```
+export PATH="/Users/YourUsername/runai:$PATH"
+```
+
+
+## Custom LiteLLM Server:
 
 ```
 # Optional if want to run local AI server:
@@ -72,3 +88,4 @@ Design thoughts on main task types:
    - Example: Automatically deploy code to a staging server after passing CI/CD pipelines.
 
 This project Copyright (C) David Joffe 2023
+
