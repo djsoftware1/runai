@@ -1,3 +1,5 @@
+High:
+* Correctly handle different newline cases? E.g. sometimes if replacing in a .cpp 'git diff --stat' shows hundreds of changes but there are only a few ... think it's newline format issues ... but is inconsistent and maybe platform-dependent and filetype-dependent and git setting dependent - see what's going on. Should we rather try detect the file type (eg NL or NL/CR etc.) on file open?
 
 * Better built-in batching of tasks? (Or to what extent can one solve this by consecutive calls to runai?)
 * analyze git diff detailed?
@@ -13,3 +15,5 @@ e.g. 'use this folder as basis but create new different project from it'
 * non-regex option for refactor / search and replace
 * customizable 'extension' system for generic 'actions'?
 * [claude.ai integration?]
+* future/nice-to-have? Option to just directly interface with AIs without autogen if desired
+ 
