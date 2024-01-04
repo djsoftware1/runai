@@ -2,9 +2,19 @@
 # place source in that you want gitignore'd under src eg src/tlex
 src/*
 env/*
+/env*
+
+# autogen stuff
+/coding*
+
+# VS Code styff
+/.vscode*
 
 # output files
 /output_files*
+# Not sure yet but leaning towards "._output_files_"
+/_output_files_*
+/._output_files_*
 outfile*
 
 # Logs
@@ -12,6 +22,11 @@ DEBUGLOG*
 dj AI*log*
 dj_log*
 log_capture*
+dj_AI_log.txt
+
+# Not sure if this should be in gitignore or not but probably, it has things like OpenAI keys in in and is really user-settings-specific
+# Maybe we can have OAI_CONFIG_LIST.template to help make it easier to copy and start with.
+OAI_CONFIG_LIST
 
 # pyagent cache
 /.cache*

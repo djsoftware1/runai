@@ -16,6 +16,7 @@ from dual_output import DualOutput
 from helper_functions import create_files_from_ai_output
 # This should probably only import if necessary/used if via commandline --version etc.:
 import djversion
+import djargs
 
 ##### system/script init:
 # Get the directory of the current script (runai.py)
@@ -54,60 +55,26 @@ refactor_negmatches=[]
 do_refactor=False
 # [Setting] default task file to use if none specified
 taskfile='autotask.txt'
+#if os.path.exists('autotask.txt'):
+#    taskfile = 'autotask.txt'  # Or set a default value as needed
+settings_pyscript = 'autosettings.py'
 # [Setting] optional input file to run task for every line in file with substitution of "{$1}" in task text with each line
 inputfile='input.txt'
 
-print("=== USAGE: runai (or python main.py) [taskfile] [targetfolder] [settings.py]")
-
-# [Application flow control]
-force_show_prompt=False
-just_show_settings=False
-use_sample_default_task=False
-# Parameter 1: taskfile with task prompt (defaults to task.txt)
-if len(sys.argv) > 1:
-    arg = sys.argv[1]
-    if arg=='--version':
-        print(f"[runai] Version: {djversion.Version().get_version()}")
-        sys.exit(0)
-    if arg=='-s':
-        # Just show settings and exit
-        print("=== -s Show settings and exit")
-        just_show_settings = True
-    elif arg=='-p':
-        # Force ask for task prompt from input?
-        print("=== -p Ask for prompt")
-        taskfile = ''
-        force_show_prompt = True
-    elif arg=='-t': # t for 'test task'
-        use_sample_default_task=True
-        task = "Write a Python function to sort a list of numbers."
-        taskfile = ''
-    else:
-        taskfile = arg
-else:
-    if os.path.exists('autotask.txt'):
-        taskfile = 'autotask.txt'  # Or set a default value as needed
-    #taskfile = 'task.txt'  # Or set a default value as needed
-
-# Parameter 2: target folder to operate on, for example your codebase e.g. "src/tlex" defaults to 'src'
-# Work in current folder by default if not specified?
+# Work in current folder by default unless otherwise specified
 worktree='.'
-if len(sys.argv) > 2:
-    print(f"=== Using target folder: {sys.argv[2]}")
-    worktree = sys.argv[2]
-
 
 
 # Slightly gross but use this global to capture output from AI of last most recent final code block it sent
 #g_ai_output_saved_last_code_block=None
 
-files_to_send = ["djNode.h", "djNode.cpp"]
+#files_to_send = ["djNode.h", "djNode.cpp"]
 files_to_send = None
-files_to_create = ["djVec3d.h", "djVec3d.cpp"]
-#files_to_create = ["djQuaternion.h", "djQuaternion.cpp"]
-#files_to_create = ["refactored_lines.cpp"]
+#files_to_create = ["djVec3d.h", "djVec3d.cpp"]
 files_to_create=None
-targetfolder = "modified_tlex/DicLib"
+#targetfolder = "modified_tlex/DicLib"
+# currently not used:
+targetfolder = ''
 # settings
 # I need to experiment a bit more to see exactly the implications of not creating groups (or creating groups), both if I only have 1 AI agent available or if I have 2 or 3 machines I can use ..
 NoGroup=True
@@ -120,6 +87,65 @@ no_user_proxy=True
 # [Setting] Control whether or not to use the autogen user proxy agent
 #no_user_proxy=False
 
+
+
+
+print("=== USAGE: runai (or python main.py) [taskfile] [targetfolder] [settings.py]")
+
+# [Application flow control]
+force_show_prompt=False
+just_show_settings=False
+use_sample_default_task=False
+use_deprecating_old_arg_handling=True
+
+# More generic new arg parser
+CmdLineParser = djargs.CmdLineParser()
+args = CmdLineParser.parser.parse_args()
+# Check if a subcommand is provided
+if args.version:
+    # Display version and exit
+    print(f"[runai] Version: {djversion.Version().get_version()}")
+    sys.exit(0)
+if args.showsettings:
+    # Display settings and exit
+    print(f"[runai] Version: {djversion.Version().get_version()}")
+    just_show_settings = True
+    #sys.exit(0)
+if args.subcommand:
+    if args.folder:
+        # worktree: "." by default
+        worktree = args.folder
+    if args.task:
+        # e.g. "Say coffee 10 times, then help cure aging"
+        task = args.task
+    if args.taskfile:
+        # Read task from given taskfile? (optionally we can also use 'autotask.txt')
+        taskfile = args.taskfile
+    if args.settings:
+        # Per-task task-specific custom settings.py? (optionally we can also use 'autosettings.py')
+        settings_pyscript = args.settings
+    if args.subcommand == 'refactor':
+        print("TASK: Refactor")
+        do_refactor = True
+        #print("Taskfile:", args.taskfile)
+        #taskfile = args.taskfile
+        use_deprecating_old_arg_handling = False
+
+
+# OLD BUSY-DEPRECATING ARGS PARSER:
+# Parameter 1: taskfile with task prompt (defaults to task.txt)
+if len(sys.argv) > 1:
+    arg = sys.argv[1]
+    if arg=='-p':
+        # Force ask for task prompt from input?
+        print("=== -p Ask for prompt")
+        taskfile = ''
+        force_show_prompt = True
+    elif arg=='-t': # t for 'test task'
+        use_sample_default_task=True
+        task = "Write a Python function to sort a list of numbers."
+        taskfile = ''
+
 # Check if autosettings.py exists in current folder and run it if it does
 if os.path.exists('autosettings.py'):
     # Read the autosettings.py file
@@ -130,8 +156,8 @@ if os.path.exists('autosettings.py'):
 
 # Parameter 3: task settings.py to run
 # Put this just after all basic settings initialization so user can override all/most default settings
-if len(sys.argv) > 3:
-    settings_pyscript = sys.argv[3]
+if settings_pyscript is not None and len(settings_pyscript) > 0:
+    #settings_pyscript = sys.argv[3]
     print(f"{Fore.BLUE}=== Using custom settings.py: {settings_pyscript}{Style.RESET_ALL}")
     if os.path.exists(settings_pyscript):
         # Read the settings.py file
@@ -148,6 +174,7 @@ def show_settings():
     print(f"{Fore.GREEN}=== SETTINGS:")
     print(f"=== Taskfile: {taskfile}")
     print(f"=== Inputfile: {inputfile}")
+    print(f"=== Settings.py: {settings_pyscript}")
     print(f"=== Worktree: {worktree}")
     print(f"=== Targetfolder: {targetfolder}")
     print(f"=== Task: {task}")
@@ -466,8 +493,11 @@ if __name__ == '__main__':
             dual_output.UnpauseSaveFiles()
 
             if coder_only and no_user_proxy:
-                response = coder.handle_task(task_line)
-                print(response)
+                user_proxy.initiate_chat(
+                    coder,message=task,
+                )
+                #response = coder.handle_task(task_line)
+                #print(response)
             elif coder_only:
                 # Can we just let coder chat with itself to solve problems?
                 # the assistant receives a message from the user_proxy, which contains the task description
@@ -531,8 +561,11 @@ if __name__ == '__main__':
         dual_output.UnpauseSaveFiles()
         task_message=task
         if coder_only and no_user_proxy:
-            response = coder.handle_task(task)
-            print(response)
+            user_proxy.initiate_chat(
+                coder,message=task,
+            )
+            #response = coder.handle_task(task)
+            #print(response)
         elif coder_only:
             # Can we just let coder chat with itself to solve problems?
             # the assistant receives a message from the user_proxy, which contains the task description

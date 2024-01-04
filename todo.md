@@ -1,6 +1,8 @@
 High:
 * Correctly handle different newline cases? E.g. sometimes if replacing in a .cpp 'git diff --stat' shows hundreds of changes but there are only a few ... think it's newline format issues ... but is inconsistent and maybe platform-dependent and filetype-dependent and git setting dependent - see what's going on. Should we rather try detect the file type (eg NL or NL/CR etc.) on file open?
 
+* Refactoring should exclude our own e.g. 'output_files'/'__output_files__' folder?
+
 * Better built-in batching of tasks? (Or to what extent can one solve this by consecutive calls to runai?)
 * analyze git diff detailed?
 * buildtest automated with AI

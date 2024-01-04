@@ -40,6 +40,8 @@ export PATH="/Users/YourUsername/runai:$PATH"
 # python3 -m pip install litellm
 ```
 
+Some kinds of tasks don't require AI at all, and are just done locally, e.g. a refactor straightforward regex replace.
+
 Design thoughts on main task types:
 
 ## Main Task Types:
@@ -87,5 +89,5 @@ Design thoughts on main task types:
    - Manage release cycles and deployment schedules.
    - Example: Automatically deploy code to a staging server after passing CI/CD pipelines.
 
-This project Copyright (C) David Joffe 2023
+This project Copyright (C) David Joffe 2023-2024
 
