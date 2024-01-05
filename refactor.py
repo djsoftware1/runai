@@ -117,20 +117,45 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
         if not occurrences:
             continue  # Skip files without the needle
 
+        OPEN_BINARY = True
 
+        # If not OPEN_BINARY Python loads the file but Python normalizes the line endings to "\n" which means we can't detect the original line endings
+        # So we try opening in binary mode and decoding the content manually
+        if OPEN_BINARY:
+            try:
+                with open(file_path, 'rb') as file:  # Open in binary mode
+                    raw_content = file.read()
+            except IOError as e:
+                print("Error reading file:", e)
+                # Handle error
 
-        #if show_debug:
-        #    print(f"===REFACTOR:Found {len(occurrences)} occurrences in file {file_path}")
-        # Getting encoding errors reading some files so first try utf8 if that fails try cp1252 etc. - probably have to refine this further
-        try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                lines = file.readlines()
-        except UnicodeDecodeError:
-            # Fallback to a different encoding, or handle the error as appropriate
-            with open(file_path, 'r', encoding='cp1252') as file:
-                lines = file.readlines()
+            # Try decoding the content
+            try:
+                content = raw_content.decode('utf-8')
+            except UnicodeDecodeError:
+                try:
+                    content = raw_content.decode('cp1252')
+                except UnicodeDecodeError:
+                    print("Could not decode file content")
+                    # Handle error
+    
+            # Split lines manually and detect line endings
+            lines = content.splitlines(True)  # Keep line endings
+        else:
+            # If not OPEN_BINARY Python loads the file but Python normalizes the line endings to "\n" which means we can't detect the original line endings
 
-        # Check the first line (or first several lines) to try auto-detect line ending type, this isn't necessarily perfect but should work in most cases (generally unless a file has mixed line endings)
+            #if show_debug:
+            #    print(f"===REFACTOR:Found {len(occurrences)} occurrences in file {file_path}")
+            # Getting encoding errors reading some files so first try utf8 if that fails try cp1252 etc. - probably have to refine this further
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    lines = file.readlines()
+            except UnicodeDecodeError:
+                # Fallback to a different encoding, or handle the error as appropriate
+                with open(file_path, 'r', encoding='cp1252') as file:
+                    lines = file.readlines()
+
+        # DETECT LINE ENDINGS TYPE. Check the first line (or first several lines) to try auto-detect line ending type, this isn't necessarily perfect but should work in most cases (generally unless a file has mixed line endings)
         line_endings = '\n'  # Default to LF
         #for _ in range(0, 5):
         if lines is not None and len(lines)>0:
