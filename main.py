@@ -39,7 +39,8 @@ use_openai=False
 use_openai=True
 
 # Configuration
-worktree = "src/tlex"
+# Work in current folder by default unless otherwise specified
+worktree = '.'#"src/tlex"
 # can also override in your settings.py passed in as parameter:
 refactor_wildcards = ["*.cpp", "*.h"]
 refactor_codetype = "cpp"
@@ -61,8 +62,6 @@ settings_pyscript = 'autosettings.py'
 # [Setting] optional input file to run task for every line in file with substitution of "{$1}" in task text with each line
 inputfile='input.txt'
 
-# Work in current folder by default unless otherwise specified
-worktree='.'
 
 
 # Slightly gross but use this global to capture output from AI of last most recent final code block it sent
@@ -111,19 +110,22 @@ if args.showsettings:
     print(f"[runai] Version: {djversion.Version().get_version()}")
     just_show_settings = True
     #sys.exit(0)
+if args.folder:
+    # worktree: "." by default
+    worktree = args.folder
+if args.task:
+    # e.g. "Say coffee 10 times, then help cure aging"
+    task = args.task
+if args.taskfile:
+    # Read task from given taskfile? (optionally we can also use 'autotask.txt')
+    taskfile = args.taskfile
+if args.settings:
+    # Per-task task-specific custom settings.py? (optionally we can also use 'autosettings.py')
+    settings_pyscript = args.settings
+if args.input:
+    inputfile = args.input
 if args.subcommand:
-    if args.folder:
-        # worktree: "." by default
-        worktree = args.folder
-    if args.task:
-        # e.g. "Say coffee 10 times, then help cure aging"
-        task = args.task
-    if args.taskfile:
-        # Read task from given taskfile? (optionally we can also use 'autotask.txt')
-        taskfile = args.taskfile
-    if args.settings:
-        # Per-task task-specific custom settings.py? (optionally we can also use 'autosettings.py')
-        settings_pyscript = args.settings
+    
     if args.subcommand == 'refactor':
         print("TASK: Refactor")
         do_refactor = True
