@@ -1,4 +1,4 @@
-# Copyright (C) 2023 David Joffe / DJ Software
+# Copyright (C) 2023-2024 David Joffe / DJ Software
 import os
 import re
 import fnmatch
@@ -224,9 +224,9 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
                 print(f"modified_code = {modified_code}")
                 print(f"========END")
 
-                # If we sent it e.g. " Copyright (C) 2022 David Joffe" and it sent back
-                # " Copyright (C) 2023 David Joffe" we don't want to just append its space and get:
-                # "  Copyright (C) 2023 David Joffe"
+                # If we sent it e.g. " Copyright (C) 2024 David Joffe" and it sent back
+                # " Copyright (C) 2024 David Joffe"
+                # "  Copyright (C) 2024 David Joffe"
                 # In effect if it returns indentation matching the original let's not add any more
                 leading_whitespace_returned = re.match(r'^(\s*)', modified_code)
                 indent_modified = leading_whitespace_returned.group(1) if leading_whitespace_returned else ''
