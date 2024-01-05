@@ -1,4 +1,4 @@
-# Copyright (C) 2023 David Joffe / DJ Software
+# Copyright (C) 2023-2024 David Joffe / DJ Software
 
 #refactor_wildcard = ["*.cpp", "*.h"]
 refactor_wildcard = "*.cpp"

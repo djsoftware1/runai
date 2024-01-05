@@ -1,4 +1,4 @@
-# Copyright (C) 2023 David Joffe / DJ Software
+# Copyright (C) 2023-2024 David Joffe / DJ Software
 import re
 
 def grep_file(filename, needle):

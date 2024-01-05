@@ -1,4 +1,4 @@
-# Copyright (C) 2023 David Joffe
+# Copyright (C) 2023-2024 David Joffe
 import os
 
 # Configure build command and build folder

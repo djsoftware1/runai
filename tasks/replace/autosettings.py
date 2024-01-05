@@ -1,4 +1,4 @@
-# Copyright (C) 2023 David Joffe / DJ Software
+# Copyright (C) 2023-2024 David Joffe / DJ Software
 # Simple regex replace that does not actually need AI (if defined replace_with)
 
 #do_replace=True
