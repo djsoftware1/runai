@@ -17,7 +17,7 @@ def find_files(directory, pattern):
         for basename in files:
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
-                #print(filename)
+                #print(f"[filename]{filename}[/filename]")
                 yield filename
 
 
@@ -101,6 +101,7 @@ def refactor_file(original_code, task, autogen_user_proxy, autogen_coder, file_p
 # Note if replace_with defined then it's a simple regex replace that does not actually need AI and we just do ourselves
 def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTask, autogen_user_proxy, autogen_coder):
     file_list = find_files(in_folder, wildcard)
+    #show_debug = False
 
     # Compile negative match patterns for efficiency
     negmatch_patterns = [re.compile(negmatch) for negmatch in refactor_negmatches]
@@ -110,11 +111,16 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
         #occurrences = djgrep.grep_file(file_path, needle)
         occurrences = djgrep.grep_multiline2(file_path, needle)
         #occurrences = djgrep.grep_multiline(file_path, needle)
-
+        #if show_debug:
+        #    print(f"[filepath {file_path}]")
+        #continue
         if not occurrences:
             continue  # Skip files without the needle
 
-        #debug:print(f"===REFACTOR:Found {len(occurrences)} occurrences in file {file_path}")
+
+
+        #if show_debug:
+        #    print(f"===REFACTOR:Found {len(occurrences)} occurrences in file {file_path}")
         # Getting encoding errors reading some files so first try utf8 if that fails try cp1252 etc. - probably have to refine this further
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -123,6 +129,22 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
             # Fallback to a different encoding, or handle the error as appropriate
             with open(file_path, 'r', encoding='cp1252') as file:
                 lines = file.readlines()
+
+        # Check the first line (or first several lines) to try auto-detect line ending type, this isn't necessarily perfect but should work in most cases (generally unless a file has mixed line endings)
+        line_endings = '\n'  # Default to LF
+        #for _ in range(0, 5):
+        if lines is not None and len(lines)>0:
+            if lines[0].endswith('\r\n'): # CR+LF (Windows usually)
+                print('[CRLF]', end='');
+                line_endings = '\r\n'
+            elif lines[0].endswith('\n'): # LF (Unix/Mac usually)
+                print('[LF]', end='');
+                line_endings = '\n'
+            elif lines[0].endswith('\r'): # Possibly CR (old Mac style only, probably uncommon but check just in case)
+                print('[CR]', end='');
+                line_endings = '\r'
+        # if just show line endings:
+        #continue
 
         # Iterate over occurrences in reverse order to make it easier to deal with line numbers changing as we do replacements
         for line_num, line_content, num_lines in reversed(occurrences):
@@ -168,6 +190,9 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
                 # Pass to AI to refactor
                 modified_code = refactor_file(line_content, sTask, autogen_user_proxy, autogen_coder, file_path, file_extension, line_num, num_lines)
 
+            # [Hmm what if it differs only by line ending type? [low]
+            # Not sure if that may be a problem or not. See in future ..
+
             if modified_code!=line_content:
                 print(f"===REFACTOR:Replacing line {line_num} in file {file_path} num_lines {num_lines}")
                 print(f"========START:")
@@ -181,12 +206,22 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
                 leading_whitespace_returned = re.match(r'^(\s*)', modified_code)
                 indent_modified = leading_whitespace_returned.group(1) if leading_whitespace_returned else ''
 
+                
 
                 # Apply the leading whitespace to each line of modified_code
                 if (indent_modified==indent):
                     modified_lines = [line if line.strip() else '' for line in modified_code.split('\n')]
                 else:
                     modified_lines = [indent + line if line.strip() else '' for line in modified_code.split('\n')]
+
+                # Remove an extra newline at the end if present
+                # e.g. if the file CRLF but we split by LF then we may have e.g. just a floating CR? remove it
+                # then re-add it using the detected line_endings
+                # May have to refine this approach further later
+                for i in range(len(modified_lines)):
+                    while modified_lines[i].endswith('\n') or modified_lines[i].endswith('\r'):
+                        modified_lines[i] = modified_lines[i][:-1]
+                    #print(f"LINE:{i} {modified_lines[i]}")
 
                 # Remove an extra newline at the end if present
                 # (litellm with ollama/codemistral at least for me returning lots of this extra blank line at end of code block so strip it out)
@@ -226,7 +261,10 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
                 print(f"===REFACTOR:Saving file: {out_file_path}")
                 with open(out_file_path, 'w', encoding='utf-8') as file:
                     for line in lines:
+                        file.write(line if line.endswith(line_endings) else line + line_endings)
+                        """
                         file.write(line if line.endswith('\n') else line + '\n')
+                        """
 
 # Example usage
 #Refactor("input_folder", "*.cpp", "needle", "Refactor this line to...")
