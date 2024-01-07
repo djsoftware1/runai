@@ -11,6 +11,7 @@ env/*
 /.vscode*
 
 # output files
+/.output_files_runai*
 /output_files*
 # Not sure yet but leaning towards "._output_files_"
 /_output_files_*

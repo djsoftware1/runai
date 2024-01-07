@@ -275,7 +275,7 @@ show_settings()
 # Get date/time to use in filenames and directories and session logfiles etc.
 task_datetime = datetime.datetime.now()
 task_formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
-task_output_directory='output_files' + '/' + task_formatted_datetime
+task_output_directory='.output_files_runai' + '/' + task_formatted_datetime
 # Create the output directory if it doesn't exist
 if not os.path.exists(task_output_directory):
     os.makedirs(task_output_directory)
@@ -446,7 +446,7 @@ if __name__ == '__main__':
     """
 
     # Log the task to keep a record of what we're doing and help study/analyze results
-    log_task = f"{task_output_directory}/task.txt"
+    log_task = f"{task_output_directory}/tasklog.txt"
     with open(log_task, 'a', encoding='utf-8') as log_file:
         log_file.write(task)
 
@@ -593,19 +593,26 @@ if __name__ == '__main__':
     ai_output = dual_output.getvalue()
 
 
+
+    # Get the current date and time
+    formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
+
     # Create the log filename
+    # Not quite sure if this shoudl also be in task_output_directory or not
     log_filename_base = f"dj_AI_log.txt"
     # Write the AI output to the log file
     with open(log_filename_base, 'a', encoding='utf-8') as log_file:
-        log_file.write("Captured AI Output:\n")
+        log_file.write(f"[{formatted_datetime}] Captured AI Output:\n")
         log_file.write(ai_output)
+        log_file.write("----------------------\n")
 
     # Create the log filename
     log_filename1 = f"{task_output_directory}/dj_AI_log.txt"
     # Write the AI output to the log file
-    with open(log_filename1, 'w', encoding='utf-8') as log_file:
-        log_file.write("Captured AI Output:\n")
+    with open(log_filename1, 'a', encoding='utf-8') as log_file:
+        log_file.write(f"[{formatted_datetime}] Captured AI Output:\n")
         log_file.write(ai_output)
+        log_file.write("----------------------\n")
 
     # We're effectively doing below twice now ..
     # Use ai_output with create_files_from_ai_output function in order to actually create any files in the returned code
@@ -616,15 +623,6 @@ if __name__ == '__main__':
     print(ai_output)
 
 
-    # Get the current date and time
-    formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
-    # Create the log filename
-    log_filename = f"dj AI final log - {formatted_datetime}.txt"
-    # Write the AI output to the log file
-    with open(log_filename, 'w', encoding='utf-8') as log_file:
-        log_file.write("Captured AI Output:\n")
-        log_file.write(ai_output)
-    print(f"=== Log saved in file: {log_filename}")
 
     #result = send_files_for_modification(args.task_description, args.header_file, args.source_file)
     #print(f'Modified files received: {result}')

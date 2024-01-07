@@ -18,7 +18,7 @@ coder (to user_proxy):
 #g_ai_output_saved_last_code_block = None
 
 # Return array of created files (if any) else return empty array
-def create_files_from_ai_output(ai_output, output_directory='output_files'):
+def create_files_from_ai_output(ai_output, output_directory='.output_files_runai'):
     """
     Parses the AI output string for filenames and content, and creates files with that content.
 

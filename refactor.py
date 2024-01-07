@@ -107,6 +107,11 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
     negmatch_patterns = [re.compile(negmatch) for negmatch in refactor_negmatches]
 
     for file_path in file_list:
+
+        # If contains ".output_files_runai" (for now our normal temp out folder) then skip to prevent this stuff running insid the temporary folder containing code snippetes eg it may auto-generate a .cpp in there and if we are refactoring .cpp files then it will try to refactor that too!
+        if file_path.find(".output_files_runai")>=0:
+            continue
+
         # maybe multiline matching should be an option
         #occurrences = djgrep.grep_file(file_path, needle)
         occurrences = djgrep.grep_multiline2(file_path, needle)
