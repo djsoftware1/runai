@@ -40,6 +40,8 @@ export PATH="/Users/YourUsername/runai:$PATH"
 # python3 -m pip install litellm
 ```
 
+Then e.g. 'ollama pull codellama' and 'litellm --model ollama/codellama'
+
 Some kinds of tasks don't require AI at all, and are just done locally, e.g. a refactor straightforward regex replace.
 
 Design thoughts on main task types:
