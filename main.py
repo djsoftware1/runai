@@ -190,6 +190,10 @@ def show_settings():
     print(f"=== max_consecutive_auto_replies={max_consecutive_auto_replies}")
     print(f"=== refactor_matches={refactor_matches}")
     print(f"=== replace_with={replace_with}")
+    if config_list:
+        print("=== config_list:")
+        # Convert the object to a JSON string and print it
+        print(json.dumps(config_list, indent=4))
     print(f"==={Style.RESET_ALL}")
     # TODO also try let coder handle things more directly?
     return
