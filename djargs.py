@@ -37,6 +37,7 @@ class CmdLineParser:
         refactor_parser.add_argument('--find-text', type=str, help='Specify the refactor string to find')
         refactor_parser.add_argument('-w', '--wildcards', type=str, nargs='+', help='Specify the refactor file wildcards')
         refactor_parser.add_argument('--replace-with', type=str, help='Specify the string to replace with (if defined this is a direct non-AI find and replace)')
+        refactor_parser.add_argument('-s', '--send', type=str, nargs='+', help='Specify list of files to send in query for refactoring')
         """
         refactor_parser.add_argument('--replace-text', type=str, help='Specify the refactor string to replace')
         refactor_parser.add_argument('--neg-regex', type=str, nargs='+', help='Specify the refactor regex to exclude')
@@ -58,7 +59,7 @@ class CmdLineParser:
         # Subparser for the 'create' command
         create_parser = subparsers.add_parser('create', help='Create command help')
         # Make this also -o or --outname
-        create_parser.add_argument('-o', '--outname', type=str, help='Specify the output file name')
+        create_parser.add_argument('-o', '--out', type=str, nargs='+', help='Specify the output file name(s)')
 
         # Subparser for the 'createfrom' command
         sub_parser = subparsers.add_parser('createfrom', help='Create command help')

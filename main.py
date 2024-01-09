@@ -17,6 +17,13 @@ from helper_functions import create_files_from_ai_output
 # This should probably only import if necessary/used if via commandline --version etc.:
 import djversion
 import djargs
+import djsettings
+from djtasktypes import djTaskTypes
+from djtask import djTask
+
+# In future might want multiple settings objects for different things ...
+#runtask = djSettings()
+runtask = djTask()
 
 ##### system/script init:
 # Get the directory of the current script (runai.py)
@@ -143,6 +150,7 @@ if args.subcommand:
     if args.subcommand == 'refactor':
         print("TASK: Refactor")
         do_refactor = True
+        runtask.type = djTaskTypes.refactor
         # Add all passed wildcards to refactor_wildcards array (which looks like e.g. refactor_wildcard = ["*.cpp", "*.h"])
         if args.wildcards:
             refactor_wildcards = args.wildcards
@@ -150,9 +158,15 @@ if args.subcommand:
             refactor_matches = args.find_regex
         if args.replace_with:
             replace_with = args.replace_with
+        if args.send:
+            runtask.settings.send_files = args.send
         #print("Taskfile:", args.taskfile)
         #taskfile = args.taskfile
         use_deprecating_old_arg_handling = False
+    elif args.subcommand == 'create':
+        runtask.type = djTaskTypes.create
+        if args.out:
+            runtask.settings.out_files = args.out
 
 
 # OLD BUSY-DEPRECATING ARGS PARSER:
@@ -190,34 +204,40 @@ if settings_pyscript is not None and len(settings_pyscript) > 0:
         exec(settings_py)
 
 
+# Small helper to show setting name and value in different color
+def show_setting(name, value):
+    if value is not None:
+        print(f"{Fore.GREEN}=== {name}:{Style.RESET_ALL} {Fore.CYAN}{value}{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.GREEN}=== {name}:{Style.RESET_ALL} {Fore.RED}-{Style.RESET_ALL}")
 
 def show_settings():
     # TODO some of these settings may already be unused
     print(f"{Fore.BLUE}____________________________________________________{Style.RESET_ALL}")
-    print(f"{Fore.GREEN}=== SETTINGS:")
-    print(f"=== Taskfile: {taskfile}")
-    print(f"=== Inputfile: {inputfile}")
-    print(f"=== Settings.py: {settings_pyscript}")
-    print(f"=== Worktree: {worktree}")
-    print(f"=== Targetfolder: {targetfolder}")
-    print(f"=== Task: {task}")
-    print(f"=== Files to send: {files_to_send}")
-    print(f"=== use_openai: {use_openai}")
-    print(f"=== have_openai_config: {have_openai_config}")
-    print(f"=== no_user_proxy: {no_user_proxy}")
-    print(f"=== NoGroup: {NoGroup}")
-    print(f"=== use_cache_seed: {use_cache_seed}")
-    print(f"=== code_execution_enabled={code_execution_enabled}")
-    print(f"=== max_consecutive_auto_replies={max_consecutive_auto_replies}")
-    print(f"=== refactor_matches={refactor_matches}")
-    print(f"=== replace_with={replace_with}")
-    if refactor_wildcards is not None:
-        print(f"=== refactor_wildcards={refactor_wildcards}")
+    print(f"{Fore.BLUE}=== SETTINGS:")
+    show_setting("Taskfile", taskfile)
+    show_setting("Inputfile", inputfile)
+    show_setting("Settings.py", settings_pyscript)
+    show_setting("Worktree", worktree)
+    show_setting("Targetfolder", targetfolder)
+    show_setting("Task", task)
+    show_setting("Files to send", files_to_send)
+    show_setting("use_openai", use_openai)
+    show_setting("have_openai_config", have_openai_config)
+    show_setting("no_user_proxy", no_user_proxy)
+    show_setting("NoGroup", NoGroup)
+    show_setting("use_cache_seed", use_cache_seed)
+    show_setting("code_execution_enabled", code_execution_enabled)
+    show_setting("max_consecutive_auto_replies", max_consecutive_auto_replies)
+    show_setting("refactor_matches", refactor_matches)
+    show_setting("replace_with", replace_with)
+    show_setting("refactor_wildcards", refactor_wildcards)
+    show_setting("send_files", runtask.settings.send_files)
+    show_setting("out_files", runtask.settings.out_files)
     if config_list:
-        print("=== config_list:")
         # Convert the object to a JSON string and print it
-        print(json.dumps(config_list, indent=4))
-    print(f"==={Style.RESET_ALL}")
+        show_setting("config_list", json.dumps(config_list, indent=4))
+    print(f"{Fore.BLUE}__________________________________{Style.RESET_ALL}")
     # TODO also try let coder handle things more directly?
     return
 
