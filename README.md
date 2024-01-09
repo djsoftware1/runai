@@ -85,7 +85,7 @@ Design thoughts on main task types:
    - Modify existing code to improve structure, performance, readability, or maintainability without changing its external behavior.
    - Example: Refactor specific patterns, optimize algorithms, or update to newer syntax.
 
-'''
+```
 # Use "--showsetttings" to just check the settings before run
 runai --showsettings refactor -w main.py
 runai refactor -w src/MyFile.cpp
@@ -95,7 +95,7 @@ runai refactor -w "*.cpp" "*.h"
 
 runai refactor -w src/MyFile.cpp
 
-'''
+```
 
 4. **Build and Test Automation**
    - Compile code, run build processes, and execute automated tests.
