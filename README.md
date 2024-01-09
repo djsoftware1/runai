@@ -1,4 +1,4 @@
-## DJ Software Code Automation
+## DJ Software Task Execution Framework
 
 General AI-driven automation helper framework for tasks like code refactoring (or many other tasks, including non-coding-related tasks) using autogen.
 
