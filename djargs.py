@@ -12,7 +12,7 @@ class CmdLineParser:
         self.parser.add_argument('-s', '--settings', type=str, help='Specify the task custom settings .py file.')
         self.parser.add_argument('-t', '--task', type=str, help='Specify the task string.')
         self.parser.add_argument('-tf', '--taskfile', type=str, help='Specify the task text file containing possibly multi-line task description.')
-        self.parser.add_argument('-i', '--input', type=str, help='Specify a file of input lines.')
+        self.parser.add_argument('-i', '--input', type=str, help='Specify a file of input lines if you want to run task on every line in file.')
         self.parser.add_argument('-f', '--folder', type=str, help='Specify the work folder name.')
 
 
@@ -28,11 +28,28 @@ class CmdLineParser:
 
         # Subparser for the 'refactor' command
         refactor_parser = subparsers.add_parser('refactor', help='Refactor command help')
+
         #refactor_parser.add_argument('--taskfile', type=str, help='Specify the task file')
         # In fact it's an array of regex's I think? But then how do we specify on command line an array?
         # Maybe could be multiple --find-regex and --find-text?
-        refactor_parser.add_argument('--find-regex', type=str, help='Specify the refactor regex')
+        # TODO this should become , nargs='+' an array of wildcards
+        refactor_parser.add_argument('-r', '--find-regex', type=str, help='Specify the refactor regex')
         refactor_parser.add_argument('--find-text', type=str, help='Specify the refactor string to find')
+        refactor_parser.add_argument('-w', '--wildcards', type=str, nargs='+', help='Specify the refactor file wildcards')
+        refactor_parser.add_argument('--replace-with', type=str, help='Specify the string to replace with (if defined this is a direct non-AI find and replace)')
+        """
+        refactor_parser.add_argument('--replace-text', type=str, help='Specify the refactor string to replace')
+        refactor_parser.add_argument('--neg-regex', type=str, nargs='+', help='Specify the refactor regex to exclude')
+        refactor_parser.add_argument('--neg-text', type=str, help='Specify the refactor string to exclude')
+        refactor_parser.add_argument('--neg-replace-text', type=str, help='Specify the refactor string to exclude')
+        refactor_parser.add_argument('--neg-replace-with', type=str, help='Specify the refactor string to exclude')
+        refactor_parser.add_argument('-t', '--codetype', type=str, help='Specify the refactor code type')
+        refactor_parser.add_argument('-e', '--exec', type=str, help='Specify the command to exec')
+        refactor_parser.add_argument('-f', '--folder', type=str, help='Specify the work folder name.')
+        refactor_parser.add_argument('-i', '--input', type=str, help='Specify a file of input lines.')
+        refactor_parser.add_argument('-o', '--outname', type=str, help='Specify the output file name')
+        refactor_parser.add_argument('-if', '--inputfile', type=str, nargs='+', help='Specify the input file name')
+        """
 
         # Subparser for the 'build' command
         sub_parser = subparsers.add_parser('build', help='Build command help')

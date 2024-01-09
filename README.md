@@ -32,6 +32,30 @@ Works best if you optionally add to system path like so in e.g. your bashrc or z
 export PATH="/Users/YourUsername/runai:$PATH"
 ```
 
+## Show Version
+
+```
+runai --version
+```
+
+## Show Settings and Exit
+
+```
+runai --showsettings
+
+OR e.g. with a task settings:
+
+runai --showsettings refactor -w "*.cpp" "*.h"
+
+runai -t mytask.txt --showsettings refactor -w "*.cpp" "*.h"
+
+# Straight-forward non-AI replace:
+runai  refactor -w "main.py" -r "findme" --replace-with "foo"
+
+etc.
+```
+
+By default automatically looks for 'autotask.txt' in current folder, if not found and not passed as parameter will ask for task.
 
 ## Custom LiteLLM Server:
 
@@ -60,6 +84,18 @@ Design thoughts on main task types:
 3. **Code Refactoring**
    - Modify existing code to improve structure, performance, readability, or maintainability without changing its external behavior.
    - Example: Refactor specific patterns, optimize algorithms, or update to newer syntax.
+
+'''
+# Use "--showsetttings" to just check the settings before run
+runai --showsettings refactor -w main.py
+runai refactor -w src/MyFile.cpp
+
+runai --showsettings refactor -w "*.cpp" "*.h"
+runai refactor -w "*.cpp" "*.h"
+
+runai refactor -w src/MyFile.cpp
+
+'''
 
 4. **Build and Test Automation**
    - Compile code, run build processes, and execute automated tests.

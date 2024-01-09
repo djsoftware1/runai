@@ -42,10 +42,14 @@ use_openai=True
 # Work in current folder by default unless otherwise specified
 worktree = '.'#"src/tlex"
 # can also override in your settings.py passed in as parameter:
-refactor_wildcards = ["*.cpp", "*.h"]
+#refactor_wildcards = ["*.cpp", "*.h"]
+# Override this in runai-folder/defaultsettings.py if you want to use a different wildcard by default for all projects eg if you almost always work with C++
+refactor_wildcards=[]
+# This is not reeeeally used currently not sure if it will be in future:
 refactor_codetype = "cpp"
 #refactor_matches = "^[ \t]*tStrAppend"
-refactor_matches = "tStrAppend("
+#refactor_matches = r'tStrAppend\('
+refactor_matches = '_regex_needle_to_find_'
 # Note if replace_with defined then it's a simple regex replace that does not actually need AI and we just do ourselves
 replace_with=''
 # Don't change the actual function itself
@@ -91,6 +95,16 @@ no_user_proxy=True
 
 print("=== USAGE: runai (or python main.py) [taskfile] [targetfolder] [settings.py]")
 
+# Check if defaultsettings.py exists in runai folder and run it if it does
+default_settings = os.path.join(script_dir, "defaultsettings.py")
+if os.path.exists(default_settings):
+    # Read and exec the .py file
+    settings_py = ''
+    with open(default_settings, 'r', encoding='utf-8') as file:
+        settings_py = file.read()
+    exec(settings_py)
+
+
 # [Application flow control]
 force_show_prompt=False
 just_show_settings=False
@@ -129,6 +143,13 @@ if args.subcommand:
     if args.subcommand == 'refactor':
         print("TASK: Refactor")
         do_refactor = True
+        # Add all passed wildcards to refactor_wildcards array (which looks like e.g. refactor_wildcard = ["*.cpp", "*.h"])
+        if args.wildcards:
+            refactor_wildcards = args.wildcards
+        if args.find_regex:
+            refactor_matches = args.find_regex
+        if args.replace_with:
+            replace_with = args.replace_with
         #print("Taskfile:", args.taskfile)
         #taskfile = args.taskfile
         use_deprecating_old_arg_handling = False
@@ -150,10 +171,10 @@ if len(sys.argv) > 1:
 
 # Check if autosettings.py exists in current folder and run it if it does
 if os.path.exists('autosettings.py'):
-    # Read the autosettings.py file
+    autosettings_py = ''
+    # Read and exec the autosettings.py file
     with open('autosettings.py', 'r', encoding='utf-8') as file:
         autosettings_py = file.read()
-    # Execute the autosettings.py file
     exec(autosettings_py)
 
 # Parameter 3: task settings.py to run
@@ -190,6 +211,8 @@ def show_settings():
     print(f"=== max_consecutive_auto_replies={max_consecutive_auto_replies}")
     print(f"=== refactor_matches={refactor_matches}")
     print(f"=== replace_with={replace_with}")
+    if refactor_wildcards is not None:
+        print(f"=== refactor_wildcards={refactor_wildcards}")
     if config_list:
         print("=== config_list:")
         # Convert the object to a JSON string and print it
@@ -522,6 +545,10 @@ if __name__ == '__main__':
         # Iterate over array of wildcards e.g. "*.h" "*.cpp"
         for wildcard in refactor_wildcards:
             print("=== Processing wildcard: " + wildcard)
+            #print(f"=== worktree: {worktree}")
+            #print(f"=== targetfolder: {targetfolder}")
+            print(f"=== refactor_matches: {refactor_matches}")
+            print(f"=== replace_with (optional): {replace_with}")
             # Note if replace_with defined then it's a simple regex replace that does not actually need AI and we just do ourselves
             refactor.Refactor(worktree, wildcard, refactor_matches, refactor_negmatches, replace_with, task, user_proxy, coder)
     elif files_to_create and len(files_to_create)>=1:

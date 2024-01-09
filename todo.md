@@ -3,6 +3,9 @@ High:
 
 * [done] Refactoring should exclude our own e.g. 'output_files'/'__output_files__'/.output_files_runai folder?
 
+* Refactor and other tasks should allow a list of matching regexes or strings
+* Refactor should have an option to make a backup somewhere of file content before it modifies it (currently it's advised you run on a copy of your files)
+
 * Better built-in batching of tasks? (Or to what extent can one solve this by consecutive calls to runai?)
 * analyze git diff detailed?
 * buildtest automated with AI
