@@ -115,7 +115,6 @@ if os.path.exists(default_settings):
 # [Application flow control]
 force_show_prompt=False
 just_show_settings=False
-use_sample_default_task=False
 use_deprecating_old_arg_handling=True
 
 # More generic new arg parser
@@ -145,8 +144,15 @@ if args.settings:
     settings_pyscript = args.settings
 if args.input:
     inputfile = args.input
-if args.subcommand:
-    
+if args.test:
+    #use_sample_default_task=True
+    task = "Write a Python function to sort a list of numbers."
+    taskfile = ''
+if args.prompt:
+    # Force ask for task prompt from input?
+    print("=== Force show user prompt for task: True")
+    force_show_prompt = True
+if args.subcommand:    
     if args.subcommand == 'refactor':
         print("TASK: Refactor")
         do_refactor = True
@@ -169,19 +175,6 @@ if args.subcommand:
             runtask.settings.out_files = args.out
 
 
-# OLD BUSY-DEPRECATING ARGS PARSER:
-# Parameter 1: taskfile with task prompt (defaults to task.txt)
-if len(sys.argv) > 1:
-    arg = sys.argv[1]
-    if arg=='-p':
-        # Force ask for task prompt from input?
-        print("=== -p Ask for prompt")
-        taskfile = ''
-        force_show_prompt = True
-    elif arg=='-t': # t for 'test task'
-        use_sample_default_task=True
-        task = "Write a Python function to sort a list of numbers."
-        taskfile = ''
 
 # Check if autosettings.py exists in current folder and run it if it does
 if os.path.exists('autosettings.py'):
@@ -358,7 +351,7 @@ if task=="":
 #    task = "Write a Python function to sort a list of numbers."
 
 # Check if 'task' is an empty string or None
-if task == "" or task is None:
+if task == "" or task is None or force_show_prompt:
     task = input(f"{Fore.BLUE}What would you like to do? Please enter a task:{Style.RESET_ALL} ")
 
     # Check if the user entered nothing

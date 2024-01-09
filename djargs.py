@@ -9,6 +9,8 @@ class CmdLineParser:
         #self.parser.add_argument('--help', action='store_true', help='Show this help message and exit.')
         self.parser.add_argument('--version', action='store_true', help='Show version number and exit.')
         self.parser.add_argument('--showsettings', action='store_true', help='Show settings and exit.')
+        self.parser.add_argument('--test', action='store_true', help='Run a sample test task.')
+        self.parser.add_argument('--prompt', action='store_true', help='Force show task prompt.')
         self.parser.add_argument('-s', '--settings', type=str, help='Specify the task custom settings .py file.')
         self.parser.add_argument('-t', '--task', type=str, help='Specify the task string.')
         self.parser.add_argument('-tf', '--taskfile', type=str, help='Specify the task text file containing possibly multi-line task description.')
