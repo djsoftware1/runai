@@ -1,4 +1,5 @@
 High:
+* Issue with CRLF
 * Correctly handle different newline cases? E.g. sometimes if replacing in a .cpp 'git diff --stat' shows hundreds of changes but there are only a few ... think it's newline format issues ... but is inconsistent and maybe platform-dependent and filetype-dependent and git setting dependent - see what's going on. Should we rather try detect the file type (eg NL or NL/CR etc.) on file open?
 
 * [done] Refactoring should exclude our own e.g. 'output_files'/'__output_files__'/.output_files_runai folder?
