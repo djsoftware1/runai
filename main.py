@@ -7,7 +7,6 @@ import json
 import requests
 import io
 import datetime
-import refactor
 from colorama import Fore, Style
 from globals import g_ai_output_saved_last_code_block
 
@@ -15,6 +14,7 @@ from globals import g_ai_output_saved_last_code_block
 from dual_output import DualOutput
 from helper_functions import create_files_from_ai_output
 # This should probably only import if necessary/used if via commandline --version etc.:
+import djrefactor
 import djversion
 import djargs
 import djsettings
