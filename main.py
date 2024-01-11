@@ -554,7 +554,7 @@ if __name__ == '__main__':
                 )
     elif do_refactor:
         print("=== Do refactoring file(s)")
-        #refactor.Refactor(worktree, refactor_wildcard, refactor_negmatches, "^[ \t]*tStrAppend", task, user_proxy, coder)
+        #djrefactor.Refactor(worktree, refactor_wildcard, refactor_negmatches, "^[ \t]*tStrAppend", task, user_proxy, coder)
         # Iterate over array of wildcards e.g. "*.h" "*.cpp"
         for wildcard in refactor_wildcards:
             print("=== Processing wildcard: " + wildcard)
@@ -563,7 +563,7 @@ if __name__ == '__main__':
             print(f"=== refactor_matches: {refactor_matches}")
             print(f"=== replace_with (optional): {replace_with}")
             # Note if replace_with defined then it's a simple regex replace that does not actually need AI and we just do ourselves
-            refactor.Refactor(worktree, wildcard, refactor_matches, refactor_negmatches, replace_with, task, user_proxy, coder)
+            djrefactor.Refactor(worktree, wildcard, refactor_matches, refactor_negmatches, replace_with, task, user_proxy, coder)
     elif files_to_create and len(files_to_create)>=1:
         dual_output.PauseSaveFiles()
         if len(files_to_create)==1:
