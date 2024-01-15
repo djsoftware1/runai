@@ -6,6 +6,7 @@ import os
 import json
 import requests
 import io
+import time
 import datetime
 from colorama import Fore, Style
 from globals import g_ai_output_saved_last_code_block
@@ -133,6 +134,9 @@ if args.showsettings:
 if args.folder:
     # worktree: "." by default
     worktree = args.folder
+if args.delay_between:
+    # Delay between running multiple tasks
+    runtask.delay_between = args.delay_between
 if args.task:
     # e.g. "Say coffee 10 times, then help cure aging"
     task = args.task
@@ -225,6 +229,7 @@ def show_settings():
     show_setting("refactor_matches", refactor_matches)
     show_setting("replace_with", replace_with)
     show_setting("refactor_wildcards", refactor_wildcards)
+    show_setting("task.delay_between (seconds, float)", runtask.delay_between)
     show_setting("send_files", runtask.settings.send_files)
     show_setting("out_files", runtask.settings.out_files)
     if config_list:
@@ -552,6 +557,10 @@ if __name__ == '__main__':
                 user_proxy.initiate_chat(
                     assistant,message=task_line,
                 )
+            # Optional delay between each line (in milliseconds)? (e.g. to not hammer server)
+            if runtask.delay_between:
+                print(f"=== Sleeping {runtask.delay_between}s between tasks")
+                time.sleep(runtask.delay_between)
     elif do_refactor:
         print("=== Do refactoring file(s)")
         #djrefactor.Refactor(worktree, refactor_wildcard, refactor_negmatches, "^[ \t]*tStrAppend", task, user_proxy, coder)

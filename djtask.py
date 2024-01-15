@@ -8,3 +8,5 @@ class djTask:
 
         self.type = djTaskTypes.chat
         self.settings = djsettings.djSettings()
+        self.delay_between = 0
+

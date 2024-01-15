@@ -16,6 +16,8 @@ class CmdLineParser:
         self.parser.add_argument('-tf', '--taskfile', type=str, help='Specify the task text file containing possibly multi-line task description.')
         self.parser.add_argument('-i', '--input', type=str, help='Specify a file of input lines if you want to run task on every line in file.')
         self.parser.add_argument('-f', '--folder', type=str, help='Specify the work folder name.')
+        #self.parser.add_argument('--delay-before', type=str, help='Delay in seconds before running task ')
+        self.parser.add_argument('-d', '--delay-between', type=str, help='Optional delay in seconds (floating point) between running multiple tasks for multiline mode and others.')
 
 
         subparsers = self.parser.add_subparsers(dest='subcommand')
