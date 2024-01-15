@@ -136,7 +136,7 @@ if args.folder:
     worktree = args.folder
 if args.delay_between:
     # Delay between running multiple tasks
-    runtask.delay_between = args.delay_between
+    runtask.delay_between = float(args.delay_between)
 if args.task:
     # e.g. "Say coffee 10 times, then help cure aging"
     task = args.task
@@ -541,7 +541,7 @@ if __name__ == '__main__':
 
             if coder_only and no_user_proxy:
                 user_proxy.initiate_chat(
-                    coder,message=task,
+                    coder,message=task_line,
                 )
                 #response = coder.handle_task(task_line)
                 #print(response)
