@@ -18,6 +18,8 @@ class CmdLineParser:
         self.parser.add_argument('-f', '--folder', type=str, help='Specify the work folder name.')
         #self.parser.add_argument('--delay-before', type=str, help='Delay in seconds before running task ')
         self.parser.add_argument('-d', '--delay-between', type=str, help='Optional delay in seconds (floating point) between running multiple tasks for multiline mode and others.')
+        self.parser.add_argument('--gpt3', action='store_true', help='Use gpt-3.5-turbo.')
+        self.parser.add_argument('--gpt4', action='store_true', help='Use gpt-4.')
 
 
         subparsers = self.parser.add_subparsers(dest='subcommand')

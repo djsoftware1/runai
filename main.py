@@ -11,6 +11,7 @@ import datetime
 from colorama import Fore, Style
 from globals import g_ai_output_saved_last_code_block
 
+
 # custom dual output to capture output and echo it to console so we can both log it and extract code from it but also see it in real-time
 from dual_output import DualOutput
 from helper_functions import create_files_from_ai_output
@@ -232,6 +233,7 @@ def show_settings():
     show_setting("task.delay_between (seconds, float)", runtask.delay_between)
     show_setting("send_files", runtask.settings.send_files)
     show_setting("out_files", runtask.settings.out_files)
+    #global config_list
     if config_list:
         # Convert the object to a JSON string and print it
         show_setting("config_list", json.dumps(config_list, indent=4))
@@ -288,19 +290,29 @@ print(f"=== config_list_path: {config_list_path}")
 # Check if the OAI_CONFIG_LIST file exists
 if os.path.exists(config_list_path):
     #"model": ["gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
-    config_list = autogen.config_list_from_json(
-        config_list_path,
-        filter_dict={
-            "model": ["gpt-4", "gpt-3.5-turbo", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
-        },
-    )
-    # try use gpt-3.5-turbo instead of gpt-4 as seems costly to use gpt-4 on OpenAI
-    config_list = autogen.config_list_from_json(
-        config_list_path,
-        filter_dict={
-            "model": ["gpt-3.5-turbo"],
-        },
-    )
+    if args.gpt4: # Force gpt4 if possible if --gpt4 passed?
+        config_list = autogen.config_list_from_json(
+            config_list_path,
+            filter_dict={
+                "model": ["gpt-4-1106-preview", "gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
+            },
+        )
+    elif args.gpt3: # Force gpt3 if possible if --gpt3 passed?
+        # try use gpt-3.5-turbo instead of gpt-4 as seems costly to use gpt-4 on OpenAI
+        config_list = autogen.config_list_from_json(
+            config_list_path,
+            filter_dict={
+                "model": ["gpt-3.5-turbo"],
+            },
+        )
+    else:
+        # Default
+        config_list = autogen.config_list_from_json(
+            config_list_path,
+            filter_dict={
+                "model": ["gpt-3.5-turbo", "gpt-4-1106-preview"],
+            },
+        )
     have_openai_config = True
 
     llm_config_coder_openai={
