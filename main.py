@@ -575,7 +575,14 @@ if __name__ == '__main__':
             # Add some logging so user can see where we left off quickly if we need to restart
             log_task = f"_inputlines_tasklog_runinfo.log"
             with open(log_task, 'a', encoding='utf-8') as log_file:
+                # Get date/time to use in filenames and directories and session logfiles etc.
+                log_datetime = datetime.datetime.now()
+                log_formatted_datetime = log_datetime.strftime("%Y-%m-%d %H-%M-%S")
+
+                log_file.write(f"=== EXECUTING LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}][{log_formatted_datetime}]: {inputline}\n")
+                """
                 log_file.write(f"=== EXECUTING LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}]: {inputline}\n")
+                """
 
 
             if coder_only and no_user_proxy:
