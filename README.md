@@ -68,6 +68,16 @@ Then e.g. 'ollama pull codellama' and 'litellm --model ollama/codellama'
 
 Some kinds of tasks don't require AI at all, and are just done locally, e.g. a refactor straightforward regex replace.
 
+## Forcing use of GPT3 or GPT4 etc.:
+
+Provided your OAI_CONFIG_LIST is set up correctly with GPT3 and GPT4 you can use:
+
+```
+# runai --gpt3
+# runai --gpt4
+```
+
+
 Design thoughts on main task types:
 
 ## Main Task Types:
