@@ -138,6 +138,10 @@ if args.folder:
 if args.delay_between:
     # Delay between running multiple tasks
     runtask.delay_between = float(args.delay_between)
+if args.dryrun:
+    runtask.dryrun = True
+if args.start_line:
+    runtask.start_line = int(args.start_line)
 if args.task:
     # e.g. "Say coffee 10 times, then help cure aging"
     task = args.task
@@ -233,6 +237,8 @@ def show_settings():
     show_setting("task.delay_between (seconds, float)", runtask.delay_between)
     show_setting("send_files", runtask.settings.send_files)
     show_setting("out_files", runtask.settings.out_files)
+    show_setting("dryrun", runtask.dryrun)
+    show_setting("start_line", runtask.start_line)
     #global config_list
     if config_list:
         # Convert the object to a JSON string and print it
@@ -540,7 +546,14 @@ if __name__ == '__main__':
 
     if len(inputlines_array) > 0:
         print(f"=== Using inputlines_array size %d" % len(inputlines_array))
+        if runtask.dryrun:
+            print(f"=== DRY RUN")
+        line_number = 0
         for inputline in inputlines_array:
+            line_number += 1
+            print(f"=== LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}]: {inputline}")
+            if runtask.dryrun:
+                print(f"=== DRY RUN")
             # Replace {$1} in task with the inputline
             task_line = task
             task_line = task_line.replace("{$1}", inputline)
@@ -550,6 +563,13 @@ if __name__ == '__main__':
             dual_output.PauseSaveFiles()
             print(f"=== Processing task: {task_line}")
             dual_output.UnpauseSaveFiles()
+            if runtask.start_line > 0:
+                # Skip lines until we reach start_line
+                if line_number < runtask.start_line:
+                    print(f"=== Skipping line {line_number} as it's before start_line {runtask.start_line}")
+                    continue
+            if runtask.dryrun:
+                continue
 
             if coder_only and no_user_proxy:
                 user_proxy.initiate_chat(

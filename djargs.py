@@ -16,10 +16,13 @@ class CmdLineParser:
         self.parser.add_argument('-tf', '--taskfile', type=str, help='Specify the task text file containing possibly multi-line task description.')
         self.parser.add_argument('-i', '--input', type=str, help='Specify a file of input lines if you want to run task on every line in file.')
         self.parser.add_argument('-f', '--folder', type=str, help='Specify the work folder name.')
+        self.parser.add_argument('--start-line', type=str, help='If using a multi-line task file, specify the start line number.')
         #self.parser.add_argument('--delay-before', type=str, help='Delay in seconds before running task ')
         self.parser.add_argument('-d', '--delay-between', type=str, help='Optional delay in seconds (floating point) between running multiple tasks for multiline mode and others.')
         self.parser.add_argument('--gpt3', action='store_true', help='Use gpt-3.5-turbo.')
         self.parser.add_argument('--gpt4', action='store_true', help='Use gpt-4.')
+        self.parser.add_argument('--dryrun', action='store_true', help='Show roughly what would be done but do not actually execute the task.')
+
 
 
         subparsers = self.parser.add_subparsers(dest='subcommand')
