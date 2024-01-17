@@ -3,7 +3,7 @@
 
 class Version:
     def __init__(self):
-        self.current_version = '0.8.0'
+        self.current_version = '0.8.1'
 
     def get_version(self):
         return self.current_version
