@@ -560,14 +560,18 @@ if __name__ == '__main__':
 
             # If no files to create, do requested task
             #pause_capture in case our own task has code blocks in it - we don't want those auto-saving by mistake
-            dual_output.PauseSaveFiles()
-            print(f"=== Processing task: {task_line}")
-            dual_output.UnpauseSaveFiles()
             if runtask.start_line > 0:
                 # Skip lines until we reach start_line
                 if line_number < runtask.start_line:
                     print(f"=== Skipping line {line_number} as it's before start_line {runtask.start_line}")
                     continue
+
+            # Log requested task but pause the savefiles thing otherwise it will auto grab our own codeblacks out the task
+            dual_output.PauseSaveFiles()
+            print(f"=== Processing task: {task_line}")
+            dual_output.UnpauseSaveFiles()
+
+
             if runtask.dryrun:
                 continue
 
