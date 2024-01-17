@@ -566,6 +566,25 @@ if __name__ == '__main__':
             # Replace {$1} in task with the inputline
             task_line = task
             task_line = task_line.replace("{$1}", inputline)
+            # Replace ${line} with the line number
+            task_line = task_line.replace(r'{$line}', str(line_number))
+            
+            # Note here we use exact date/time of each line not the start date/time of entire task start (later we might desire options for both)
+            # Replace ${date} with the current date YYYY-MM-DD (UCT? I think UCT to prevent timezone unambiguity) .. I suppose we could have different variables for users later eg "$dateutc"
+            if '{$date}' in task_line:
+                now = datetime.datetime.utcnow()
+                # Format date as YYYY-MM-DD
+                task_line = task_line.replace(r'{$date}', now.strftime("%Y-%m-%d"))
+
+            if '{$time}' in task_line:
+                now = datetime.datetime.utcnow()
+                # Format date as YYYY-MM-DD
+                task_line = task_line.replace(r'{$time}', now.strftime("%H-%M-%S"))
+
+            if '{$datetime}' in task_line:
+                now = datetime.datetime.utcnow()
+                # Format date as YYYY-MM-DD HH-MM-SS
+                task_line = task_line.replace(r'{$datetime}', now.strftime("%Y-%m-%d %H-%M-%S"))
 
             # If no files to create, do requested task
             #pause_capture in case our own task has code blocks in it - we don't want those auto-saving by mistake
