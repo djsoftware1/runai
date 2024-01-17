@@ -68,6 +68,20 @@ Then e.g. 'ollama pull codellama' and 'litellm --model ollama/codellama'
 
 Some kinds of tasks don't require AI at all, and are just done locally, e.g. a refactor straightforward regex replace.
 
+## Multi-line input replacements
+
+If feeding an input list, you can use "{$1}" in the task string to replace it with the line contents, for example if your input lines are:
+
+```
+Vec2d
+Vec3d
+Matrix4d
+```
+
+You can use e.g. "Generate a class called {$1} with implementation" etc.
+
+The special variable "{$line}" can be replaced with the original line number of the input file.
+
 ## Forcing use of GPT3 or GPT4 etc.:
 
 Provided your OAI_CONFIG_LIST is set up correctly with GPT3 and GPT4 you can use:
