@@ -549,11 +549,20 @@ if __name__ == '__main__':
         if runtask.dryrun:
             print(f"=== DRY RUN")
         line_number = 0
+
+        # string to show in front of output
+        str_pre = "==="
+        if runtask.dryrun:
+            str_pre = "=== [dryrun]"
         for inputline in inputlines_array:
             line_number += 1
-            print(f"=== LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}]: {inputline}")
-            if runtask.dryrun:
-                print(f"=== DRY RUN")
+            # Check if skipping lines due to e.g. "--start-line" etc.?
+            if runtask.start_line > 0 and line_number < runtask.start_line:
+                print(f"{str_pre} LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}]: {inputline} (SKIPPING)")
+            else:
+                print(f"{str_pre} LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}]: {inputline}")
+            #if runtask.dryrun:
+            #    print(f"=== DRY RUN")
             # Replace {$1} in task with the inputline
             task_line = task
             task_line = task_line.replace("{$1}", inputline)
@@ -563,7 +572,7 @@ if __name__ == '__main__':
             if runtask.start_line > 0:
                 # Skip lines until we reach start_line
                 if line_number < runtask.start_line:
-                    print(f"=== Skipping line {line_number} as it's before start_line {runtask.start_line}")
+                    #print(f"=== Skipping line {line_number} as it's before start_line {runtask.start_line}")
                     continue
 
             # Log requested task but pause the savefiles thing otherwise it will auto grab our own codeblacks out the task
