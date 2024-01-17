@@ -137,5 +137,9 @@ runai refactor -w src/MyFile.cpp
    - Manage release cycles and deployment schedules.
    - Example: Automatically deploy code to a staging server after passing CI/CD pipelines.
 
+## License
+
+Commercial/restricted
+
 This project Copyright (C) David Joffe 2023-2024
 
