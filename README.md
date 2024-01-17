@@ -82,6 +82,11 @@ You can use e.g. "Generate a class called {$1} with implementation" etc.
 
 The special variable "{$line}" can be replaced with the original line number of the input file.
 
+* {$line} Replace with current input line number in task string for multi-line input
+* {$date} Replace with current date (UTC) in task string
+* {$time} Replace with current time (UTC) in task string
+* {$datetime} Replace with current date and time (UTC) in task string (YYYY-MM-DD HH-MM-SS)
+
 ## Forcing use of GPT3 or GPT4 etc.:
 
 Provided your OAI_CONFIG_LIST is set up correctly with GPT3 and GPT4 you can use:
