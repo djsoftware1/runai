@@ -129,6 +129,8 @@ if args.version:
     sys.exit(0)
 if args.showsettings:
     # Display settings and exit
+    # We can't show settings right here yet because some of the settings to show depend on having parsed the rest of the command line
+    # But should possibly try refactor to have it not be like that in future
     print(f"[runai] Version: {djversion.Version().get_version()}")
     just_show_settings = True
     #sys.exit(0)
