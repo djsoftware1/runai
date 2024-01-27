@@ -8,6 +8,7 @@ import requests
 import io
 import time
 import datetime
+# For colored text in output
 from colorama import Fore, Style
 from globals import g_ai_output_saved_last_code_block
 
@@ -292,6 +293,9 @@ llm_config_local3={
 
 
 ##### OpenAI Configurations (if using OpenAI API, it's optional)
+
+# Note: As of 25 Jan 2024 "gpt-4-turbo-preview" seems to basically supercede "gpt-4-1106-preview" and also is meant to always now point to the latest GPT-4 Turbo (and is also meant to be less "lazy") https://openai.com/blog/new-embedding-models-and-api-updates
+
 # Construct the path to the OAI_CONFIG_LIST file
 config_list_path = os.path.join(script_dir, "OAI_CONFIG_LIST")
 print(f"=== config_list_path: {config_list_path}")
@@ -302,7 +306,7 @@ if os.path.exists(config_list_path):
         config_list = autogen.config_list_from_json(
             config_list_path,
             filter_dict={
-                "model": ["gpt-4-1106-preview", "gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
+                "model": ["gpt-4-turbo-preview", "gpt-4-1106-preview", "gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
             },
         )
     elif args.gpt3: # Force gpt3 if possible if --gpt3 passed?
@@ -318,7 +322,7 @@ if os.path.exists(config_list_path):
         config_list = autogen.config_list_from_json(
             config_list_path,
             filter_dict={
-                "model": ["gpt-3.5-turbo", "gpt-4-1106-preview"],
+                "model": ["gpt-3.5-turbo", "gpt-4-turbo-preview"],
             },
         )
     have_openai_config = True
