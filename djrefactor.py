@@ -244,6 +244,11 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
                 else:
                     modified_lines = [indent + line if line.strip() else '' for line in modified_code.split('\n')]
 
+                # Trying to fix/simplify newline logic
+                # Ensure each modified line has the correct line ending
+                modified_lines = [line.rstrip("\r\n") + line_endings for line in modified_lines]
+
+                """
                 # Remove an extra newline at the end if present
                 # e.g. if the file CRLF but we split by LF then we may have e.g. just a floating CR? remove it
                 # then re-add it using the detected line_endings
@@ -262,6 +267,8 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
                 if modified_lines and modified_lines[-1] == '':
                     modified_lines.pop()
                 print(f"##################################################LEN:{len(modified_lines)}")
+                """
+
                 add_debug_markers = False
                 if len(modified_lines)>0:
                     # Append to the first and last some debug text
