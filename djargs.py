@@ -19,8 +19,8 @@ class CmdLineParser:
         self.parser.add_argument('--start-line', type=str, help='If using a multi-line task file, specify the start line number.')
         #self.parser.add_argument('--delay-before', type=str, help='Delay in seconds before running task ')
         self.parser.add_argument('-d', '--delay-between', type=str, help='Optional delay in seconds (floating point) between running multiple tasks for multiline mode and others.')
-        self.parser.add_argument('--gpt3', action='store_true', help='Use gpt-3.5-turbo.')
-        self.parser.add_argument('--gpt4', action='store_true', help='Use gpt-4.')
+        self.parser.add_argument('-3', '--gpt3', action='store_true', help='Use gpt-3.5-turbo.')
+        self.parser.add_argument('-4', '--gpt4', action='store_true', help='Use gpt-4.')
         self.parser.add_argument('--dryrun', action='store_true', help='Show roughly what would be done but do not actually execute the task.')
 
 
