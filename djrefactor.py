@@ -260,14 +260,14 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
 
                 # Remove an extra newline at the end if present
                 # (litellm with ollama/codemistral at least for me returning lots of this extra blank line at end of code block so strip it out)
+                """
                 print(f"===REFACTOR:modified_lines[-1] is {modified_lines[-1]}")
                 print(f"##################################################LEN:{len(modified_lines)}")
-                if modified_lines and modified_lines[-1] == '':
+                if modified_lines and (modified_lines[-1] == '' or modified_lines[-1] == '\r\n' or modified_lines[-1] == '\n' or modified_lines[-1] == '\r'):
                     modified_lines.pop()
-                if modified_lines and modified_lines[-1] == '':
+                if modified_lines and (modified_lines[-1] == '' or modified_lines[-1] == '\r\n' or modified_lines[-1] == '\n' or modified_lines[-1] == '\r'):
                     modified_lines.pop()
                 print(f"##################################################LEN:{len(modified_lines)}")
-                """
 
                 add_debug_markers = False
                 if len(modified_lines)>0:
@@ -298,7 +298,8 @@ def Refactor(in_folder, wildcard, needle, refactor_negmatches, replace_with, sTa
                 print(f"===REFACTOR:Saving file: {out_file_path}")
                 with open(out_file_path, 'w', encoding='utf-8') as file:
                     for line in lines:
-                        file.write(line if line.endswith(line_endings) else line + line_endings)
+                        file.write(line)
+                        #file.write(line if line.endswith(line_endings) else line + line_endings)
                         """
                         file.write(line if line.endswith('\n') else line + '\n')
                         """
