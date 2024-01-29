@@ -160,4 +160,8 @@ runai refactor -w src/MyFile.cpp
 
 Commercial/restricted
 
+## Examples
+
+    runai -4 -tf /c/runai/tasks/copyright/task.txt -f ./cppcode_folder/ -s /c/runai/tasks/copyright/settings.py refactor -w "*.cpp"
+
 This project Copyright (C) David Joffe 2023-2024
