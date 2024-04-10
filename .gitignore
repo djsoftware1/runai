@@ -39,3 +39,7 @@ OAI_CONFIG_LIST
 /__pycache__*
 /__pycache__/*
 
+
+# Mac finder droppings
+*.DS_Store
+
