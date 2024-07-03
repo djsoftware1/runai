@@ -736,7 +736,7 @@ if __name__ == '__main__':
     formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
 
     # Create the log filename
-    # Not quite sure if this shoudl also be in task_output_directory or not
+    # Not quite sure if this should also be in task_output_directory or not
     log_filename_base = f"dj_AI_log.txt"
     # Write the AI output to the log file
     with open(log_filename_base, 'a', encoding='utf-8') as log_file:
