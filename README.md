@@ -1,6 +1,6 @@
-## DJ Software Task Execution Framework
+## runai: DJ Software Task Execution Framework
 
-General AI-driven automation helper framework for tasks like code refactoring (or many other tasks, including non-coding-related tasks) using autogen.
+General AI-driven automation helper framework for tasks like code refactoring (or many other tasks, including non-coding-related tasks), optionally using AutoGen.
 
 Optionally integrates into command-line (with a small amount of setup) on Mac, git bash for Windows, or Linux.
 
@@ -15,8 +15,21 @@ pip install -r requirements.txt
 To run:
 
 ```
-python agent.py
+$ runai
+
+Or (old way): python main.py
 ```
+
+If you follow the instrutions here to add this to your system PATH, then you can just type "runai" from anywhere. (Otherwise, use "./runai" or a full path to run.)
+
+Example:
+```
+$ runai -4 -t "Give me a Python script that can check daily for updated exchange rate for Rand, USD, EUR"
+      
+-4          (optionally select to try use "gpt-4" model)
+-t "TASK"   (pass it a task to run on commandline)
+```
+
 
 If using OpenAI, then place your configuration with API key in OAI_CONFIG_LIST
 
@@ -26,10 +39,32 @@ To set it up to run globally from anywhere on your command-line:
 # python3 -m pip install -r requirements.txt
 ```
 
-Works best if you optionally add to system path like so in e.g. your bashrc or zshrc, then you can call it from anywhere with just 'runai':
+### PATH Setup
+
+
+Works best if you optionally add to your system PATH, like so, in e.g. your **.bashrc** or zshrc, then you can call it from anywhere with just 'runai':
 
 ```
-export PATH="/Users/YourUsername/runai:$PATH"
+    export PATH="/c/src/runai:$PATH"
+```
+(If, for example, you did 'git clone' this project into your, say, "/c/src" folder.)
+
+ Place in your system PATH for best results, then use just "runai" to run (the "runai" file is basically a small wrapper to just run 'python main.py'). I installed as follows:
+
+1. For Windows, run "Git Bash", then pick a folder and "git clone" into it:
+1. $ cd /c/src    (this can be wherever you like on your system)
+1. $ git clone https://github.com/djsoftware1/runai       (then pip install -r requirements.txt etc.)
+1. $ nano ~/.bashrc - (or text editor of your choice) to edit one's .bashrc (or similar) startup file (in my case in "c:\Users\david\")
+1. Add a line to .bashrc that says:
+   **export PATH=$PATH:/c/src/runai**
+   This adds it to your system PATH each time you run Git Bash. Then you can run "runai" from anywhere on your system - potentially very powerful.
+1. Do any custom configuration, e.g. set up your OAI_CONFIG_LIST add your OpenAI keys
+
+## Simple Test
+
+Try a simple test like this to see if it's working: 
+```
+    runai -4 -t "Hi, can you help me ?"
 ```
 
 ## Show Version
@@ -87,13 +122,20 @@ The special variable "{$line}" can be replaced with the original line number of 
 * {$time} Replace with current time (UTC) in task string
 * {$datetime} Replace with current date and time (UTC) in task string (YYYY-MM-DD HH-MM-SS)
 
-## Forcing use of GPT3 or GPT4 etc.:
+## To try force use of GPT3 or GPT4, or other preferred model:
 
-Provided your OAI_CONFIG_LIST is set up correctly with GPT3 and GPT4 you can use:
+OpenAI/AutoGen tasks: Provided your OAI_CONFIG_LIST is set up correctly with GPT3 and GPT4 you can use these command-line parameters to select gpt-3 and gpt-4:
+
 
 ```
 # runai --gpt3
 # runai --gpt4
+
+Other options for selecting your preferred model:
+
+runai -m "MODEL" OR: runai --model "MODEL"
+runai --o1-mini
+runai --o1-preview
 ```
 
 
@@ -164,4 +206,18 @@ Commercial/restricted
 
     runai -4 -tf /c/runai/tasks/copyright/task.txt -f ./cppcode_folder/ -s /c/runai/tasks/copyright/settings.py refactor -w "*.cpp"
 
-This project Copyright (C) David Joffe 2023-2024
+## About
+
+Multi-purpose automation framework, optionally with AutoGen multi-agents, for AI/LLM and other task automation, created by David Joffe @davidjoffe (beta/early dev)
+
+Other potential names: dj-Run-AI, or perhaps 'dj-run-tasks' (to reflect that not all tasks are AI-based).
+
+## Copyright
+
+This project Copyright (C) David Joffe / [DJ Software](https://djoffe.com/DJ-Software/) 2023-2025
+
+Note: "**DJ Software**" is just short for "David Joffe Software", and is a name I created to place some of my software under (and of 1. a potential entity, and 2. of this [GitHub organization I created for DJ Software, @djsoftware1](https://github.com/djsoftware1/).
+
+See also [djoffe.com/DJ-Software/](https://djoffe.com/DJ-Software/)
+
+- David Joffe
