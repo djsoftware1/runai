@@ -1,11 +1,12 @@
-# Copyright (C) David Joffe 2023-2024
+# Copyright (C) David Joffe / DJ Software 2023-2025
 # Command line argument parser helper class
+# "djargs" = "dj arguments" (commandl line arguments)
 import argparse
 
 class CmdLineParser:
     def __init__(self):
 
-        self.parser = argparse.ArgumentParser(description='runai - Run AI tasks with autogen')
+        self.parser = argparse.ArgumentParser(description='runai - Run AI/LLM or other tasks, optionally with autogen')
         #self.parser.add_argument('--help', action='store_true', help='Show this help message and exit.')
         self.parser.add_argument('--version', action='store_true', help='Show version number and exit.')
         self.parser.add_argument('--showsettings', action='store_true', help='Show settings and exit.')
@@ -21,6 +22,9 @@ class CmdLineParser:
         self.parser.add_argument('-d', '--delay-between', type=str, help='Optional delay in seconds (floating point) between running multiple tasks for multiline mode and others.')
         self.parser.add_argument('-3', '--gpt3', action='store_true', help='Use gpt-3.5-turbo.')
         self.parser.add_argument('-4', '--gpt4', action='store_true', help='Use gpt-4.')
+        self.parser.add_argument('--o1-mini', action='store_true', help='Try use model o1-mini')
+        self.parser.add_argument('--o1-preview', action='store_true', help='Try use model o1-preview')
+        self.parser.add_argument('--model', '-m', type=str, help='Specify preferred model to use.')
         self.parser.add_argument('--dryrun', action='store_true', help='Show roughly what would be done but do not actually execute the task.')
 
 
