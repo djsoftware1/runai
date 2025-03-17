@@ -1,4 +1,18 @@
-# Copyright (C) 2023-2024 David Joffe / DJ Software
+# main.py
+#
+# runai - Run or Automate AI/LLM and other tasks (such as code refactoring), optionally with AutoGen. 
+# Tasks may be non-AI-related (e.g. code or other document search-and-replace tasks), or we may use AI/LLM for tasks like code refactoring.
+#
+# See ReadMe.md for setup instructions, for instructions on how to use runai, and how to add it to your PATH.
+#
+# runai -h             → SHOW HELP
+# runai -m MODEL       → Select Model to Use
+# runai --showsettings → Just show settings
+# 
+# runai (dj-run-AI) Source Repo: https://github.com/djsoftware1/runai
+# Created by David Joffe - 'Initially to try help with some of my own tasks, and partly as a learning exercise, but have not had enough time to work on it'.
+# Copyright (C) 2023-2025 David Joffe / DJ Software
+#==================================================================
 # Import necessary libraries
 import sys
 import autogen
@@ -17,7 +31,7 @@ from globals import g_ai_output_saved_last_code_block
 # custom dual output to capture output and echo it to console so we can both log it and extract code from it but also see it in real-time
 from dual_output import DualOutput
 from helper_functions import create_files_from_ai_output
-# This should probably only import if necessary/used if via commandline --version etc.:
+import djabout
 import djrefactor
 import djversion
 import djargs
@@ -29,12 +43,26 @@ from djtask import djTask
 #runtask = djSettings()
 runtask = djTask()
 
+# Show short core 'about this application' info on commandline - (dj)
+djabout.djAbout().show_about()
+
+
 ##### system/script init:
 # Get the directory of the current script (runai.py)
 script_dir = os.path.dirname(os.path.abspath(__file__))
 print(f"{Fore.GREEN}=== Script directory: {script_dir}{Style.RESET_ALL}")
 
+
+#==================================================================
+#todo group all these settings better so it is clearer what is going on - dj2025-03
 ##### settings defaults
+#==================================================================
+
+
+####################
+# TASK SETTINGS:
+####################
+
 # dj2023-12 This anyway only works for Python currently and the user agent goes back and forth with coder and coder thinks there's a problem and sends the code again and again because user agent couldn't execute
 # Even if it could exec C++ I don't currently want it to for these tasks so let's make this a parameter
 # Maybe in future for some tasks it should be true eg simpler Python stuff it can exec or if it gets better in future
@@ -71,10 +99,12 @@ refactor_negmatches=[]
 do_refactor=False
 # [Setting] default task file to use if none specified
 taskfile='autotask.txt'
+#taskfile='optional-autostart-task.txt'
 #if os.path.exists('autotask.txt'):
 #    taskfile = 'autotask.txt'  # Or set a default value as needed
 settings_pyscript = 'autosettings.py'
 # [Setting] optional input file to run task for every line in file with substitution of "{$1}" in task text with each line
+# -i "InputFile" a file of input lines to batch-run task on every line in file
 inputfile='input.txt'
 
 
@@ -89,6 +119,12 @@ files_to_create=None
 #targetfolder = "modified_tlex/DicLib"
 # currently not used:
 targetfolder = ''
+
+
+####################
+# AUTOGEN SETTINGS:
+####################
+
 # settings
 # I need to experiment a bit more to see exactly the implications of not creating groups (or creating groups), both if I only have 1 AI agent available or if I have 2 or 3 machines I can use ..
 NoGroup=True
@@ -97,14 +133,22 @@ NoGroup=True
 # dj try make setting to control if we have lots or fewer etc. of AIs to use:
 # this needs further work though
 coder_only=True
-no_user_proxy=True
+
 # [Setting] Control whether or not to use the autogen user proxy agent
-#no_user_proxy=False
+# no_autogen_user_proxy
+no_autogen_user_proxy=True
+#no_autogen_user_proxy=False
 
 
+####################
+# LLM settings:
+####################
+user_select_preferred_model=''
+
+#==================================================================
 
 
-print("=== USAGE: runai (or python main.py) [taskfile] [targetfolder] [settings.py]")
+print(f"{Fore.YELLOW}=== {Fore.YELLOW}USAGE: runai (or python main.py) [taskfile] [targetfolder] [settings.py]{Style.RESET_ALL}")
 
 # Check if defaultsettings.py exists in runai folder and run it if it does
 default_settings = os.path.join(script_dir, "defaultsettings.py")
@@ -142,9 +186,20 @@ if args.folder:
 if args.delay_between:
     # Delay between running multiple tasks
     runtask.delay_between = float(args.delay_between)
+if args.model:
+    # Specify preferred model to use
+    user_select_preferred_model = args.model
+    print(f"[args] TryUseModel: {user_select_preferred_model}")
+elif args.o1_mini:
+    user_select_preferred_model = "o1-mini"
+    print(f"[args] TryUseModel: {user_select_preferred_model}")
+elif args.o1_preview:
+    user_select_preferred_model = "o1-preview"
+    print(f"[args] TryUseModel: {user_select_preferred_model}")
 if args.dryrun:
     runtask.dryrun = True
 if args.start_line:
+    # --start-line START_LINE           If using a multi-line task file, specify the start line number.
     runtask.start_line = int(args.start_line)
 if args.task:
     # e.g. "Say coffee 10 times, then help cure aging"
@@ -211,29 +266,53 @@ if settings_pyscript is not None and len(settings_pyscript) > 0:
 
 
 # Small helper to show setting name and value in different color
-def show_setting(name, value):
-    if value is not None:
-        print(f"{Fore.GREEN}=== {name}:{Style.RESET_ALL} {Fore.CYAN}{value}{Style.RESET_ALL}")
+def show_setting(name, value, indent=0, descriptionString="", strKeyShortcut=""):
+    # dj2025-03 add indent and descriptionString (optional)
+    #sBULLET_INFO="→ 🛈"
+    #sBULLET_INFO="→"
+    sBULLET_INFO=""
+    strDashesBefore="=== "
+    if indent > 0:
+        print("   " * indent, end="")
+        strDashesBefore="■ "
+        #strDashesBefore = sBULLET_INFO
     else:
-        print(f"{Fore.GREEN}=== {name}:{Style.RESET_ALL} {Fore.RED}-{Style.RESET_ALL}")
+        strDashesBefore="=== "
+    
+    strDescription=""
+    if len(descriptionString) > 0:
+        strDescription = f" {sBULLET_INFO} {Fore.MAGENTA}{descriptionString}{Style.RESET_ALL}"
+
+    # e.g. "-f FOLDER" info stuff
+    # ■ -f FOLDER: Nodjfsdj dsfkjl → Work-folder for tasks like auto-refactoring
+    # ■ -t TASK: Hey there! tell me how to make cofee
+    strShortCut=""
+    if len(strKeyShortcut) > 0:
+        strShortCut = f"{Fore.GREEN}{strKeyShortcut}{Style.RESET_ALL}"
+
+    if value is not None:
+        print(f"{Fore.GREEN}{strDashesBefore}{name}:{Style.RESET_ALL} {Fore.CYAN}{value}{Style.RESET_ALL}{strDescription} {strShortCut}")
+    else:
+        print(f"{Fore.GREEN}{strDashesBefore}{name}:{Style.RESET_ALL} {Fore.RED}-{Style.RESET_ALL}{strDescription} {strShortCut}")
+
 
 def show_settings():
     # TODO some of these settings may already be unused
     print(f"{Fore.BLUE}____________________________________________________{Style.RESET_ALL}")
-    print(f"{Fore.BLUE}=== SETTINGS:")
-    show_setting("Taskfile", taskfile)
-    show_setting("Inputfile", inputfile)
-    show_setting("Settings.py", settings_pyscript)
-    show_setting("Worktree", worktree)
-    show_setting("Targetfolder", targetfolder)
-    show_setting("Task", task)
-    show_setting("Files to send", files_to_send)
-    show_setting("use_openai", use_openai)
-    show_setting("have_openai_config", have_openai_config)
-    show_setting("no_user_proxy", no_user_proxy)
-    show_setting("NoGroup", NoGroup)
-    show_setting("use_cache_seed", use_cache_seed)
-    show_setting("code_execution_enabled", code_execution_enabled)
+    #print(f"{Fore.BLUE}=== SETTINGS:"):
+    print(f"{Fore.YELLOW}=== SETTINGS:")
+    sBullet1='x'
+    print(f"{Fore.YELLOW}{sBullet1} Task settings:{Style.RESET_ALL}")
+    #default_values
+    #default_values['InputFile']='input.txt'
+    show_setting("TaskFile", taskfile, 1)#
+    show_setting("InputFile", inputfile, 1, "input-file to batch-run task on all lines, with substitution", "-i")
+    show_setting("Settings.py", settings_pyscript, 1)
+    show_setting("WorkFolder", worktree, 1, "work-folder for tasks like auto-refactoring. (default: \".\" current-folder)", "-f")
+    show_setting("TargetFolder", targetfolder, 1, "", "  ")
+    show_setting("TASK", task, 1, "task string for LLM or agent to perform", "-t")
+    show_setting("Files to send", files_to_send, 1)
+
     show_setting("max_consecutive_auto_replies", max_consecutive_auto_replies)
     show_setting("refactor_matches", refactor_matches)
     show_setting("replace_with", replace_with)
@@ -243,6 +322,25 @@ def show_settings():
     show_setting("out_files", runtask.settings.out_files)
     show_setting("dryrun", runtask.dryrun)
     show_setting("start_line", runtask.start_line)
+    
+    print(f"{Fore.YELLOW}{sBullet1} AutoGen settings:{Style.RESET_ALL}")
+    show_setting("autogen.no_autogen_user_proxy", no_autogen_user_proxy, 1)
+    show_setting("autogen.NoGroup", NoGroup, 1, "If True do not create autogen GroupChat and GroupChatManager")
+    show_setting("autogen.use_cache_seed", use_cache_seed, 1, "random seed for caching and reproducibility")
+    show_setting("autogen.code_execution_enabled", code_execution_enabled, 1, "Enable AutoGen agent code execution [currently always off]")
+    show_setting("coder_only", coder_only, 1)
+    
+    # LLM SETTINGS/PREFERENCES/COMMAND-LINE OPTIONS
+    print(f"{Fore.YELLOW}{sBullet1} LLM settings:{Style.RESET_ALL}")
+    show_setting("TryUseModell", user_select_preferred_model, 1)
+    sBULLET_SQUARE="■"
+    print("   " * 2, end="")#indent
+    print(f"{Fore.YELLOW}OpenAI settings:{Style.RESET_ALL}")
+    show_setting("USE_OPENAI", 'YES' if use_openai is True else 'NO', 2)
+    show_setting("HAVE_OPENAI_CONFIG?", have_openai_config, 2)
+    if have_openai_config:
+        show_setting("openai.config_list", config_list, 2)
+
     #global config_list
     if config_list:
         # Convert the object to a JSON string and print it
@@ -257,28 +355,48 @@ def show_settings():
 # Either via command-line or extra setuup.py or both etc. or maybe even environment variables
 # e.g. maybe in future could look in local folder for settings.py and if found exec it after these defaults
 
-# [dj2023-12] local LiteLLM instances ...
+"""
+config_list_local_ollama=[
+    {
+        'base_url':"http://127.0.0.1:11434",
+        #'model':'deepseek-r1:1.5b',
+        'model':'gemma3:4b',
+        'api_key':"NULL"
+    }
+]
+"""
+# [dj] local LiteLLM instances ...
 config_list_localgeneral=[
     {
+        """
         'base_url':"http://10.0.0.13:8000",
+        """
+        'base_url':"http://127.0.0.1:11434",
+        #'model':'deepseek-r1:1.5b',
+        'model':'gemma3:4b',
         'api_key':"NULL"
     }
 ]
 config_list_localcoder=[
     {
-        'base_url':"http://127.0.0.1:8000",
+        'base_url':"http://127.0.0.1:11434",
+        #'model':'deepseek-r1:1.5b',
+        'model':'gemma3:4b',
         'api_key':"NULL"
     }
 ]
 config_list_localcoder=[
     {
-        'base_url':"http://10.0.0.10:8000",
+        'base_url':"http://127.0.0.1:11434",
+        #'model':'deepseek-r1:1.5b',
+        'model':'gemma3:4b',
         'api_key':"NULL"
     }
 ]
 config_list_local3=[
     {
-        'base_url':"http://air.local:8000",
+        'base_url':"http://127.0.0.1:11434",
+        'model':'gemma3:4b',#'model':'deepseek-r1:1.5b',
         'api_key':"NULL"
     }
 ]
@@ -304,6 +422,8 @@ print(f"=== config_list_path: {config_list_path}")
 if os.path.exists(config_list_path):
     #"model": ["gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
     if args.gpt4: # Force gpt4 if possible if --gpt4 passed?
+        print("[args] TryUseModel: gpt-4")
+        user_select_preferred_model="gpt-4"
         config_list = autogen.config_list_from_json(
             config_list_path,
             filter_dict={
@@ -311,6 +431,8 @@ if os.path.exists(config_list_path):
             },
         )
     elif args.gpt3: # Force gpt3 if possible if --gpt3 passed?
+        print("[args] TryUseModel: gpt-3")
+        user_select_preferred_model="gpt-3"
         # try use gpt-3.5-turbo instead of gpt-4 as seems costly to use gpt-4 on OpenAI
         config_list = autogen.config_list_from_json(
             config_list_path,
@@ -319,11 +441,12 @@ if os.path.exists(config_list_path):
             },
         )
     else:
+        print("do autogen.config_list_from_json - default")
         # Default
         config_list = autogen.config_list_from_json(
             config_list_path,
             filter_dict={
-                "model": ["gpt-3.5-turbo", "gpt-4-turbo-preview"],
+                "model": ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo-preview"],
             },
         )
     have_openai_config = True
@@ -333,6 +456,12 @@ if os.path.exists(config_list_path):
     }
 else:
     print("Warning: No OpenAI configuration - this is not critical if using local AI instances like LiteLLM")
+    #dj-check: should we set have_openai_config to False here? (dj2025-03)
+    # should we override config_list ..not 100% sure
+    #have_openai_config = False
+    print("selecting config_list_localgeneral")
+    config_list = config_list_localgeneral
+    #config_list.model = ["deepseek-r1:1.5b"]
     have_openai_config = False
     use_openai = False
 
@@ -360,16 +489,54 @@ if not os.path.exists(task_output_directory):
 #task = ""
 if taskfile!='':
     if os.path.exists(taskfile):
-        print(f"=== Using taskfile: {taskfile}")
+        status='found'
+        #color='GREEN'
+        print(f"{Fore.BLUE}■ {Fore.YELLOW}TaskFile: {taskfile}: {Fore.GREEN}{status}{Style.RESET_ALL}")
+        print(f"=== {Fore.YELLOW}Loading TaskFile: {taskfile}{Style.RESET_ALL}")
         with open(taskfile, 'r', encoding='utf-8') as file:
             for line in file:
                 task += line.strip() + "\n"  # Appending each line to the task string
+        if len(task)==0:
+            print(f"{Fore.RED}Warning: TaskFile is empty!{Style.RESET_ALL}")
     else:
-        print(f"=== {Fore.BLUE}Taskfile not found:{Fore.CYAN} {taskfile}{Style.RESET_ALL}")
+        
+        # [dj2025-03] Remember the file name "autotask.txt" is like a special "auto-start" "autotask.txt" task file that is fully optional
+        # So if "taskfile" is not found, if it is on the default special  "auto-start" "autotask.txt" file, then we just print a message and continue
+        status=''
+        color='GREEN'
+        if os.path.exists(taskfile):
+            color = 'GREEN'
+            if taskfile=='autotask.txt':
+                status='found autostart.txt'
+            else:
+                # file exists and name is not "autostart.txt" (likely user used "-tf" to specify a taskfile)
+                status='found'
+        else: # FILE DOES NOT EXIST
+            if taskfile=='autotask.txt':
+                status='not found, but that is fine as autostart.txt is optional'
+                color = 'GREEN'
+            else:
+                # file does not exist and name is not "autostart.txt" (likely user used "-tf" to specify a taskfile)
+                status='ERROR: not found'# and this is bad because it is a red error for user!
+                color = 'RED'
+
+        if color=='RED':
+            print(f"{Fore.BLUE}■ {Fore.YELLOW}TaskFile: {taskfile}: {Fore.RED}{status}{Style.RESET_ALL}")
+            print(f"{Fore.RED}Please either create the file now with your task description, or specify a correct filename.{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.BLUE}■ {Fore.YELLOW}TaskFile: {taskfile}: {Fore.GREEN}{status}{Style.RESET_ALL}")
+        
+        # dj2025-03 Hmm I am not sure I am mad about several lines of guidance info like this is good or bad here or if it should move elsewhere (low prio)
+        print("--------------------------[ NOTES ]----------------------------")
+        print("The name \"autotask.txt\" is a special OPTIONAL filename to \"auto-load/start\" the task.")
+        print("It is the AUTOEXEC.BAT of runai, if you will.")
+        print("If you want to use a different task file name, please specify it with the -tf parameter.")
+        print("---------------------------------------------------------------")
+        
 
 if task=="":
     # Define your coding task, for example:
-    print(f"=== No task specified")
+    print(f"■ No task specified")
     #if not force_show_prompt:
         #print("=== Please specify a task in task.txt (or pass filename as 1st parameter) or use -p to prompt for a task or -t for default test/sample task")
         #task = "Write a Python function to sort a list of numbers."
@@ -381,8 +548,11 @@ if task=="":
 #    task = "Write a Python function to sort a list of numbers."
 
 # Check if 'task' is an empty string or None
+# Show short core 'about this application' info on commandline - (dj)
+#djabout.djAbout().show_about(True)
+
 if task == "" or task is None or force_show_prompt:
-    task = input(f"{Fore.BLUE}What would you like to do? Please enter a task:{Style.RESET_ALL} ")
+    task = input(f"{Fore.CYAN}(Ctrl+C to stop) {Fore.YELLOW}What would you like to do? Please enter a task:{Style.RESET_ALL} ")
 
     # Check if the user entered nothing
     if task == "":
@@ -462,6 +632,10 @@ from colorama import init
 init()
 
 if __name__ == '__main__':
+    print("--- start-main")
+    # CWD is not so much a 'setting' as a 'current state' of runtime environment but we log it here anyway, it may be useful to know
+    sCWD=os.getcwd()#getcwd just for logging
+    print(f"• current-directory: {sCWD}")
     if files_to_send:
         for file_name in files_to_send:
             print(f"SETTINGS:File={file_name}...")
@@ -624,7 +798,7 @@ if __name__ == '__main__':
                 """
 
 
-            if coder_only and no_user_proxy:
+            if coder_only and no_autogen_user_proxy:
                 user_proxy.initiate_chat(
                     coder,message=task_line,
                 )
@@ -666,7 +840,7 @@ if __name__ == '__main__':
             task_message = f"Create the following files and return in ```...``` code blocks with filenames: {', '.join(files_to_create)} with the following specifications: {task}"
         dual_output.UnpauseSaveFiles()
         #user_proxy.initiate_chat(assistant, message=create_task_message)
-        if coder_only and no_user_proxy:
+        if coder_only and no_autogen_user_proxy:
             response = coder.handle_task(task_message)
             print(response)
         elif coder_only:
@@ -700,7 +874,7 @@ if __name__ == '__main__':
         print(f"=== Processing task: {task}")
         dual_output.UnpauseSaveFiles()
         task_message=task
-        if coder_only and no_user_proxy:
+        if coder_only and no_autogen_user_proxy:
             user_proxy.initiate_chat(
                 coder,message=task,
             )
