@@ -5,6 +5,10 @@
         "tags": ["gpt-4", "tool"]
     },
     {
+        "model": "o1-mini",
+        "api_key": "<your key here>"
+    },
+    {
         "model": "gpt-3.5-turbo",
         "api_key": "sk-yourkeyhere"
     },

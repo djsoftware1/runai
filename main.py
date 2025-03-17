@@ -58,6 +58,7 @@ print(f"{Fore.GREEN}=== Script directory: {script_dir}{Style.RESET_ALL}")
 ##### settings defaults
 #==================================================================
 
+#app = djAppSettings()
 
 ####################
 # TASK SETTINGS:
@@ -189,13 +190,19 @@ if args.delay_between:
 if args.model:
     # Specify preferred model to use
     user_select_preferred_model = args.model
-    print(f"[args] TryUseModel: {user_select_preferred_model}")
+    print(f"[args] Select Model: {user_select_preferred_model}")
+elif args.gpt4:
+    user_select_preferred_model = "gpt-4"
+    print(f"[args] Select Model: {user_select_preferred_model}")
+elif args.gpt3:
+    user_select_preferred_model = "gpt-3"
+    print(f"[args] Select Model: {user_select_preferred_model}") 
 elif args.o1_mini:
     user_select_preferred_model = "o1-mini"
-    print(f"[args] TryUseModel: {user_select_preferred_model}")
+    print(f"[args] Select Model: {user_select_preferred_model}")
 elif args.o1_preview:
     user_select_preferred_model = "o1-preview"
-    print(f"[args] TryUseModel: {user_select_preferred_model}")
+    print(f"[args] Select Model: {user_select_preferred_model}")
 if args.dryrun:
     runtask.dryrun = True
 if args.start_line:
@@ -368,28 +375,25 @@ config_list_local_ollama=[
 # [dj] local LiteLLM instances ...
 config_list_localgeneral=[
     {
-        """
-        'base_url':"http://10.0.0.13:8000",
-        """
-        'base_url':"http://127.0.0.1:11434",
-        #'model':'deepseek-r1:1.5b',
-        'model':'gemma3:4b',
+        'base_url':"http://127.0.0.1:11434",#'base_url':"http://127.0.0.1:11434/v1/chat/completions",
+        'model':'deepseek-r1:1.5b',
+        #'model':'gemma3:4b',
         'api_key':"NULL"
     }
 ]
 config_list_localcoder=[
     {
         'base_url':"http://127.0.0.1:11434",
-        #'model':'deepseek-r1:1.5b',
-        'model':'gemma3:4b',
+        'model':'deepseek-r1:1.5b',
+        #'model':'gemma3:4b',
         'api_key':"NULL"
     }
 ]
 config_list_localcoder=[
     {
         'base_url':"http://127.0.0.1:11434",
-        #'model':'deepseek-r1:1.5b',
-        'model':'gemma3:4b',
+        'model':'deepseek-r1:1.5b',
+        #'model':'gemma3:4b',
         'api_key':"NULL"
     }
 ]
@@ -400,6 +404,17 @@ config_list_local3=[
         'api_key':"NULL"
     }
 ]
+
+#testing
+config_list_local_ollama=[
+    {   
+        #'base_url':"http://127.0.0.1:11434/v1/chat/completions",
+        'base_url':"http://127.0.0.1:11434",
+        'model':'deepseek-r1:1.5b',#'model':'gemma3:4b',
+        'api_key':"NULL"
+    }
+]
+
 llm_config_localgeneral={
     "config_list":config_list_localgeneral
 }
@@ -415,29 +430,66 @@ llm_config_local3={
 
 # Note: As of 25 Jan 2024 "gpt-4-turbo-preview" seems to basically supercede "gpt-4-1106-preview" and also is meant to always now point to the latest GPT-4 Turbo (and is also meant to be less "lazy") https://openai.com/blog/new-embedding-models-and-api-updates
 
+print(f"=== user_select_preferred_model: \"{user_select_preferred_model}\"")
 # Construct the path to the OAI_CONFIG_LIST file
 config_list_path = os.path.join(script_dir, "OAI_CONFIG_LIST")
+"""
 print(f"=== config_list_path: {config_list_path}")
+"""
+if os.path.exists(config_list_path):
+    print(f"=== config_list_path: {config_list_path} {Fore.GREEN}(file found){Style.RESET_ALL}")
+else:
+    print(f"=== config_list_path: {config_list_path} {Fore.RED}warning: not found - please configure.{Style.RESET_ALL}")
+    print("Will attempt fallback to local AI instances")
+    
+    #"deepseek-r1:1.5b""
+    # TESTING: Try fall back to local ollama ...
+    # ollama is meant to be API-compatible with OpenAI but I'm not 100% sure if we should pass here the ollama modelname or give it modelname "gpt-4" in a sort of pretense for autogen
+    # [dj] I think we should TRY pass the ollama modelname here, as it is a different model and we should be explicit about what we are using
+    # (Unless override is specific with user_select_preferred_model?)
+
+    #config_list_path = os.path.join(script_dir, "userconfigs/local_ollama.json")
+    _try_config_list_path = os.path.join(script_dir, "configs/local_ollama.json")
+    if os.path.exists(_try_config_list_path):
+        print(f"=== TRY config_list_path FALLBACK: {_try_config_list_path}")
+        model = "deepseek-r1:1.5b"
+        if user_select_preferred_model:
+            model = user_select_preferred_model
+            print(f"TRY USE MODEL: {user_select_preferred_model}")
+        config_list = autogen.config_list_from_json(
+            _try_config_list_path,#config_list_local_ollama,
+            filter_dict={
+                #"model": ["deepseek-r1:1.5b","gpt-4"],
+                "model": [model, "gpt-4"],
+            },
+        )
+
 # Check if the OAI_CONFIG_LIST file exists
 if os.path.exists(config_list_path):
     #"model": ["gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
-    if args.gpt4: # Force gpt4 if possible if --gpt4 passed?
-        print("[args] TryUseModel: gpt-4")
-        user_select_preferred_model="gpt-4"
+    if user_select_preferred_model=="gpt-4": # Force gpt4 if possible if --gpt4 passed?
+        print("Trying selected model gpt-4")
         config_list = autogen.config_list_from_json(
             config_list_path,
             filter_dict={
-                "model": ["gpt-4-turbo-preview", "gpt-4-1106-preview", "gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
+                "model": ["gpt-4", "gpt-4-turbo-preview", "gpt-4-1106-preview", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
             },
         )
-    elif args.gpt3: # Force gpt3 if possible if --gpt3 passed?
-        print("[args] TryUseModel: gpt-3")
-        user_select_preferred_model="gpt-3"
+    elif user_select_preferred_model=="gpt-3": # Force gpt3 if possible if --gpt3 passed?
+        print("Trying selected model gpt-3")
         # try use gpt-3.5-turbo instead of gpt-4 as seems costly to use gpt-4 on OpenAI
         config_list = autogen.config_list_from_json(
             config_list_path,
             filter_dict={
                 "model": ["gpt-3.5-turbo"],
+            },
+        )
+    elif len(user_select_preferred_model)>0:
+        print(f"Trying selected model {user_select_preferred_model}")
+        config_list = autogen.config_list_from_json(
+            config_list_path,
+            filter_dict={
+                "model": [user_select_preferred_model],
             },
         )
     else:
@@ -450,11 +502,17 @@ if os.path.exists(config_list_path):
             },
         )
     have_openai_config = True
-
+    #print(f"{Fore.GREEN}'--- {config_list_path}' found. have_openai_config=Y{Style.RESET_ALL}")
+    print("--- setting have-openai-config")
+    #print("OpenAI configuration loaded")
+    # todo (low) show details of OpenAI config picked up? eg models and whatever else ... and if have key
     llm_config_coder_openai={
         "config_list":config_list
     }
 else:
+    # {Hmm .. hould we have something like 'default to local ollama or LM Studio' settings?}
+    # If the OAI_CONFIG_LIST file does not exist, print a warning message
+    #print(f"{Fore.RED}Warning: '{config_list_path}' file not found{Style.RESET_ALL}")
     print("Warning: No OpenAI configuration - this is not critical if using local AI instances like LiteLLM")
     #dj-check: should we set have_openai_config to False here? (dj2025-03)
     # should we override config_list ..not 100% sure
@@ -529,13 +587,15 @@ if taskfile!='':
         # dj2025-03 Hmm I am not sure I am mad about several lines of guidance info like this is good or bad here or if it should move elsewhere (low prio)
         print("--------------------------[ NOTES ]----------------------------")
         print("The name \"autotask.txt\" is a special OPTIONAL filename to \"auto-load/start\" the task.")
-        print("It is the AUTOEXEC.BAT of runai, if you will.")
+        print("It is the default task file name that is used if no task file name is specified.")
         print("If you want to use a different task file name, please specify it with the -tf parameter.")
         print("---------------------------------------------------------------")
         
 
 if task=="":
     # Define your coding task, for example:
+    # Hm, saying "No task specified" is misleading if the user passed a taskfile and it was empty or not found - from their perspective they did try to specify a task
+    #print(f"■ No task specified")
     print(f"■ No task specified")
     #if not force_show_prompt:
         #print("=== Please specify a task in task.txt (or pass filename as 1st parameter) or use -p to prompt for a task or -t for default test/sample task")
@@ -662,7 +722,9 @@ if __name__ == '__main__':
     user_proxy = autogen.UserProxyAgent(
         name="user_proxy",
         human_input_mode="NEVER",
-        #llm_config=llm_config_localgeneral,
+        ########### ollama-testing:
+        #llm_config=llm_config_coder_openai if use_openai else llm_config_localcoder,
+        #llm_config=llm_config_localgeneral if use_openai else llm_config_localgeneral,
         #code_execution_config=code_execution_enabled,
         max_consecutive_auto_reply=max_consecutive_auto_replies,
         is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
