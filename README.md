@@ -8,14 +8,14 @@ Cross-platform: Optionally integrates into command-line (with a small amount of 
 
 This can be configured to use either OpenAI, or your own custom AI instances (for example your own LiteLLM server(s)).
 
-**Caution:** For some tasks, this can modify files. Always backup all your data first, always work in a 'sandbox' copy, and always check all changes. Always test first. The author(s) of this software are not liable for any use of this tool.
+**Caution:** For some tasks, this can modify files. Always backup all your data first, work in a 'sandbox' copy, and check all changes. Always test first. The author(s) of this software are not liable for any use of this tool.
 
 ## Terms of Use
 
 * Not open source.
 * Free to use for personal, non-commercial use only. For commercial use and organizations (such as government institutions), a support and licensing fee required.
 
-* [License, EULA and disclaimers](https://github.com/djsoftware1/runai/blob/main/README.md)
+* [License, EULA and disclaimers](https://github.com/djsoftware1/runai/blob/main/LICENSE.md)
 
 ## Installation
 
@@ -33,7 +33,7 @@ $ runai
 Or (old way): python main.py
 ```
 
-If you follow the instrutions here to add this to your system PATH, then you can just type "runai" from anywhere. (Otherwise, use "./runai" or a full path to run.)
+If you follow the instructions here to add this to your system PATH, then you can just type "runai" from anywhere. (Otherwise, use "./runai" or a full path to run.)
 
 Example:
 ```
@@ -49,28 +49,29 @@ If using OpenAI, then place your configuration with API key in OAI_CONFIG_LIST
 To set it up to run globally from anywhere on your command-line:
 
 ```
-# python3 -m pip install -r requirements.txt
+$ python3 -m pip install -r requirements.txt
 ```
 
 ### PATH Setup
 
 
-Works best if you optionally add to your system PATH, like so, in e.g. your **.bashrc** or zshrc, then you can call it from anywhere with just 'runai':
+Works best if you optionally add to your system PATH - then you can just type "runai" on the command line from any folder to run - potentially very powerful.
+
+On Windows you can use the system Environment Variables dialog to add runai to PATH.
+
+For git bash, or Linux/macOS, add a line like this in e.g. your **.bashrc** or zshrc startup file - this will add it to PATH each time one runs bash:
 
 ```
     export PATH="/c/src/runai:$PATH"
 ```
 (If, for example, you did 'git clone' this project into your, say, "/c/src" folder.)
 
- Place in your system PATH for best results, then use just "runai" to run (the "runai" file is basically a small wrapper to just run 'python main.py'). I installed as follows:
+("runai" is just a small wrapper for 'python main.py'.) I installed as follows:
 
-1. For Windows, run "Git Bash", then pick a folder and "git clone" into it:
-1. $ cd /c/src    (this can be wherever you like on your system)
+1. Pick a folder and 'git clone' the repo into it, e.g.:
+1. $ cd /c/src    (this can be anywhere you like on your system)
 1. $ git clone https://github.com/djsoftware1/runai       (then pip install -r requirements.txt etc.)
-1. $ nano ~/.bashrc - (or text editor of your choice) to edit one's .bashrc (or similar) startup file (in my case in "c:\Users\david\")
-1. Add a line to .bashrc that says:
-   **export PATH=$PATH:/c/src/runai**
-   This adds it to your system PATH each time you run Git Bash. Then you can run "runai" from anywhere on your system - potentially very powerful.
+1. $ nano ~/.bashrc (to edit .bashrc startup file, and add a line "**export PATH=$PATH:/c/src/runai**")
 1. Do any custom configuration, e.g. set up your OAI_CONFIG_LIST add your OpenAI keys
 
 ## Simple Test
