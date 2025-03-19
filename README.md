@@ -1,10 +1,23 @@
-## runai: DJ Software Task Execution Framework
+## runai: DJ Software Task Execution and Automation Framework
 
-General AI-driven automation helper framework for tasks like code refactoring (or many other tasks, including non-coding-related tasks), optionally using AutoGen.
+* [runai homepage](https://djoffe.com/dj-software/runai/)
 
-Optionally integrates into command-line (with a small amount of setup) on Mac, git bash for Windows, or Linux.
+General AI/LLM-driven task execution and automation tool for tasks such as code refactoring (or many other tasks, including non-coding-related tasks), supporting AutoGen.
+
+Cross-platform: Optionally integrates into command-line (with a small amount of setup) on Mac, git bash for Windows, or Linux.
 
 This can be configured to use either OpenAI, or your own custom AI instances (for example your own LiteLLM server(s)).
+
+**Caution:** For some tasks, this can modify files. Always backup all your data first, always work in a 'sandbox' copy, and always check all changes. Always test first. The author(s) of this software are not liable for any use of this tool.
+
+## Terms of Use
+
+* Not open source.
+* Free to use for personal, non-commercial use only. For commercial use and organizations (such as government institutions), a support and licensing fee required.
+
+* [License, EULA and disclaimers](https://github.com/djsoftware1/runai/blob/main/README.md)
+
+## Installation
 
 To install requirements (you may either do this in an env, or though is more useful to install globally to allow to easily run "runai" anywhere from command line):
 
@@ -94,9 +107,15 @@ By default automatically looks for 'autotask.txt' in current folder, if not foun
 
 ## Custom LiteLLM Server:
 
+It is recommended to use a separate Python environment for litellm to avoid dependency issues.
+
 ```
 # Optional if want to run local AI server:
-# python3 -m pip install litellm
+$ pip install litellm (or: python3 -m pip install litellm)
+
+And possibly also:
+
+$ pip install litellm[proxy]
 ```
 
 Then e.g. 'ollama pull codellama' and 'litellm --model ollama/codellama'
@@ -214,10 +233,10 @@ Other potential names: dj-Run-AI, or perhaps 'dj-run-tasks' (to reflect that not
 
 ## Copyright
 
-This project Copyright (C) David Joffe / [DJ Software](https://djoffe.com/DJ-Software/) 2023-2025
+This project Copyright (C) David Joffe and [DJ Software](https://djoffe.com/dj-software/) 2023-2025
 
-Note: "**DJ Software**" is just short for "David Joffe Software", and is a name I created to place some of my software under (and of 1. a potential entity, and 2. of this [GitHub organization I created for DJ Software, @djsoftware1](https://github.com/djsoftware1/).
+"**DJ Software**" is just short for "David Joffe Software", and is a name I created to place some of my software under (and of 1. a potential entity, and 2. of this [GitHub organization I created for DJ Software, @djsoftware1](https://github.com/djsoftware1/).
 
-See also [djoffe.com/DJ-Software/](https://djoffe.com/DJ-Software/)
+See also [djoffe.com/dj-software/](https://djoffe.com/dj-software/)
 
 - David Joffe
