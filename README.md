@@ -2,11 +2,17 @@
 
 * [runai homepage](https://djoffe.com/dj-software/runai/)
 
+A kind of integrated 'AI extension' of your terminal or command prompt
+
 General AI/LLM-driven task execution and automation tool for tasks such as code refactoring (or many other tasks, including non-coding-related tasks), supporting AutoGen.
 
-Cross-platform: Optionally integrates into command-line (with a small amount of setup) on Mac, git bash for Windows (and Windows command prompt), or Linux.
+**Use also straight from VS Code and Cursor terminal:**
 
-This can be configured to use either OpenAI, or your own custom AI instances (for example your own LiteLLM server(s)).
+![runai screenshot by David Joffe and icon symbol](https://djoffe.com/dj-software/runai/media/runai_crop_center_logo.png)
+
+**Cross-platform:** Integrates into command-line for Windows command prompt, git bash, Linux, or macOS terminal.
+
+Supports either OpenAI, or your own custom AI instances (for example your own LiteLLM server(s)).
 
 **Example:**
 
@@ -23,7 +29,10 @@ Use `-t "task"` to specify task to be done.
 
 ```runai --showsettings``` **Just show settings and exit**
 
-**Example:** `runai --gpt3 -t "Repeat the word coffee five times"`
+**Example:**
+```
+runai --gpt3 -t "Repeat the word coffee five times"`
+```
 
 ### Common settings quick-reference
 ```
@@ -79,16 +88,17 @@ Options for selecting the model to use:
 
 **Note:** For some tasks, this tool can modify files, so use with caution. Always backup all your data first, work in a 'sandbox' copy, and check all ch ananges. Test things first. Use at own risk.
 
-## Terms of Use
+## License and Terms of Use
 
 * Free to use for personal, non-commercial use only. For commercial use and organizations (such as government institutions), a support and licensing fee required.
 * Not open source.
-
 * [License, EULA and disclaimers](https://github.com/djsoftware1/runai/blob/main/LICENSE.md)
 
 ## Installation
 
-To install requirements (you may use an env, though may be useful to install globally to more easily run "runai" from anywhere on command line):
+First, either download runai (as a zip), or clone this GitHub repo: `$ git clone https://github.com/djsoftware1/runai`
+
+Then install requirements (you may use an env, though may be useful to install globally to more easily run "runai" from anywhere on command line):
 
 ```
 pip install -r requirements.txt
@@ -104,46 +114,31 @@ Or (old way): python main.py
 
 If you follow the instructions here to add this to your system PATH, then you can just type "runai" from anywhere. (Otherwise, use "./runai" or a full path to run.)
 
-
 If using OpenAI, then place your configuration with API key in OAI_CONFIG_LIST
 
-```
-$ python3 -m pip install -r requirements.txt
-```
 
 ### PATH Setup
 
+runai "works best" if you optionally add to your system PATH - then you can just type "runai" on the command line from any folder to run - potentially very powerful.
 
-Works best if you optionally add to your system PATH - then you can just type "runai" on the command line from any folder to run - potentially very powerful.
+On Windows you can use the system Environment Variables dialog to add runai to PATH. (git bash _should_ automatically 'inherit' this for its PATH.)
 
-On Windows you can use the system Environment Variables dialog to add runai to PATH.
+For Linux/macOS (or also git bash), add a line like this in e.g. your **.bashrc** or zshrc startup file to add it to PATH on bash startup:
 
-For git bash, or Linux/macOS, add a line like this in e.g. your **.bashrc** or zshrc startup file to add it to PATH on bash startup:
-
-```
+``` sh
     export PATH="/c/src/runai:$PATH"
 ```
 (If, for example, you did 'git clone' this project into your, say, "/c/src" folder.)
 
-("runai" is just a small wrapper for 'python main.py'.) I installed as follows:
+("runai" is just a small wrapper for 'python main.py'.)
 
-1. Pick a folder and 'git clone' the repo into it, e.g.:
-1. $ cd /c/src    (this can be anywhere you like on your system)
-1. $ git clone https://github.com/djsoftware1/runai       (then pip install -r requirements.txt etc.)
-1. $ nano ~/.bashrc (to edit .bashrc startup file and add a line "export PATH=$PATH:/c/src/runai")
-1. Do any custom configuration, e.g. set up your OAI_CONFIG_LIST add your OpenAI keys
+
 
 ## Simple Test
 
 Try a simple test like this to see if it's working: 
 ```
     runai -4 -t "Hi, can you help me ?"
-```
-
-## Show Version
-
-```
-runai --version
 ```
 
 ## Show Settings and Exit
@@ -271,9 +266,6 @@ runai refactor -w src/MyFile.cpp
    - Manage release cycles and deployment schedules.
    - Example: Automatically deploy code to a staging server after passing CI/CD pipelines.
 
-## License
-
-Commercial/restricted
 
 ## Examples
 
