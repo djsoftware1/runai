@@ -4,13 +4,15 @@
 import argparse
 
 class CmdLineParser:
-    def __init__(self):
-
-        self.parser = argparse.ArgumentParser(description='runai - Run AI/LLM or other tasks, optionally with autogen')
+    def __init__(self, prog_override=''):
+        if prog_override == '':
+            self.parser = argparse.ArgumentParser(description='runai - Run AI/LLM or other tasks, optionally with autogen')
+        else:
+            self.parser = argparse.ArgumentParser(description='runai - Run AI/LLM or other tasks, optionally with autogen', prog=prog_override)
         #self.parser.add_argument('--help', action='store_true', help='Show this help message and exit.')
         self.parser.add_argument('--version', action='store_true', help='Show version number and exit.')
         self.parser.add_argument('--showsettings', action='store_true', help='Show settings and exit.')
-        self.parser.add_argument('--test', action='store_true', help='Run a sample test task.')
+        self.parser.add_argument('--test', action='store_true', help='Run test task(s).')
         self.parser.add_argument('--prompt', action='store_true', help='Force show task prompt.')
         self.parser.add_argument('-s', '--settings', type=str, help='Specify the task custom settings .py file.')
         self.parser.add_argument('-t', '--task', type=str, help='Specify the task string.')
@@ -26,6 +28,12 @@ class CmdLineParser:
         self.parser.add_argument('--o1-preview', action='store_true', help='Try use model o1-preview')
         self.parser.add_argument('--model', '-m', type=str, help='Specify preferred model to use.')
         self.parser.add_argument('--dryrun', action='store_true', help='Show roughly what would be done but do not actually execute the task.')
+
+
+        group = self.parser.add_argument_group('Backend selection', 'Backend selection options.')
+        #self.parser.add_argument('--use-djchatbot', '--djchatbot', action='store_true', help='use djchatbot backend for chat tasks.')
+        group.add_argument('--djchat', action='store_true', help='Use djchatbot backend for tasks if available.')
+        #group.add_argument('--openai', action='store_true', help='Use OpenAI backend directly for tasks.')
 
 
 
@@ -49,7 +57,7 @@ class CmdLineParser:
         refactor_parser.add_argument('-r', '--find-regex', type=str, help='Specify the refactor regex')
         refactor_parser.add_argument('--find-text', type=str, help='Specify the refactor string to find')
         refactor_parser.add_argument('-w', '--wildcards', type=str, nargs='+', help='Specify the refactor file wildcards')
-        refactor_parser.add_argument('--replace-with', type=str, help='Specify the string to replace with (if defined this is a direct non-AI find and replace)')
+        refactor_parser.add_argument('--replace-with', type=str, help='Specify the string to replace with (non-AI find and replace)')
         refactor_parser.add_argument('-s', '--send', type=str, nargs='+', help='Specify list of files to send in query for refactoring')
         """
         refactor_parser.add_argument('--replace-text', type=str, help='Specify the refactor string to replace')
@@ -79,8 +87,19 @@ class CmdLineParser:
         sub_parser.add_argument('-s', '--srcdir', type=str, help='Specify the output file name')
 
         # Subparser for the 'modify' command
+        # MAY CHANGE:
         sub_parser = subparsers.add_parser('modify', help='Modify command help')
+        # MAY CHANGE:
         sub_parser.add_argument('--editfile', type=str, help='Specify the file to edit')
+        #sub_parser.add_argument('--editfiles', '-e', type=str, help='Specify the files to edit')
+        # MAY CHANGE:
+        sub_parser.add_argument('-e', '--edit', type=str, nargs='+', help='Specify file(s) to send in query for edit')
+
+        # Subparser for the 'edit' command (? synonym for modify? or different?)
+        """
+        sub_parser = subparsers.add_parser('edit', help='Modify command help')
+        """
+
 
         """
         # Subparser for the 'clone' command

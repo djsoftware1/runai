@@ -1,4 +1,4 @@
-# Copyright (C) David Joffe / DJ Software 2023-2025
+# Copyright (C) David Joffe and DJ Software 2023-2025
 
 #import djtasktypes
 
@@ -25,11 +25,21 @@ class djSettings:
         self.out_files = []
         self.send_files = []
 """
+class ModifyTaskSettings:
+    def __init__(self):
+        self.send_files = []
+        self.out_files = []
+
 
 class djSettings:
     def __init__(self):
+        # User-required output files
+        # E.g. "runai --o1-mini -t "Please create a full C++ vec3d helper class, and return it in codeblocks with file names vec3d.h and vec3d.cpp." create -o vec3d.h vec3d.cpp"
+        # then this should be ["vec3d.h", "vec3d.cpp"]
         self.out_files = []
         self.send_files = []
+        # still in-dev:
+        self.exec = None
 
 """
 todo and flesh out, something like below for LLMsettings, say, and more:

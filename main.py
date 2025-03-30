@@ -1,6 +1,6 @@
 # main.py
 #
-# runai - Run or Automate AI/LLM and other tasks (such as code refactoring), optionally with AutoGen. 
+# runai - Run or Automate AI/LLM and other tasks (such as code refactoring), optionally with AutoGen.
 # Tasks may be non-AI-related (e.g. code or other document search-and-replace tasks), or we may use AI/LLM for tasks like code refactoring.
 #
 # See ReadMe.md for setup instructions, for instructions on how to use runai, and how to add it to your PATH.
@@ -8,8 +8,10 @@
 # runai -h             → SHOW HELP
 # runai -m MODEL       → Select Model to Use
 # runai --showsettings → Just show settings
+# runai create -h      → Subcommand help
 # 
-# runai (dj-run-AI) Source Repo: https://github.com/djsoftware1/runai
+# runai website: https://djoffe.com/dj-software/runai/
+# runai github repo: https://github.com/djsoftware1/runai
 # Created by David Joffe - 'Initially to try help with some of my own tasks, and partly as a learning exercise, but have not had enough time to work on it'.
 # Copyright (C) 2023-2025 David Joffe / DJ Software
 #==================================================================
@@ -36,15 +38,75 @@ import djrefactor
 import djversion
 import djargs
 import djsettings
-from djtasktypes import djTaskTypes
+from djtasktypes import djTaskType
 from djtask import djTask
+from run_ai.config.display import show_setting
+from run_ai.backends.selector import BackendSelector
+import djapp
+
+use_backend='autogen'
+run_tests=False
+
+def djGetFormattedDatetime(datetime_input):
+    #tmp_task_datetime = datetime.datetime.now()
+    return datetime_input.strftime("%Y-%m-%d %H-%M-%S")
+
+class SessionStats:
+    def __init__(self):        
+        self.datetime_start = datetime.datetime.now()
+        self.datetime_end = None
+        self.elapsed_time = None
+        # todo add more info - e.g. numerrors or numwarnings etc. ..
+
+
+class djController:
+    def __init__(self):        
+        self.app = djapp.App(appname="runai")
+        #self.runtask = djTask()
+        self.script_dir = os.path.dirname(os.path.abspath(__file__))
+        #self.config_list_path = os.path.join(self.script_dir, "OAI_CONFIG_LIST")
+        #self.config_list = None
+        #self.have_openai_config = False
+        #self.config_list_localgeneral = ""
+        #self.config_list_localcoder = ""
+        #self.config_list_local3 = ""
+        #self.config_list_local_ollama = ""
+        self.session_stats = None
+
+    def AppInitialize(self):
+        # verbosity level?
+        print(f"{Fore.GREEN}🤖 controller app-initialize{Style.RESET_ALL}")
+        # Show short core 'about this application' info on commandline - (dj)
+        djabout.djAbout().show_about()
+        # [dj2025-03]
+        self.session_stats = SessionStats()
+        # Get the directory of the current script (runai.py)
+        self.script_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        #print(f"{Fore.GREEN}🤖 Script directory: {script_dir}{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}=== Script directory: {self.script_dir}{Style.RESET_ALL}")
+
+    def AppDone(self):
+        print(f"{Fore.GREEN}🤖 controller app-done{Style.RESET_ALL}")
+        self.session_stats.datetime_end = datetime.datetime.now()
+        self.session_stats.elapsed_time = self.session_stats.datetime_end - self.session_stats.datetime_start
+        print(f"{Fore.GREEN}🤖[controller] Elapsed time: {self.session_stats.elapsed_time}{Style.RESET_ALL}")
+
+
+# Create a new application instance
+#app = djapp.App(appname="runai")
+controller=djController()
+controller.AppInitialize()
+app = controller.app
 
 # In future might want multiple settings objects for different things ...
 #runtask = djSettings()
 runtask = djTask()
 
+
 # Show short core 'about this application' info on commandline - (dj)
-djabout.djAbout().show_about()
+#djabout.djAbout().show_about()
+
 
 
 ##### system/script init:
@@ -58,7 +120,6 @@ print(f"{Fore.GREEN}=== Script directory: {script_dir}{Style.RESET_ALL}")
 ##### settings defaults
 #==================================================================
 
-#app = djAppSettings()
 
 ####################
 # TASK SETTINGS:
@@ -68,6 +129,7 @@ print(f"{Fore.GREEN}=== Script directory: {script_dir}{Style.RESET_ALL}")
 # Even if it could exec C++ I don't currently want it to for these tasks so let's make this a parameter
 # Maybe in future for some tasks it should be true eg simpler Python stuff it can exec or if it gets better in future
 code_execution_enabled=False
+#code_execution_enabled=True
 # TODO also try let coder handle things more directly?
 #max_consecutive_auto_replies=10
 max_consecutive_auto_replies=0
@@ -166,8 +228,8 @@ force_show_prompt=False
 just_show_settings=False
 use_deprecating_old_arg_handling=True
 
-# More generic new arg parser
-CmdLineParser = djargs.CmdLineParser()
+# More generic new arg parser (dj2025 we must pass appname here so it does noto show "usage: main.py")
+CmdLineParser = djargs.CmdLineParser(app.appname)
 args = CmdLineParser.parser.parse_args()
 # Check if a subcommand is provided
 if args.version:
@@ -187,6 +249,11 @@ if args.folder:
 if args.delay_between:
     # Delay between running multiple tasks
     runtask.delay_between = float(args.delay_between)
+if args.djchat:
+    use_backend = 'djchat'
+else:
+    use_backend = 'autogen'
+    
 if args.model:
     # Specify preferred model to use
     user_select_preferred_model = args.model
@@ -221,7 +288,9 @@ if args.input:
     inputfile = args.input
 if args.test:
     #use_sample_default_task=True
-    task = "Write a Python function to sort a list of numbers."
+    run_tests=True
+    #task = 'Say Hi 3 times'
+    #task = "Write a Python function to sort a list of numbers."
     taskfile = ''
 if args.prompt:
     # Force ask for task prompt from input?
@@ -231,7 +300,7 @@ if args.subcommand:
     if args.subcommand == 'refactor':
         print("TASK: Refactor")
         do_refactor = True
-        runtask.type = djTaskTypes.refactor
+        runtask.type = djTaskType.refactor
         # Add all passed wildcards to refactor_wildcards array (which looks like e.g. refactor_wildcard = ["*.cpp", "*.h"])
         if args.wildcards:
             refactor_wildcards = args.wildcards
@@ -245,9 +314,40 @@ if args.subcommand:
         #taskfile = args.taskfile
         use_deprecating_old_arg_handling = False
     elif args.subcommand == 'create':
-        runtask.type = djTaskTypes.create
+        runtask.type = djTaskType.create
         if args.out:
             runtask.settings.out_files = args.out
+    elif args.subcommand == 'build':
+        runtask.type = djTaskType.build
+        if args.exec:
+            # Specify the file to exec
+            runtask.settings.exec = args.exec
+    #elif args.subcommand == 'modify' or args.subcommand == 'edit':
+    elif args.subcommand == 'modify':
+        runtask.type = djTaskType.modify
+        if args.editfile:
+            # Specify the file to edit
+            runtask.settings.send_files = [ args.editfile ]
+            runtask.settings_modify.send_files = [ args.editfile ]
+        if args.edit:
+            runtask.settings.send_files = args.edit
+            runtask.settings_modify.send_files = args.edit
+        ################## ?
+        # dj: clean up and consolidate and simplify these various sendfile settings ...
+        # dj I guess maybe we should copy this to files_to_send? hm ..
+        #files_to_send = runtask.settings.send_files
+        # Add all passed wildcards to refactor_wildcards array (which looks like e.g. refactor_wildcard = ["*.cpp", "*.h"])
+        refactor_wildcards = ''
+        refactor_matches = ''
+        replace_with = ''
+        #runtask.settings.send_files = args.send
+        #files_to_send = runtask.settings.send_files
+
+        #if args.exec:
+            # Specify the file to exec
+         #   runtask.settings.exec = args.exec
+    else:
+        print(f"Unknown subcommand: {args.subcommand}")
 
 
 
@@ -272,35 +372,7 @@ if settings_pyscript is not None and len(settings_pyscript) > 0:
         exec(settings_py)
 
 
-# Small helper to show setting name and value in different color
-def show_setting(name, value, indent=0, descriptionString="", strKeyShortcut=""):
-    # dj2025-03 add indent and descriptionString (optional)
-    #sBULLET_INFO="→ 🛈"
-    #sBULLET_INFO="→"
-    sBULLET_INFO=""
-    strDashesBefore="=== "
-    if indent > 0:
-        print("   " * indent, end="")
-        strDashesBefore="■ "
-        #strDashesBefore = sBULLET_INFO
-    else:
-        strDashesBefore="=== "
-    
-    strDescription=""
-    if len(descriptionString) > 0:
-        strDescription = f" {sBULLET_INFO} {Fore.MAGENTA}{descriptionString}{Style.RESET_ALL}"
 
-    # e.g. "-f FOLDER" info stuff
-    # ■ -f FOLDER: Nodjfsdj dsfkjl → Work-folder for tasks like auto-refactoring
-    # ■ -t TASK: Hey there! tell me how to make cofee
-    strShortCut=""
-    if len(strKeyShortcut) > 0:
-        strShortCut = f"{Fore.GREEN}{strKeyShortcut}{Style.RESET_ALL}"
-
-    if value is not None:
-        print(f"{Fore.GREEN}{strDashesBefore}{name}:{Style.RESET_ALL} {Fore.CYAN}{value}{Style.RESET_ALL}{strDescription} {strShortCut}")
-    else:
-        print(f"{Fore.GREEN}{strDashesBefore}{name}:{Style.RESET_ALL} {Fore.RED}-{Style.RESET_ALL}{strDescription} {strShortCut}")
 
 
 def show_settings():
@@ -309,7 +381,14 @@ def show_settings():
     #print(f"{Fore.BLUE}=== SETTINGS:"):
     print(f"{Fore.YELLOW}=== SETTINGS:")
     sBullet1='x'
-    print(f"{Fore.YELLOW}{sBullet1} Task settings:{Style.RESET_ALL}")
+    sBullet1='→'
+    sBullet1='● '
+    #sBullet1='_'
+    #sBullet1='__'
+    #sBullet1=''
+    sHeadingSuffix='________'
+    sHeadingSuffix=''
+    print(f"{Fore.YELLOW}{sBullet1}Task settings:{Style.RESET_ALL}")
     #default_values
     #default_values['InputFile']='input.txt'
     show_setting("TaskFile", taskfile, 1)#
@@ -318,40 +397,66 @@ def show_settings():
     show_setting("WorkFolder", worktree, 1, "work-folder for tasks like auto-refactoring. (default: \".\" current-folder)", "-f")
     show_setting("TargetFolder", targetfolder, 1, "", "  ")
     show_setting("TASK", task, 1, "task string for LLM or agent to perform", "-t")
+
+    show_setting("runtask.type", runtask.type, 1)
+    show_setting("runtask.delay_between (seconds, float)", runtask.delay_between, 1)
+    show_setting("runtask.start_line", runtask.start_line, 1)
+
+    show_setting("runtask.autogen_task.send_files", runtask.settings.send_files, 1)
+    show_setting("runtask.autogen_task.out_files", runtask.settings.out_files, 1)
+
     show_setting("Files to send", files_to_send, 1)
 
-    show_setting("max_consecutive_auto_replies", max_consecutive_auto_replies)
-    show_setting("refactor_matches", refactor_matches)
-    show_setting("replace_with", replace_with)
-    show_setting("refactor_wildcards", refactor_wildcards)
-    show_setting("task.delay_between (seconds, float)", runtask.delay_between)
-    show_setting("send_files", runtask.settings.send_files)
-    show_setting("out_files", runtask.settings.out_files)
-    show_setting("dryrun", runtask.dryrun)
-    show_setting("start_line", runtask.start_line)
+    show_setting(f"{Fore.YELLOW}task.refactor:{Fore.GREEN} refactor_matches", refactor_matches, 1)
+    show_setting("refactor.refactor_matches", refactor_matches, 3)
+    show_setting("refactor.replace_with", replace_with, 3)
+    show_setting("refactor.refactor_wildcards", refactor_wildcards, 3)
+    show_setting("?runtask.settings.send_files", runtask.settings.send_files, 3)
     
-    print(f"{Fore.YELLOW}{sBullet1} AutoGen settings:{Style.RESET_ALL}")
-    show_setting("autogen.no_autogen_user_proxy", no_autogen_user_proxy, 1)
-    show_setting("autogen.NoGroup", NoGroup, 1, "If True do not create autogen GroupChat and GroupChatManager")
-    show_setting("autogen.use_cache_seed", use_cache_seed, 1, "random seed for caching and reproducibility")
-    show_setting("autogen.code_execution_enabled", code_execution_enabled, 1, "Enable AutoGen agent code execution [currently always off]")
+
+    show_setting(f"{Fore.YELLOW}task.modify{Fore.GREEN}.send_files", f"{runtask.settings_modify.send_files}", 1)
+    
+    # HEADING
+    print(f"{Fore.YELLOW}{sBullet1}AutoGen settings:{sHeadingSuffix}{Style.RESET_ALL}")
+    show_setting("no_autogen_user_proxy", no_autogen_user_proxy, 1)
+    show_setting("NoGroup", NoGroup, 1, "If True do not create autogen GroupChat and GroupChatManager")
+    show_setting("use_cache_seed", use_cache_seed, 1, "random seed for caching and reproducibility")
+    show_setting("code_execution_enabled", code_execution_enabled, 1, "Enable AutoGen agent code execution [currently always off]")
     show_setting("coder_only", coder_only, 1)
-    
+    show_setting("max_consecutive_auto_replies", max_consecutive_auto_replies, 1)
+
+    # HEADING
     # LLM SETTINGS/PREFERENCES/COMMAND-LINE OPTIONS
-    print(f"{Fore.YELLOW}{sBullet1} LLM settings:{Style.RESET_ALL}")
-    show_setting("TryUseModell", user_select_preferred_model, 1)
-    sBULLET_SQUARE="■"
-    print("   " * 2, end="")#indent
-    print(f"{Fore.YELLOW}OpenAI settings:{Style.RESET_ALL}")
-    show_setting("USE_OPENAI", 'YES' if use_openai is True else 'NO', 2)
-    show_setting("HAVE_OPENAI_CONFIG?", have_openai_config, 2)
+    print(f"{Fore.YELLOW}{sBullet1}LLM settings:{sHeadingSuffix}{Style.RESET_ALL}")
+    show_setting("user-selected-model", user_select_preferred_model, 1, "", "-m -4 -o1-mini")
+    #sBULLET_SQUARE="■"
+    #print("   " * 2, end="")#indent
+    # why showing twice
+    # HEADING
+    print(f"{Fore.YELLOW}{sBullet1}OpenAI settings:{sHeadingSuffix}{Style.RESET_ALL}")
+    show_setting("USE_OPENAI", 'YES' if use_openai is True else 'NO', 1)
+    show_setting("HAVE_OPENAI_CONFIG?", have_openai_config, 1)
     if have_openai_config:
-        show_setting("openai.config_list", config_list, 2)
+        # NB hide sensitive data like API keys
+        s = f"{config_list}"
+        #s = re.sub(r'sk-(.*)["\']', "\"(hidden)\"", s, flags=re.MULTILINE)
+        #show_setting("openai.config_list", config_list, 1)
+        show_setting("openai.config_list", s, 1)
 
     #global config_list
     if config_list:
         # Convert the object to a JSON string and print it
-        show_setting("config_list", json.dumps(config_list, indent=4))
+        #show_setting("global.config_list", json.dumps(config_list, indent=4))
+        # todo if we add a --verbose or something 
+        #s = json.dumps(config_list)
+        #s = re.sub(r'sk-(.*)["\']', "\"(hidden)\"", s, flags=re.MULTILINE)
+        """
+        'api_key': '"s(key_hidden)"}]
+         config_list: [
+        """
+        show_setting("global.config_list", s)
+    show_setting("dryrun only", runtask.dryrun)
+    show_setting("use-backend", use_backend)
     print(f"{Fore.BLUE}__________________________________{Style.RESET_ALL}")
     # TODO also try let coder handle things more directly?
     return
@@ -371,37 +476,54 @@ config_list_local_ollama=[
         'api_key':"NULL"
     }
 ]
+config_list_localgeneral_LITELLM=[
+    {
+        #'base_url':"http://127.0.0.1:8000",#'base_url':"http://127.0.0.1:11434/v1/chat/completions",
+        'base_url':"http://127.0.0.1:8000/v1",
+        'model':'gemma-3-4b-it',
+        'api_key':"NULL"
+    }
+]
 """
 # [dj] local LiteLLM instances ...
 config_list_localgeneral=[
     {
-        'base_url':"http://127.0.0.1:11434",#'base_url':"http://127.0.0.1:11434/v1/chat/completions",
-        'model':'deepseek-r1:1.5b',
+        #'base_url':"http://127.0.0.1:8000",#'base_url':"http://127.0.0.1:11434/v1/chat/completions",
+        'base_url':"http://127.0.0.1:8000",
+        'model':'ollama/gemma3-4b',#'model':'gemma-3-4b-it',
+        #'model':'deepseek-r1:1.5b',
         #'model':'gemma3:4b',
         'api_key':"NULL"
     }
 ]
 config_list_localcoder=[
     {
-        'base_url':"http://127.0.0.1:11434",
-        'model':'deepseek-r1:1.5b',
+        #'base_url':"http://127.0.0.1:8000",
+        'base_url':"http://127.0.0.1:8000",
+        'model':'ollama/gemma3-4b',#'model':'gemma-3-4b-it',
+        #'model':'deepseek-r1:1.5b',
         #'model':'gemma3:4b',
         'api_key':"NULL"
     }
 ]
 config_list_localcoder=[
     {
-        'base_url':"http://127.0.0.1:11434",
-        'model':'deepseek-r1:1.5b',
+        #'base_url':"http://127.0.0.1:8000",
+        'base_url':"http://127.0.0.1:8000",
+        'model':'ollama/gemma3-4b',#'model':'gemma-3-4b-it',
+        #'model':'deepseek-r1:1.5b',
         #'model':'gemma3:4b',
         'api_key':"NULL"
     }
 ]
 config_list_local3=[
     {
-        'base_url':"http://127.0.0.1:11434",
-        'model':'gemma3:4b',#'model':'deepseek-r1:1.5b',
+        'base_url':"http://127.0.0.1:8000",
+        'model':'ollama/gemma3-4b',#'model':'gemma-3-4b-it',
+        #'model':'deepseek-r1:1.5b',
+        #'model':'gemma3:4b',
         'api_key':"NULL"
+
     }
 ]
 
@@ -409,8 +531,9 @@ config_list_local3=[
 config_list_local_ollama=[
     {   
         #'base_url':"http://127.0.0.1:11434/v1/chat/completions",
-        'base_url':"http://127.0.0.1:11434",
-        'model':'deepseek-r1:1.5b',#'model':'gemma3:4b',
+        'base_url':"http://127.0.0.1:8000",
+        #'model':'lm_studio/deepseek-r1:1.5b',#'model':'gemma3:4b',
+        'model':'ollama/gemma3-4b',#'model':'gemma-3-4b-it',#'model':'gemma3:4b',
         'api_key':"NULL"
     }
 ]
@@ -612,7 +735,9 @@ if task=="":
 #djabout.djAbout().show_about(True)
 
 if task == "" or task is None or force_show_prompt:
-    task = input(f"{Fore.CYAN}(Ctrl+C to stop) {Fore.YELLOW}What would you like to do? Please enter a task:{Style.RESET_ALL} ")
+    sCWD=os.getcwd()#getcwd just for logging
+    print(f"• current-directory={sCWD} • working-folder={worktree}")
+    task = input(f"{Fore.CYAN}(Ctrl+C to stop)({sCWD}) {Fore.YELLOW}What would you like to do? Please enter a task:{Style.RESET_ALL} ")
 
     # Check if the user entered nothing
     if task == "":
@@ -669,6 +794,7 @@ def send_to_autogen(file_path, task):
 
 # Function to process files
 def process_files(files_to_send, worktree, targetfolder, task):
+    print(f"DEBUG: PROCESS_FILES {files_to_send} worktree={worktree} targetfolder={targetfolder} {runtask.type} {task}")
     for file_name in files_to_send:
         file_path = os.path.join(worktree, file_name)
         if os.path.exists(file_path):
@@ -702,6 +828,69 @@ if __name__ == '__main__':
     print(f"SETTINGS: Task={task}")
     print(f"USE_OPENAI={use_openai}")
 
+    # dj2025-03 adding backend selector
+    print(f"USE_BACKEND={use_backend}")
+    settings = None
+    print('=== BackendSelector setup')
+    selector = BackendSelector(settings, use_backend)
+
+    # RUN BACKEND TEST:
+    if run_tests:
+        #input(f"Press a key to run tests")
+        #task = 'Say Hi 3 times'
+        #task = "Write a Python function to sort a list of numbers."
+
+        print('=== TEST:')
+        result = selector.do_task('Say hi 3 times')
+
+        backend = selector.get_backend()
+        #print(f"=== BackendSelector TEST: {result}")
+        if len(backend.error)>0:
+            print(f"=== test DoTask[backend:{selector.backend_name}]: {Fore.RED}ERROR: {backend.error}. RESPONSE:{Style.RESET_ALL}")
+            print(f"{Fore.RED}{backend.response}{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}{result}{Style.RESET_ALL}")
+        else:
+            print(f"=== test DoTask[backend:{selector.backend_name}]: {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")    
+            print(f"{Fore.RED}{result}{Style.RESET_ALL}")
+        print(f"RESULT (TEST): {result}")
+        print("---------------------------------------")
+        print('=== BackendSelector TEST:')
+        testtask = "Write a Python function to sort a list of numbers."
+        result = selector.do_task(testtask)
+
+        backend = selector.get_backend()
+        #print(f"=== BackendSelector TEST: {result}")
+        if len(backend.error)>0:
+            print(f"=== test DoTask[backend:{selector.backend_name}]: {Fore.RED}ERROR: {backend.error}. RESPONSE:{Style.RESET_ALL}")
+            print(f"{Fore.RED}{backend.response}{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}{result}{Style.RESET_ALL}")
+        else:
+            print(f"=== test DoTask[backend:{selector.backend_name}]: {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")    
+            print(f"{Fore.RED}{result}{Style.RESET_ALL}")
+        print(f"RESULT (TEST): {result}")
+        print("---------------------------------------")
+
+    # todo add option whether to wait on keypress or auto go-ahead
+    input(f"■ Press a key to run task: {task}")
+    result = selector.do_task(task)
+    backend = selector.get_backend()
+    print(f"DEBUG: selector.get_active_backends: {selector.get_active_backends()}")
+    
+    if len(backend.error)>0:
+        print(f"■ DoTask[backend:{selector.backend_name}] {Fore.RED}ERROR: {backend.error}. RESPONSE:{Style.RESET_ALL}")
+        print(f"{Fore.RED}{backend.response}{Style.RESET_ALL}")
+        print(f"{Fore.RED}{result}{Style.RESET_ALL}")
+        #print(f"{result}")
+    else:
+        print(f"■ DoTask[backend:{selector.backend_name}] {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")    
+        print(f"{Fore.GREEN}{result}{Style.RESET_ALL}")
+    #elif len(backend.response)==0:
+    #    # this will still happen with autogen as our autogen backend is a stub... (dj2025-03)
+    #    print(f"empty response")
+    print("---------------------------------------")
+
+    #input('Press a key ....')
+
     # create an AssistantAgent named "assistant"
     assistant = autogen.AssistantAgent(
         name="assistant",
@@ -728,9 +917,10 @@ if __name__ == '__main__':
         #code_execution_config=code_execution_enabled,
         max_consecutive_auto_reply=max_consecutive_auto_replies,
         is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
+        #code_execution_config=code_execution_enabled,
         code_execution_config=False,
         #code_execution_config={
-        #    "work_dir": "coding",
+        #    "work_dir": "__coding__",
         #    "use_docker": False,  # set to True or image name like "python:3" to use docker
         #},
     )
@@ -806,6 +996,7 @@ if __name__ == '__main__':
                 print(f"{str_pre} LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}]: {inputline}")
             #if runtask.dryrun:
             #    print(f"=== DRY RUN")
+            # BATCH MODE SUBSTITUTIONS:
             # Replace {$1} in task with the inputline
             task_line = task
             task_line = task_line.replace("{$1}", inputline)
@@ -882,6 +1073,52 @@ if __name__ == '__main__':
             if runtask.delay_between:
                 print(f"=== Sleeping {runtask.delay_between}s between tasks")
                 time.sleep(runtask.delay_between)
+    elif runtask.type==djTaskType.modify:
+        print("=== Do task type: {runtask.type}")
+
+        # [dj2025] THIS APPLIES NOW TO "EDIT":
+        if len(runtask.settings_modify.send_files)>0:
+            for filename in runtask.settings_modify.send_files:
+                print(f"=== MODIFY: PROCESSING FILE: {filename}")
+                # Read all lines from the file
+                #with open(file, 'r', encoding='utf-8') as file:
+                with open(filename, 'r', encoding='utf-8') as file:
+                    lines = file.readlines()
+                # Read a line a time
+                str_loaded_file_content = ""
+                for line in lines:
+                    str_loaded_file_content += line# + "\n"
+                    print(line)
+                    #loaded_file_content = file.read()
+                print(f"=== Loaded file content:\n```\n{str_loaded_file_content}\n```")
+                input(" Please press a key to continue. loaded_file_content")
+
+                # todo low) "cpp" hardcoded as code type here for now
+                newline_char = "\n"
+
+                #str_loaded_file_content = f"{loaded_file_content}"
+                #print(f"=== Loaded file content: {loaded_file_content}")
+                print(f"task:{task}")
+                task_message = task + newline_char + f"```{filename}" + newline_char + str_loaded_file_content + "```"
+                print(f"task_message:{task_message}")
+
+                # DEBUG/TESTING and maybe actual use: Save the task_message to file
+                # but if filename exists generate new filename
+                #task_message_filename = f"{file}.task"
+                str_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                task_message_filename = f"{filename}__{str_datetime}-task.txt"
+                while os.path.exists(task_message_filename):
+                    str_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                    task_message_filename = f"{filename}__{str_datetime}-task.txt"
+                with open(task_message_filename, 'w', encoding='utf-8') as file:
+                    file.write(task_message)
+                
+                # wait for keypress
+                input('Please press a key to continue.')
+                # (1) First let the AI do its thing
+                # (2) Then get the AI output which gets captured in the DualOutput class
+                # We want to use the final AI output co ..
+                user_proxy.initiate_chat(coder, message=task_message)
     elif do_refactor:
         print("=== Do refactoring file(s)")
         #djrefactor.Refactor(worktree, refactor_wildcard, refactor_negmatches, "^[ \t]*tStrAppend", task, user_proxy, coder)
@@ -922,18 +1159,20 @@ if __name__ == '__main__':
         # If no files to create, do requested task
         dual_output.PauseSaveFiles()
         if len(files_to_send)==1:
-            print(f"=== Sending file: {', '.join(files_to_send)}")
+            print(f"=== Sending file [{runtask.type}]: {', '.join(files_to_send)}")
         else:
-            print(f"=== Sending files: {', '.join(files_to_send)}")
+            print(f"=== Sending files [{runtask.type}]: {', '.join(files_to_send)}")
         dual_output.UnpauseSaveFiles()
         # Call the function to process files
         # This is maybe not going to be used anymore, not sure..
+        # wait for keypress
+        #input('process_files')
         process_files(files_to_send, worktree, targetfolder, task)
     else:
         # If no files to create, do requested task
         #pause_capture in case our own task has code blocks in it - we don't want those auto-saving by mistake
         dual_output.PauseSaveFiles()
-        print(f"=== Processing task: {task}")
+        print(f"=== Processing task [type={runtask.type}]: {task}")
         dual_output.UnpauseSaveFiles()
         task_message=task
         if coder_only and no_autogen_user_proxy:
@@ -990,21 +1229,58 @@ if __name__ == '__main__':
 
     # We're effectively doing below twice now ..
     # Use ai_output with create_files_from_ai_output function in order to actually create any files in the returned code
-    create_files_from_ai_output(ai_output, task_output_directory + '/outfiles_final')
+    app.out.print("Creating files from AI output task_output_directory {task_output_directory}/outfiles_final")
+    files_created = create_files_from_ai_output(ai_output, task_output_directory + '/outfiles_final')
+    #ret_created_files
 
     # Print the captured output to the console
     print("=== Captured AI Output:")
     print(ai_output)
 
 
+    # dj2025-03 list files created and list files first required (e.g. "runai create -o file1.cpp file2.h") so we can see if all files were created
+    if runtask.type == djTaskType.create:
+        print("🤖create files requested:")
+        if not runtask.settings.out_files is None:
+            for file in runtask.settings.out_files:
+                print(f"  '{file}'")
+            
+        print("🤖 files to create:")
+        if not files_to_create is None:
+            for file in files_to_create:
+                print(f"  {file}")
+        #files_created = create_files_from_ai_output
+        print("🤖💾files created by final create_files_from_ai_output:")
+        if not files_created is None:
+            for file in files_created:
+                print(f"  {file}")
+
 
     #result = send_files_for_modification(args.task_description, args.header_file, args.source_file)
     #print(f'Modified files received: {result}')
-    print("=== Done! All tasks processed.")
-
-#def get_task_from_user(task):
-#    """Checks if the task is empty or None, and prompts the user for input if it is."""
-#    while task is None or task.strip() == '':
-#        task = input("Please enter a task to perform: ").strip()
-#    return task
+    # Get date/time to use in filenames and directories and session logfiles etc.
+    controller.AppDone()
+    #app = controller.apps
+    #datetime_completed = controller.datetime_end#djGetFormattedDatetime(datetime.datetime.now())
+    print(f"🤖=== Done! All tasks processed. Completed {controller.session_stats.datetime_end}")
+    print(f"{Fore.YELLOW}_______________________________\nFinal Session Stats & Info:{Style.RESET_ALL}")
+    #HEADING: Session Stats
+    #show_setting(f"{Fore.YELLOW}Session Stats{Style.RESET_ALL}", '', 1)
+    print(f"   {Fore.YELLOW}Session: {Fore.WHITE}started: {Fore.BLUE}{controller.session_stats.datetime_start}{Style.RESET_ALL}")
+    print(f"   {Fore.YELLOW}         {Fore.WHITE}completed: {Fore.BLUE}{controller.session_stats.datetime_end}{Style.RESET_ALL}")
+    print(f"   {Fore.YELLOW}         {Fore.WHITE}time: {Fore.BLUE}{controller.session_stats.elapsed_time}{Style.RESET_ALL}")
+    #show_setting('total tasks', controller.session_stats.total_tasks, 1)
+    show_setting('task_output_directory', f"\"task_output_directory\"", 1)
+    show_setting('task_output_directory/outfiles_final', task_output_directory+'/outfiles_final', 1)
+    #HEADING: Task info
+    show_setting(f"{Fore.YELLOW}Task info{Style.RESET_ALL}", '', 1)
+    show_setting("runtask.type", runtask.type, 2)
+    show_setting("files_to_create", files_to_create, 2)
+    show_setting("files_to_send", files_to_send, 2)
+    #HEADING: File-related info
+    show_setting(f"{Fore.YELLOW}File-related info{Style.RESET_ALL}", '', 1)
+    show_setting("runtask.settings.out_files", runtask.settings.out_files, 2)
+    show_setting("runtask.settings.send_files", runtask.settings.send_files, 2)
+    show_setting("files_created", files_created, 2)
+    print(f"🤖 - \"{Fore.MAGENTA}Done! What else can I help you with next?\"{Style.RESET_ALL}")
 
