@@ -42,7 +42,7 @@ from djtasktypes import djTaskType
 from djtask import djTask
 from run_ai.config.display import show_setting
 from run_ai.backends.selector import BackendSelector
-import djapp
+from run_ai.djapp import App
 
 use_backend='autogen'
 run_tests=False
@@ -61,7 +61,7 @@ class SessionStats:
 
 class djController:
     def __init__(self):        
-        self.app = djapp.App(appname="runai")
+        self.app = App(appname="runai")
         #self.runtask = djTask()
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
         #self.config_list_path = os.path.join(self.script_dir, "OAI_CONFIG_LIST")
