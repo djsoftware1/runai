@@ -9,10 +9,9 @@
 from run_ai.backends.base import Backend
 from run_ai.backends.djchat import djChatBackend
 from run_ai.backends.autogen import AutoGenBackend
+from run_ai.backends.openai import OpenAIBackend
 # future?
-#from run_ai.backends.openai_backend import OpenAIBackend
-# from run_ai.backends.ollama_backend import OllamaBackend
-# from run_ai.backends.autogen_backend import AutoGenBackend
+# from run_ai.backends.ollama import OllamaBackend
 
 class BackendSelector:
     # LLMSettings
@@ -35,9 +34,9 @@ class BackendSelector:
         elif self.backend_name == "djchat":
             # Initialize djChatBackend with settings
             return [djChatBackend(self.settings)]
-        #elif self.backend_name == "openai":
+        elif self.backend_name == "openai":
             # Initialize OpenAIBackend with settings
-            #return [OpenAIBackend(self.settings)]
+            return [OpenAIBackend(self.settings)]
         # elif self.backend_name == "ollama":
         #if self.backend_name == "openai":
         #    return [OpenAIBackend(self.settings)]

@@ -251,6 +251,8 @@ if args.delay_between:
     runtask.delay_between = float(args.delay_between)
 if args.djchat:
     use_backend = 'djchat'
+elif args.openai:
+    use_backend = 'openai'
 else:
     use_backend = 'autogen'
     
@@ -448,7 +450,7 @@ def show_settings():
         # Convert the object to a JSON string and print it
         #show_setting("global.config_list", json.dumps(config_list, indent=4))
         # todo if we add a --verbose or something 
-        #s = json.dumps(config_list)
+        s = json.dumps(config_list)
         #s = re.sub(r'sk-(.*)["\']', "\"(hidden)\"", s, flags=re.MULTILINE)
         """
         'api_key': '"s(key_hidden)"}]
