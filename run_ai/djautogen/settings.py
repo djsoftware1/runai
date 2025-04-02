@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2025 David Joffe and DJ Software
+# dj2025-04
+
 """
 ■ runtask.autogen_task.send_files: []
 ■ runtask.autogen_task.out_files: [] ((? ■ task.modify.send_files: [])

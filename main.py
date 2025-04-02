@@ -42,7 +42,12 @@ from djtasktypes import djTaskType
 from djtask import djTask
 from run_ai.config.display import show_setting
 from run_ai.backends.selector import BackendSelector
+from run_ai.backends.base import djAISettings
 from run_ai.djapp import App
+
+from run_ai.djautogen.settings import djAutoGenSettings
+#autogen_settings = djAutoGenSettings(system_prompt="You are a helpful assistant.")
+autogen_settings = djAutoGenSettings()
 
 use_backend='autogen'
 run_tests=False
@@ -832,7 +837,9 @@ if __name__ == '__main__':
 
     # dj2025-03 adding backend selector
     print(f"USE_BACKEND={use_backend}")
-    settings = None
+    settings = djAISettings()
+    if len(user_select_preferred_model)>0:
+        settings.model = user_select_preferred_model
     print('=== BackendSelector setup')
     selector = BackendSelector(settings, use_backend)
 
@@ -872,8 +879,26 @@ if __name__ == '__main__':
         print(f"RESULT (TEST): {result}")
         print("---------------------------------------")
 
+    # Log the task to keep a record of what we're doing and help study/analyze results
+    log_task = f"{task_output_directory}/tasklog.txt"
+    with open(log_task, 'a', encoding='utf-8') as log_file:
+        log_file.write(task)
+
+    # [IO redirect begin] Backup the original stdout
+    ####original_stdout = sys.stdout
+    # [IO redirect begin] Create a StringIO object to capture output
+    ####captured_output = io.StringIO()
+    ####sys.stdout = captured_output
+
+    # Redirect output to both console and StringIO
+    dual_output = DualOutput(task_output_directory)
+    sys.stdout = dual_output
+
+
+
+
     # todo add option whether to wait on keypress or auto go-ahead
-    input(f"■ Press a key to run task: {task}")
+    input(f"■ Press a key to run task: {Fore.CYAN}{task}{Style.RESET_ALL}")
     result = selector.do_task(task)
     backend = selector.get_backend()
     print(f"DEBUG: selector.get_active_backends: {selector.get_active_backends()}")
@@ -943,11 +968,6 @@ if __name__ == '__main__':
         )
     """
 
-    # Log the task to keep a record of what we're doing and help study/analyze results
-    log_task = f"{task_output_directory}/tasklog.txt"
-    with open(log_task, 'a', encoding='utf-8') as log_file:
-        log_file.write(task)
-
     if not NoGroup:
         print("=== Creating groupchat and manager")
         groupchat = autogen.GroupChat(agents=[user_proxy, coder, assistant], messages=[])
@@ -956,16 +976,6 @@ if __name__ == '__main__':
         print("=== no groupchat or manager")
         groupchat = None
         manager = None
-
-    # [IO redirect begin] Backup the original stdout
-    ####original_stdout = sys.stdout
-    # [IO redirect begin] Create a StringIO object to capture output
-    ####captured_output = io.StringIO()
-    ####sys.stdout = captured_output
-
-    # Redirect output to both console and StringIO
-    dual_output = DualOutput(task_output_directory)
-    sys.stdout = dual_output
 
     # Check if we have a input.txt file and if so use that as input to the AI to run on all lines of the file
     inputlines_array = []
@@ -1231,7 +1241,7 @@ if __name__ == '__main__':
 
     # We're effectively doing below twice now ..
     # Use ai_output with create_files_from_ai_output function in order to actually create any files in the returned code
-    app.out.print("Creating files from AI output task_output_directory {task_output_directory}/outfiles_final")
+    print("Creating files from AI output task_output_directory {task_output_directory}/outfiles_final")
     files_created = create_files_from_ai_output(ai_output, task_output_directory + '/outfiles_final')
     #ret_created_files
 

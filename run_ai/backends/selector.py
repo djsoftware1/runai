@@ -7,36 +7,34 @@
 
 #from run_ai.config.back import LLMSettings
 from run_ai.backends.base import Backend
+from run_ai.backends.base import djAISettings
 from run_ai.backends.djchat import djChatBackend
 from run_ai.backends.autogen import AutoGenBackend
 from run_ai.backends.openai import OpenAIBackend
 # future?
 # from run_ai.backends.ollama import OllamaBackend
 
-class BackendSelector:
-    # LLMSettings
-    def __init__(self, settings: None, backend_name: str = "openai"):
-        self.settings = settings
-        self.backend_name = backend_name.lower()
-        self.backends = self._initialize_backends()
 
 class BackendSelector:
     #LLMSettings
-    def __init__(self, settings: None, backend_name: str = "autogen"):
-        self.settings = settings
+    #def __init__(self, settings: None, backend_name: str = "openai"):
+    def __init__(self, ai_settings: djAISettings, backend_name: str = "autogen"):
+        self.ai_settings = ai_settings
         self.backend_name = backend_name.lower()
         self.backends = self._initialize_backends()
+        for backend in self.backends:
+            backend.create()
 
     def _initialize_backends(self):
         if self.backend_name=='autogen':
             # Initialize AutoGenBackend with settings
-            return [AutoGenBackend(self.settings)]
+            return [AutoGenBackend(self.ai_settings)]
         elif self.backend_name == "djchat":
             # Initialize djChatBackend with settings
-            return [djChatBackend(self.settings)]
+            return [djChatBackend(self.ai_settings)]
         elif self.backend_name == "openai":
             # Initialize OpenAIBackend with settings
-            return [OpenAIBackend(self.settings)]
+            return [OpenAIBackend(self.ai_settings)]
         # elif self.backend_name == "ollama":
         #if self.backend_name == "openai":
         #    return [OpenAIBackend(self.settings)]

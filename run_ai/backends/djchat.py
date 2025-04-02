@@ -16,9 +16,9 @@ def try_import_backend(name: str):
 djchatbot = try_import_backend("chat.djchatbot")
 
 class djChatBackend(Backend):
-    def __init__(self, settings):
-        super().__init__(settings)
-        self.settings = settings
+    def __init__(self, ai_settings):
+        super().__init__(ai_settings)
+        self.ai_settings = ai_settings
         self.chatbot = None
         self.profile = None
         self.userconfig=None
@@ -37,6 +37,8 @@ class djChatBackend(Backend):
             debuglevel=2
 
             self.userconfig.model = 'gpt-4'
+            if len(self.ai_settings.model) > 0:
+                self.userconfig.model = self.ai_settings.model
             #self.userconfig.model = ''
             # TODO: Pass in and use user model override
 

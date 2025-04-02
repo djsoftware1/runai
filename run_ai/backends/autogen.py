@@ -1,5 +1,8 @@
+#dj2025-03
 
 from run_ai.backends.base import Backend
+from run_ai.djautogen.settings import djAutoGenSettings
+from run_ai.djautogen.djautogen import djAutoGen
 import autogen
 
 """
@@ -14,10 +17,17 @@ no_autogen_user_proxy=True
 """
 
 class AutoGenBackend(Backend):
-    def __init__(self, settings):
-        super().__init__(settings)
-        self.settings = settings
+    def __init__(self, ai_settings, autogen_settings: djAutoGenSettings = None):
+        super().__init__(ai_settings)
+        self.autogen_settings = autogen_settings
+        self.djautogen = None
         print("INIT: Creating AutoGenBackend")
+
+    def create(self):
+        # Initialize the AutoGen backend
+        self.djautogen = djAutoGen(self.autogen_settings)
+        self.djautogen.InitAutoGen()
+        #self.djautogen.start()
 
     #def create()
 
