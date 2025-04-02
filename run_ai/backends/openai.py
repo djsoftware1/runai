@@ -3,6 +3,8 @@
 
 from run_ai.backends.base import Backend
 #import openai
+from colorama import Fore, Style
+
 from openai import OpenAI
 
 class OpenAIBackend(Backend):
@@ -26,6 +28,6 @@ class OpenAIBackend(Backend):
             input=task
         )
         self.response = response.output_text
-        print(f"OpenAI response: {response}")
+        print(f"{Style.DIM}OpenAI response: {response}{Style.RESET_ALL}")
         print(response.output_text)
         return response.output_text

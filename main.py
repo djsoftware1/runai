@@ -49,6 +49,12 @@ from run_ai.config.settings import autogen_settings
 
 use_backend='autogen'
 run_tests=False
+print(f"USE_BACKEND={use_backend}")
+
+#=== BACKEND SELECTOR:
+#settings = djAISettings()
+selector = None
+backend = None
 
 def djGetFormattedDatetime(datetime_input):
     #tmp_task_datetime = datetime.datetime.now()
@@ -111,18 +117,10 @@ runtask = djTask()
 # TASK SETTINGS:
 ####################
 
-# dj2023-12 This anyway only works for Python currently and the user agent goes back and forth with coder and coder thinks there's a problem and sends the code again and again because user agent couldn't execute
-# Even if it could exec C++ I don't currently want it to for these tasks so let's make this a parameter
-# Maybe in future for some tasks it should be true eg simpler Python stuff it can exec or if it gets better in future
-code_execution_enabled=False
-#code_execution_enabled=True
-# TODO also try let coder handle things more directly?
-#max_consecutive_auto_replies=10
-max_consecutive_auto_replies=0
 
 task=''
 task_folder = "tasks/copyright"
-#use_cache_seed=24
+
 use_openai=False
 use_openai=True
 
@@ -169,31 +167,81 @@ files_to_create=None
 # currently not used:
 targetfolder = ''
 
-
-####################
-# AUTOGEN SETTINGS:
-####################
-
-# settings
-# I need to experiment a bit more to see exactly the implications of not creating groups (or creating groups), both if I only have 1 AI agent available or if I have 2 or 3 machines I can use ..
-NoGroup=True
-#NoGroup=False
-#MaxAgents=1
-# dj try make setting to control if we have lots or fewer etc. of AIs to use:
-# this needs further work though
-coder_only=True
-
-# [Setting] Control whether or not to use the autogen user proxy agent
-# no_autogen_user_proxy
-no_autogen_user_proxy=True
-#no_autogen_user_proxy=False
-
-
 ####################
 # LLM settings:
 ####################
 user_select_preferred_model=''
 
+#==================================================================
+##user_proxy.initiate_chat(coder, message=task_message)
+def djAutoGenDoTask(task: str, do_handle_task=False):
+    print(f"{Fore.YELLOW}■ DOTASK[{use_backend}]: {Fore.CYAN}{task}{Style.RESET_ALL}")
+
+    if use_backend!='autogen' and not selector is None:
+        #result = djAutoGenDoTask(task)
+        result = selector.do_task(task)
+        backend = selector.get_backend()
+        
+        if len(backend.error)>0:
+            print(f"■ DoTask[backend:{selector.backend_name}] {Fore.RED}ERROR: {backend.error}. RESPONSE:{Style.RESET_ALL}")
+            print(f"{Fore.RED}{backend.response}{Style.RESET_ALL}")
+            print(f"{Fore.RED}{result}{Style.RESET_ALL}")
+            #print(f"{result}")
+        else:
+            print(f"■ DoTask[backend:{selector.backend_name}] {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")    
+            print(f"{Fore.GREEN}{result}{Style.RESET_ALL}")
+
+        # Use the backend selector to get the appropriate backend for the task
+        #backend = selector.get_backend()
+        #ret = backend.do_task(task)
+        print(f"{Fore.YELLOW}■ DOTASK DONE{Style.RESET_ALL}")
+        return result
+
+    # dj refactoring 2025 .. only the create task  currently does this do_handle_task=True behavior ... todo, check if this is still needed
+    # task_message = f"Create the following file and return in a ```...``` code block with filename: {', '.join(files_to_create)} with the following specifications: {task}"
+    """
+    # task_message = f"Create the following file and return in a ```...``` code block with filename: {', '.join(files_to_create)} with the following specifications: {task}"
+    if coder_only and no_autogen_user_proxy:
+        response = coder.handle_task(task_message)
+        print(response)
+    elif coder_only:
+        # the assistant receives a message from the user_proxy, which contains the task description
+        #coder.initiate_chat(
+        user_proxy.initiate_chat(
+            coder if manager is None else manager,
+            message=task_message,
+        )
+    else:
+        # the assistant receives a message from the user_proxy, which contains the task description
+        user_proxy.initiate_chat(
+            assistant,
+            message=task_message,
+        )
+    """
+    if autogen_settings.coder_only and autogen_settings.no_autogen_user_proxy:
+        if do_handle_task:
+            response = coder.handle_task(task)
+            print(response)
+        else:
+            user_proxy.initiate_chat(
+                coder,message=task,
+            )
+    elif autogen_settings.coder_only:
+        # Can we just let coder chat with itself to solve problems?
+        # the assistant receives a message from the user_proxy, which contains the task description
+        #coder.initiate_chat(
+        ##ChatResult result =
+        user_proxy.initiate_chat(
+            coder if manager is None else manager,message=task,
+        )
+    else:
+        # the assistant receives a message from the user_proxy, which contains the task description
+        ##ChatResult result =
+        user_proxy.initiate_chat(
+            assistant,message=task,
+        )
+    print(f"{Fore.YELLOW}=== DOTASK DONE{Style.RESET_ALL}")
+    return ''
 #==================================================================
 
 
@@ -406,12 +454,12 @@ def show_settings():
     
     # HEADING
     print(f"{Fore.YELLOW}{sBullet1}AutoGen settings:{sHeadingSuffix}{Style.RESET_ALL}")
-    show_setting("no_autogen_user_proxy", no_autogen_user_proxy, 1)
-    show_setting("NoGroup", NoGroup, 1, "If True do not create autogen GroupChat and GroupChatManager")
+    show_setting("no_autogen_user_proxy", autogen_settings.no_autogen_user_proxy, 1)
+    show_setting("NoGroup", autogen_settings.NoGroup, 1, "If True do not create autogen GroupChat and GroupChatManager")
     show_setting("use_cache_seed", autogen_settings.use_cache_seed, 1, "random seed for caching and reproducibility")
-    show_setting("code_execution_enabled", code_execution_enabled, 1, "Enable AutoGen agent code execution [currently always off]")
-    show_setting("coder_only", coder_only, 1)
-    show_setting("max_consecutive_auto_replies", max_consecutive_auto_replies, 1)
+    show_setting("code_execution_enabled", autogen_settings.code_execution_enabled, 1, "Enable AutoGen agent code execution [currently always off]")
+    show_setting("coder_only", autogen_settings.coder_only, 1)
+    show_setting("max_consecutive_auto_replies", autogen_settings.max_consecutive_auto_replies, 1)
 
     # HEADING
     # LLM SETTINGS/PREFERENCES/COMMAND-LINE OPTIONS
@@ -744,15 +792,7 @@ if task=="":
         #task = "Write a Python function to sort a list of numbers."
         #print("=== Using default sample task: {task}")
 
-#if task=="":
-#    # Define your coding task, for example:
-#    print("=== No task specified, using default task")
-#    task = "Write a Python function to sort a list of numbers."
-
 # Check if 'task' is an empty string or None
-# Show short core 'about this application' info on commandline - (dj)
-#djabout.djAbout().show_about(True)
-
 if task == "" or task is None or force_show_prompt:
     sCWD=os.getcwd()#getcwd just for logging
     print(f"• current-directory={sCWD} • working-folder={worktree}")
@@ -910,19 +950,9 @@ if __name__ == '__main__':
 
 
     # todo add option whether to wait on keypress or auto go-ahead
-    input(f"■ Press a key to run task: {Fore.CYAN}{task}{Style.RESET_ALL}")
-    result = selector.do_task(task)
-    backend = selector.get_backend()
     print(f"DEBUG: selector.get_active_backends: {selector.get_active_backends()}")
-    
-    if len(backend.error)>0:
-        print(f"■ DoTask[backend:{selector.backend_name}] {Fore.RED}ERROR: {backend.error}. RESPONSE:{Style.RESET_ALL}")
-        print(f"{Fore.RED}{backend.response}{Style.RESET_ALL}")
-        print(f"{Fore.RED}{result}{Style.RESET_ALL}")
-        #print(f"{result}")
-    else:
-        print(f"■ DoTask[backend:{selector.backend_name}] {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")    
-        print(f"{Fore.GREEN}{result}{Style.RESET_ALL}")
+    input(f"■ Press a key to run task: {Fore.CYAN}{task}{Style.RESET_ALL}")
+    #djAutoGenDoTask(task)
     #elif len(backend.response)==0:
     #    # this will still happen with autogen as our autogen backend is a stub... (dj2025-03)
     #    print(f"empty response")
@@ -954,7 +984,7 @@ if __name__ == '__main__':
         #llm_config=llm_config_coder_openai if use_openai else llm_config_localcoder,
         #llm_config=llm_config_localgeneral if use_openai else llm_config_localgeneral,
         #code_execution_config=code_execution_enabled,
-        max_consecutive_auto_reply=max_consecutive_auto_replies,
+        max_consecutive_auto_reply=autogen_settings.max_consecutive_auto_replies,
         is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
         #code_execution_config=code_execution_enabled,
         code_execution_config=False,
@@ -965,7 +995,7 @@ if __name__ == '__main__':
     )
 
     """
-    if coder_only:
+    if autogen_settings.coder_only:
         # the assistant receives a message from the user_proxy, which contains the task description
         #user_proxy.initiate_chat(
         coder.initiate_chat(
@@ -980,7 +1010,7 @@ if __name__ == '__main__':
         )
     """
 
-    if not NoGroup:
+    if not autogen_settings.NoGroup:
         print("=== Creating groupchat and manager")
         groupchat = autogen.GroupChat(agents=[user_proxy, coder, assistant], messages=[])
         manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config_localgeneral)
@@ -1074,25 +1104,8 @@ if __name__ == '__main__':
                 log_file.write(f"=== EXECUTING LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}]: {inputline}\n")
                 """
 
-
-            if coder_only and no_autogen_user_proxy:
-                user_proxy.initiate_chat(
-                    coder,message=task_line,
-                )
-                #response = coder.handle_task(task_line)
-                #print(response)
-            elif coder_only:
-                # Can we just let coder chat with itself to solve problems?
-                # the assistant receives a message from the user_proxy, which contains the task description
-                #coder.initiate_chat(
-                user_proxy.initiate_chat(
-                    coder if manager is None else manager,message=task_line,
-                )
-            else:
-                # the assistant receives a message from the user_proxy, which contains the task description
-                user_proxy.initiate_chat(
-                    assistant,message=task_line,
-                )
+            print("--- 1")
+            djAutoGenDoTask(task_line)
             # Optional delay between each line (in milliseconds)? (e.g. to not hammer server)
             if runtask.delay_between:
                 print(f"=== Sleeping {runtask.delay_between}s between tasks")
@@ -1142,7 +1155,9 @@ if __name__ == '__main__':
                 # (1) First let the AI do its thing
                 # (2) Then get the AI output which gets captured in the DualOutput class
                 # We want to use the final AI output co ..
-                user_proxy.initiate_chat(coder, message=task_message)
+                print("--- 2")
+                djAutoGenDoTask(task_message)
+                #user_proxy.initiate_chat(coder, message=task_message)
     elif do_refactor:
         print("=== Do refactoring file(s)")
         #djrefactor.Refactor(worktree, refactor_wildcard, refactor_negmatches, "^[ \t]*tStrAppend", task, user_proxy, coder)
@@ -1163,22 +1178,8 @@ if __name__ == '__main__':
             task_message = f"Create the following files and return in ```...``` code blocks with filenames: {', '.join(files_to_create)} with the following specifications: {task}"
         dual_output.UnpauseSaveFiles()
         #user_proxy.initiate_chat(assistant, message=create_task_message)
-        if coder_only and no_autogen_user_proxy:
-            response = coder.handle_task(task_message)
-            print(response)
-        elif coder_only:
-            # the assistant receives a message from the user_proxy, which contains the task description
-            #coder.initiate_chat(
-            user_proxy.initiate_chat(
-                coder if manager is None else manager,
-                message=task_message,
-            )
-        else:
-            # the assistant receives a message from the user_proxy, which contains the task description
-            user_proxy.initiate_chat(
-                assistant,
-                message=task_message,
-            )
+        print("--- 3")
+        djAutoGenDoTask(task_message, True)
     elif files_to_send and len(files_to_send)>=1:
         # If no files to create, do requested task
         dual_output.PauseSaveFiles()
@@ -1199,24 +1200,8 @@ if __name__ == '__main__':
         print(f"=== Processing task [type={runtask.type}]: {task}")
         dual_output.UnpauseSaveFiles()
         task_message=task
-        if coder_only and no_autogen_user_proxy:
-            user_proxy.initiate_chat(
-                coder,message=task,
-            )
-            #response = coder.handle_task(task)
-            #print(response)
-        elif coder_only:
-            # Can we just let coder chat with itself to solve problems?
-            # the assistant receives a message from the user_proxy, which contains the task description
-            #coder.initiate_chat(
-            user_proxy.initiate_chat(
-                coder if manager is None else manager,message=task,
-            )
-        else:
-            # the assistant receives a message from the user_proxy, which contains the task description
-            user_proxy.initiate_chat(
-                assistant,message=task,
-            )
+        print("--- final-else")
+        djAutoGenDoTask(task_message)
 
 
     # [IO redirect] Reset stdout to original
@@ -1258,8 +1243,11 @@ if __name__ == '__main__':
     #ret_created_files
 
     # Print the captured output to the console
+    print('')
+    print('')
     print("=== Captured AI Output:")
     print(ai_output)
+    print('____________________________')
 
 
     # dj2025-03 list files created and list files first required (e.g. "runai create -o file1.cpp file2.h") so we can see if all files were created

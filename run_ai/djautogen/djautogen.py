@@ -18,11 +18,11 @@ class djAutoGen:
         """
         Initialize AutoGen settings and objects.
         """
-        print("INIT: Creating AutoGenBackend")
+        print("djAutoGen: InitAutoGen")
         # Initialize the AutoGen settings and objects here
         # This is where you would set up the coder, autogen_coder, assistant, manager, and user_proxy
         # For now, we'll just print a message indicating that the initialization is complete
-        print("AutoGen initialized with settings:", self.settings.__dict__)
+        print("djAutoGen: Initialized with settings:", self.settings.__dict__)
         #input('debug press a key')
         return
 
