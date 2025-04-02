@@ -26,9 +26,9 @@ class CmdLineParser:
         self.parser.add_argument('--o1-preview', action='store_true', help='Try use model o1-preview')
         self.parser.add_argument('--model', '-m', type=str, help='Specify preferred model to use.')
         self.parser.add_argument('--dryrun', action='store_true', help='Show roughly what would be done but do not actually execute the task.')
-        self.parser.add_argument('--openai', action='store_true', help='Use OpenAI backend for tasks if available.')
 
         group = self.parser.add_argument_group('Backend selection', 'Backend selection options.')
+        group.add_argument('--openai', action='store_true', help='Use OpenAI backend directly (without AutoGen) for tasks.')
         group.add_argument('--djchat', action='store_true', help='Use djchatbot backend for tasks if available.')
 
         subparsers = self.parser.add_subparsers(dest='subcommand')

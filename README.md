@@ -86,6 +86,16 @@ Options for selecting the model to use:
 
 **Example:** `runai -3 -t "Write a short story about cats"`
 
+### Selecting Backend
+
+Options for selecting the backend
+
+```
+   --openai Use OpenAI backend directly (without AutoGen) for tasks
+
+   --djchat Use djchat/djchatbot backend (without AutoGen) if available
+```
+
 **Note:** For some tasks, this tool can modify files, so use with caution. Always backup all your data first, work in a 'sandbox' copy, and check all ch ananges. Test things first. Use at own risk.
 
 ## License and Terms of Use
