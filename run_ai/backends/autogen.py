@@ -16,12 +16,15 @@ manager = None
 no_autogen_user_proxy=True
 """
 
+from run_ai.config.settings import *
+
 class AutoGenBackend(Backend):
-    def __init__(self, ai_settings, autogen_settings: djAutoGenSettings = None):
+    def __init__(self, ai_settings, settings: djAutoGenSettings = autogen_settings):#, **kwargs):
         super().__init__(ai_settings)
-        self.autogen_settings = autogen_settings
+        self.autogen_settings = settings#run_ai.config.settings.autogen_settings
         self.djautogen = None
         print("INIT: Creating AutoGenBackend")
+        print("AutoGen initialized with settings:", self.autogen_settings.__dict__)
 
     def create(self):
         # Initialize the AutoGen backend

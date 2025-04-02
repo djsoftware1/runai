@@ -27,6 +27,11 @@ class server_settings:
 class Backend:
     def __init__(self, ai_settings: djAISettings):
         self.ai_settings = ai_settings
+        if not self.ai_settings is None:
+            print(f"backend:ai_settings: initialized with model: {self.ai_settings.model}")
+            print("backend:ai_settings:", self.ai_settings.__dict__)
+        else:
+            raise ValueError("AISettings cannot be None")
         # last error from backend
         self.error = ''
         # last response from backend

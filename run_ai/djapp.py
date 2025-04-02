@@ -36,9 +36,12 @@ class AppSettings:
         self.appname = "runai"
 
 class App:
-    def __init__(self, appname):
+    def __init__(self, appname, app_dir=''):
         #self.appname = appname  # "runai"
         self.appname = "runai"
+        # app_dir is the directory of the current script being executed, e.g. the runai home folder being run from (main.py or whatever)
+        self.app_dir = app_dir
+
         self.settings = AppSettings(self.appname)
         #self.out = AppOut(self.appname)
         #self.out.print(f"App {self.appname} initialized.")

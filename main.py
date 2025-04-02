@@ -18,7 +18,6 @@
 # Import necessary libraries
 import sys
 import autogen
-#import pyautogen as autogen
 import os
 import json
 import requests
@@ -46,8 +45,7 @@ from run_ai.backends.base import djAISettings
 from run_ai.djapp import App
 
 from run_ai.djautogen.settings import djAutoGenSettings
-#autogen_settings = djAutoGenSettings(system_prompt="You are a helpful assistant.")
-autogen_settings = djAutoGenSettings()
+from run_ai.config.settings import autogen_settings
 
 use_backend='autogen'
 run_tests=False
@@ -63,19 +61,13 @@ class SessionStats:
         self.elapsed_time = None
         # todo add more info - e.g. numerrors or numwarnings etc. ..
 
-
-class djController:
-    def __init__(self):        
+# runai App controller
+class djAppController:
+    def __init__(self):
         self.app = App(appname="runai")
         #self.runtask = djTask()
-        self.script_dir = os.path.dirname(os.path.abspath(__file__))
-        #self.config_list_path = os.path.join(self.script_dir, "OAI_CONFIG_LIST")
-        #self.config_list = None
-        #self.have_openai_config = False
-        #self.config_list_localgeneral = ""
-        #self.config_list_localcoder = ""
-        #self.config_list_local3 = ""
-        #self.config_list_local_ollama = ""
+        self.app.app_dir = os.path.dirname(os.path.abspath(__file__))
+        #self.config_list_path = os.path.join(self.app.app_dir, "OAI_CONFIG_LIST")
         self.session_stats = None
 
     def AppInitialize(self):
@@ -85,11 +77,7 @@ class djController:
         djabout.djAbout().show_about()
         # [dj2025-03]
         self.session_stats = SessionStats()
-        # Get the directory of the current script (runai.py)
-        self.script_dir = os.path.dirname(os.path.abspath(__file__))
-        
-        #print(f"{Fore.GREEN}🤖 Script directory: {script_dir}{Style.RESET_ALL}")
-        print(f"{Fore.GREEN}=== Script directory: {self.script_dir}{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}=== App directory: {self.app.app_dir}{Style.RESET_ALL}")
 
     def AppDone(self):
         print(f"{Fore.GREEN}🤖 controller app-done{Style.RESET_ALL}")
@@ -100,7 +88,7 @@ class djController:
 
 # Create a new application instance
 #app = djapp.App(appname="runai")
-controller=djController()
+controller=djAppController()
 controller.AppInitialize()
 app = controller.app
 
@@ -111,13 +99,6 @@ runtask = djTask()
 
 # Show short core 'about this application' info on commandline - (dj)
 #djabout.djAbout().show_about()
-
-
-
-##### system/script init:
-# Get the directory of the current script (runai.py)
-script_dir = os.path.dirname(os.path.abspath(__file__))
-print(f"{Fore.GREEN}=== Script directory: {script_dir}{Style.RESET_ALL}")
 
 
 #==================================================================
@@ -141,7 +122,7 @@ max_consecutive_auto_replies=0
 
 task=''
 task_folder = "tasks/copyright"
-use_cache_seed=24
+#use_cache_seed=24
 use_openai=False
 use_openai=True
 
@@ -219,7 +200,7 @@ user_select_preferred_model=''
 print(f"{Fore.YELLOW}=== {Fore.YELLOW}USAGE: runai (or python main.py) [taskfile] [targetfolder] [settings.py]{Style.RESET_ALL}")
 
 # Check if defaultsettings.py exists in runai folder and run it if it does
-default_settings = os.path.join(script_dir, "defaultsettings.py")
+default_settings = os.path.join(app.app_dir, "defaultsettings.py")
 if os.path.exists(default_settings):
     # Read and exec the .py file
     settings_py = ''
@@ -427,7 +408,7 @@ def show_settings():
     print(f"{Fore.YELLOW}{sBullet1}AutoGen settings:{sHeadingSuffix}{Style.RESET_ALL}")
     show_setting("no_autogen_user_proxy", no_autogen_user_proxy, 1)
     show_setting("NoGroup", NoGroup, 1, "If True do not create autogen GroupChat and GroupChatManager")
-    show_setting("use_cache_seed", use_cache_seed, 1, "random seed for caching and reproducibility")
+    show_setting("use_cache_seed", autogen_settings.use_cache_seed, 1, "random seed for caching and reproducibility")
     show_setting("code_execution_enabled", code_execution_enabled, 1, "Enable AutoGen agent code execution [currently always off]")
     show_setting("coder_only", coder_only, 1)
     show_setting("max_consecutive_auto_replies", max_consecutive_auto_replies, 1)
@@ -562,7 +543,7 @@ llm_config_local3={
 
 print(f"=== user_select_preferred_model: \"{user_select_preferred_model}\"")
 # Construct the path to the OAI_CONFIG_LIST file
-config_list_path = os.path.join(script_dir, "OAI_CONFIG_LIST")
+config_list_path = os.path.join(app.app_dir, "OAI_CONFIG_LIST")
 """
 print(f"=== config_list_path: {config_list_path}")
 """
@@ -578,8 +559,8 @@ else:
     # [dj] I think we should TRY pass the ollama modelname here, as it is a different model and we should be explicit about what we are using
     # (Unless override is specific with user_select_preferred_model?)
 
-    #config_list_path = os.path.join(script_dir, "userconfigs/local_ollama.json")
-    _try_config_list_path = os.path.join(script_dir, "configs/local_ollama.json")
+    #config_list_path = os.path.join(app.app_dir, "userconfigs/local_ollama.json")
+    _try_config_list_path = os.path.join(app.app_dir, "configs/local_ollama.json")
     if os.path.exists(_try_config_list_path):
         print(f"=== TRY config_list_path FALLBACK: {_try_config_list_path}")
         model = "deepseek-r1:1.5b"
@@ -615,6 +596,10 @@ if os.path.exists(config_list_path):
             },
         )
     elif len(user_select_preferred_model)>0:
+        # NB Depending on model this may be OpenAI or may not be OpenAI
+        # E.g. if model is "gemma-3-4b-it" it's not OpenAI - it may be, say, local LM Studio
+        # If model is "gemma3:4b" it may be local ollama
+        # If it's gpt-4o-mini it is likely OpenAI
         print(f"Trying selected model {user_select_preferred_model}")
         config_list = autogen.config_list_from_json(
             config_list_path,
@@ -622,18 +607,34 @@ if os.path.exists(config_list_path):
                 "model": [user_select_preferred_model],
             },
         )
+		# Not 100% mad about this behaviour in that if I were a user and I was running say LM Studio with "model-foo" and I passed it on commandline I would expect it should work without also having to add a specific entry for that to the OAI_CONFIG_LIST .. ? Now it will instead filter to none.
+        # Maybe if we end up with 'None' here then try do something 'smarter'
+        # And/or if we allow (say) "ollama/modelname" or "lm_studio/modelname" we could try to construct a config?
+        # And/or if we add a commandline parameter like "--local" and/or "--url_base" etc.
+        if config_list:
+            s = json.dumps(config_list)
+            show_setting('FILTER LIST FROM MODEL {user_select_preferred_model}', s)
+        else:
+            print(f"{Fore.RED}FILTER LIST FROM MODEL {user_select_preferred_model}: MODEL NOT FOUND IN CONFIG LIST{Style.RESET_ALL}")
+            # And/or fallback to some existing model from the list (the first? first local one?) but try specify model
+            # Here just fallback to first in list for now
+            config_list = autogen.config_list_from_json(config_list_path)
+            if config_list:
+                # todo if we add a --verbose or something 
+                s = json.dumps(config_list)
+                show_setting('FALLBACK-CONFIG_LIST', s)# NB show_setting does important stuff like hide sensitive info like keys
+            else:
+                print(f"{Fore.GREEN}FALLBACK-CONFIG_LIST: NONE{Style.RESET_ALL}")
+        
     else:
         print("do autogen.config_list_from_json - default")
         # Default
-        config_list = autogen.config_list_from_json(
-            config_list_path,
-            filter_dict={
-                "model": ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo-preview"],
-            },
-        )
+        # If no model passed in then just use the first one in the list
+        # Otherwise if user has (say) their own better preferred model than gpt-4 e.g. "gpt-4o-mini" then our '"gpt-4"' filter below kills and overrides that.
+        config_list = autogen.config_list_from_json(config_list_path)
     have_openai_config = True
     #print(f"{Fore.GREEN}'--- {config_list_path}' found. have_openai_config=Y{Style.RESET_ALL}")
-    print("--- setting have-openai-config")
+    print("--- setting have-AutoGen-config_list")
     #print("OpenAI configuration loaded")
     # todo (low) show details of OpenAI config picked up? eg models and whatever else ... and if have key
     llm_config_coder_openai={
@@ -653,6 +654,17 @@ else:
     have_openai_config = False
     use_openai = False
 
+if config_list:
+    # todo if we add a --verbose or something 
+    s = json.dumps(config_list)
+    show_setting('CONFIG_LIST', s) # NB show_setting does important stuff like hide sensitive info like keys
+else:
+    print(f"{Fore.RED}CONFIG_LIST: NONE{Style.RESET_ALL}")
+    #show_setting("global.config_list", s)
+#if wait_for_confirm:
+#    input('Press a key')
+
+
 if just_show_settings:
     show_settings()
     sys.exit(0)
@@ -662,7 +674,7 @@ show_settings()
 # Get date/time to use in filenames and directories and session logfiles etc.
 task_datetime = datetime.datetime.now()
 task_formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
-task_output_directory='.output_files_runai' + '/' + task_formatted_datetime
+task_output_directory='output_runai' + '/' + task_formatted_datetime
 # Create the output directory if it doesn't exist
 if not os.path.exists(task_output_directory):
     os.makedirs(task_output_directory)
@@ -922,7 +934,7 @@ if __name__ == '__main__':
     assistant = autogen.AssistantAgent(
         name="assistant",
         llm_config={
-            "cache_seed": use_cache_seed,  # seed for caching and reproducibility
+            "cache_seed": autogen_settings.use_cache_seed,  # seed for caching and reproducibility
             #"config_list": config_list,  # a list of OpenAI API configurations
             # above line for OPENAI and this below line for our LOCAL LITE LLM:
             "config_list": config_list_localgeneral,  # a list of OpenAI API configurations

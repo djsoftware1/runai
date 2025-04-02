@@ -10,13 +10,13 @@ def show_setting(name, value, indent=0, descriptionString="", strKeyShortcut="")
     # dj2025-03 add indent and descriptionString (optional)
     #sBULLET_INFO=
     sBULLET_INFO=""#"→""→ 🛈"
-    strDashesBefore="=== "
+    strDashesBefore=""
     if indent > 0:
         print("   " * indent, end="")
         strDashesBefore="■ "
         #strDashesBefore = sBULLET_INFO
     else:
-        strDashesBefore="=== "
+        strDashesBefore=""
     
     strDescription=""
     if len(descriptionString) > 0:
