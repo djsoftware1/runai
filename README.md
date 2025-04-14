@@ -77,12 +77,12 @@ runai -4 -t "Hi, can you help me?"
 Options for selecting the model to use:
 
 ```
+   -m "model" OR --model "model" - use "model"
    -m "gpt-4.1-mini"
    -m "gpt-4.1-nano"
    -m "gpt-4.1"
    -4 or --gpt4 - use gpt4
    -3 or --gpt3 - use gpt3 (deprecated)
-   -m "model" OR --model "modeL" - use "model"
    --o1-mini - use o1-mini
    --o1-preview - use o1-preview
 ```
