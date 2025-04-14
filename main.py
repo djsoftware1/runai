@@ -28,17 +28,16 @@ import datetime
 from colorama import Fore, Style
 from globals import g_ai_output_saved_last_code_block
 
-
 # custom dual output to capture output and echo it to console so we can both log it and extract code from it but also see it in real-time
 from dual_output import DualOutput
 from helper_functions import create_files_from_ai_output
-import djabout
 import djrefactor
 import djversion
 import djargs
 import djsettings
 from djtasktypes import djTaskType
 from djtask import djTask
+import run_ai.djabout # show_about() core about/usage info
 from run_ai.config.display import show_setting
 from run_ai.backends.selector import BackendSelector
 from run_ai.backends.base import djAISettings
@@ -80,7 +79,7 @@ class djAppController:
         # verbosity level?
         print(f"{Fore.GREEN}🤖 controller app-initialize{Style.RESET_ALL}")
         # Show short core 'about this application' info on commandline - (dj)
-        djabout.djAbout().show_about()
+        run_ai.djabout.djAbout().show_about()
         # [dj2025-03]
         self.session_stats = SessionStats()
         print(f"{Fore.GREEN}=== App directory: {self.app.app_dir}{Style.RESET_ALL}")
@@ -102,9 +101,6 @@ app = controller.app
 #runtask = djSettings()
 runtask = djTask()
 
-
-# Show short core 'about this application' info on commandline - (dj)
-#djabout.djAbout().show_about()
 
 
 #==================================================================
@@ -951,37 +947,51 @@ if __name__ == '__main__':
 
     # todo add option whether to wait on keypress or auto go-ahead
     print(f"DEBUG: selector.get_active_backends: {selector.get_active_backends()}")
-    input(f"■ Press a key to run task: {Fore.CYAN}{task}{Style.RESET_ALL}")
+    ##input(f"■ Press a key to run task: {Fore.CYAN}{task}{Style.RESET_ALL}")
     #djAutoGenDoTask(task)
     #elif len(backend.response)==0:
     #    # this will still happen with autogen as our autogen backend is a stub... (dj2025-03)
     #    print(f"empty response")
     print("---------------------------------------")
+    # dj2025-04:
 
+    llm_config_general={
+        "config_list":config_list, "cache_seed": autogen_settings.use_cache_seed, "stream": False
+    }
+    llm_config_coder={
+        "config_list":config_list, "cache_seed": autogen_settings.use_cache_seed, "stream": False
+    }
+    print(f"=== {Fore.CYAN}llm_config_general: {llm_config_general}{Style.RESET_ALL}")
+    print(f"=== {Fore.CYAN}llm_config_coder: {llm_config_coder}{Style.RESET_ALL}")
     #input('Press a key ....')
 
     # create an AssistantAgent named "assistant"
     assistant = autogen.AssistantAgent(
         name="assistant",
         llm_config={
+            #"use_system_message": False,  # <-- critical: disables system role
             "cache_seed": autogen_settings.use_cache_seed,  # seed for caching and reproducibility
             #"config_list": config_list,  # a list of OpenAI API configurations
             # above line for OPENAI and this below line for our LOCAL LITE LLM:
-            "config_list": config_list_localgeneral,  # a list of OpenAI API configurations
+            "config_list": config_list,#_localgeneral,  # a list of OpenAI API configurations
             "temperature": 0,  # temperature for sampling
         },  # configuration for autogen's enhanced inference API which is compatible with OpenAI API
     )
+    # Below had to do with LM studio compatibility niggledies [dj2025-03/04]
+    assistant.use_system_message = False
+    assistant.llm_config["stream"] = False
     # Create a coder agent
     coder = autogen.AssistantAgent(
         name="coder",
-        llm_config=llm_config_coder_openai if use_openai else llm_config_localcoder
+        llm_config=llm_config_coder#llm_config_coder_openai if use_openai else llm_config_localcoder
     )
     # create a UserProxyAgent instance named "user_proxy"
     user_proxy = autogen.UserProxyAgent(
         name="user_proxy",
         human_input_mode="NEVER",
         ########### ollama-testing:
-        #llm_config=llm_config_coder_openai if use_openai else llm_config_localcoder,
+        # [dj2025-04] working on ollama/LiteLLM compatibility issues but double-check if below line causes issues with OpenAI API
+        llm_config=llm_config_general,
         #llm_config=llm_config_localgeneral if use_openai else llm_config_localgeneral,
         #code_execution_config=code_execution_enabled,
         max_consecutive_auto_reply=autogen_settings.max_consecutive_auto_replies,
