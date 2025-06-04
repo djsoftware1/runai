@@ -27,6 +27,12 @@ class CmdLineParser:
         self.parser.add_argument('--model', '-m', type=str, help='Specify preferred model to use.')
         self.parser.add_argument('--dryrun', action='store_true', help='Show roughly what would be done but do not actually execute the task.')
 
+        """
+        group = self.parser.add_argument_group('AutoGen settings', 'AutoGen settings.')
+        group.add_argument('--local', action='store_true', help='Use only own local AI instances (tag local).')
+        group.add_argument('--tag', action='store_true', help='Filter config_list by tag for model selection.')"
+        """
+
         group = self.parser.add_argument_group('Backend selection', 'Backend selection options.')
         group.add_argument('--openai', action='store_true', help='Use OpenAI backend directly (without AutoGen) for tasks.')
         group.add_argument('--djchat', action='store_true', help='Use djchatbot backend for tasks if available.')
