@@ -101,11 +101,14 @@ Options for selecting the backend
 
 **Note:** For some tasks, this tool can modify files, so use with caution. Always backup all your data first, work in a 'sandbox' copy, and check all ch ananges. Test things first. Use at own risk.
 
-## License and Terms of Use
+## License
 
-* Free to use for personal, non-commercial use only. For commercial use and organizations (such as government institutions), a support and licensing fee required.
-* Not open source.
-* [License, EULA and disclaimers](https://github.com/djsoftware1/runai/blob/main/LICENSE.md)
+runai is source-available software licensed under the Business Source License (BSL) 1.1.
+
+Free for personal, educational, research, and evaluation use.
+Commercial use requires a separate license.
+
+See the [LICENSE](LICENSE.md) file for details.
 
 ## Installation
 
@@ -300,4 +303,4 @@ This project Copyright (C) David Joffe and [DJ Software](https://djoffe.com/dj-s
 
 See also [djoffe.com/dj-software/](https://djoffe.com/dj-software/)
 
-- David Joffe
+- [David Joffe](https://davidjoffe.github.io/)
