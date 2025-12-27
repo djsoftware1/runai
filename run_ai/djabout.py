@@ -13,8 +13,6 @@ from colorama import Fore, Style
 #runai Run or automate AI or agent tasks, like coding, from anywhere on command line, supporting AutoGen
 #      Easily launch AI or agent tasks from anywhere on command line or terminal
 class djAbout:
-    #def __init__(self):
-    #   self.current_version = '0.8.3'
 
     def show_about(self):
         # brief about overview
@@ -31,7 +29,9 @@ class djAbout:
         print(f"{Fore.GREEN}Note for some tasks this tool may modify files. Use with caution. You should")
         print(f"{Fore.GREEN}always backup your data, work in a 'sandbox' copy, and check changes.{Style.RESET_ALL}")
         
-
-        print(f"{Fore.GREEN}Free to use for personal use only. See {Fore.BLUE}djoffe.com/dj-software/runai/{Style.RESET_ALL}")
+        print(f"Licensed under the Business Source License (BSL) 1.1.")
+        print(f"Free for personal, educational, research, and evaluation use.")
+        print(f"Commercial use requires a separate license.")
+        print(f"See LICENSE for details.")
 
         print(f"{Style.RESET_ALL}__________________________________________________________________")
