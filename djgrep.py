@@ -1,4 +1,6 @@
-# Copyright (C) 2023-2024 David Joffe / DJ Software
+# Copyright (C) 2023-2025 David Joffe / DJ Software
+
+# Regular Expressions
 import re
 
 def grep_file(filename, needle):
@@ -92,23 +94,18 @@ def grep_multiline2(filename, pattern):
 
     return match_info
 
-"""
-# Test the function
-filename = 'your_file.cpp'
-pattern = "tStrAppend\\("
-matched_lines = grep_multiline2(filename, pattern)
-for match in matched_lines:
-    print(match)
-"""
+# # Test the function
+# filename = 'your_file.cpp'
+# pattern = "tStrAppend\\("
+# matched_lines = grep_multiline2(filename, pattern)
+# for match in matched_lines:
+#     print(match)
 
-
-"""
 # Example usage
-pattern = r'/\*.*?\*/'  # Regular expression for C++ block comments
-filename = 'example.cpp'
-matches = grep_multiline(filename, pattern)
-for line_num, match in matches:
-    print(f"Match at line {line_num}:")
-    print(match)
-    print("-----")
-"""
+# pattern = r'/\*.*?\*/'  # Regular expression for C++ block comments
+# filename = 'example.cpp'
+# matches = grep_multiline(filename, pattern)
+# for line_num, match in matches:
+#     print(f"Match at line {line_num}:")
+#     print(match)
+#     print("-----")
