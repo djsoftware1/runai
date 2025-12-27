@@ -17,7 +17,7 @@
 #==================================================================
 # Import necessary libraries
 import sys
-import autogen
+import pyautogen as autogen
 import os
 import json
 import requests

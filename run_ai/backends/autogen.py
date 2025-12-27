@@ -3,7 +3,7 @@
 from run_ai.backends.base import Backend
 from run_ai.djautogen.settings import djAutoGenSettings
 from run_ai.djautogen.djautogen import djAutoGen
-import autogen
+import pyautogen as autogen
 
 """
 # todo refactor better .. refactoring-in-progress:

@@ -1,5 +1,5 @@
 #dj2025-04
-import autogen
+import pyautogen as autogen
 
 from .settings import djAutoGenSettings
 

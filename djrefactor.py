@@ -1,9 +1,9 @@
-# Copyright (C) 2023-2024 David Joffe / DJ Software
+# Copyright (C) 2023-2025 David Joffe / DJ Software
 import os
 import re
 import fnmatch
 import djgrep
-import autogen
+import pyautogen as autogen
 import helper_functions
 # regular expressions
 import globals
