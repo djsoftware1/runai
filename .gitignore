@@ -3,6 +3,7 @@
 src/*
 env/*
 /env*
+/.djenv*
 
 /extensions/*
 
@@ -11,6 +12,7 @@ env/*
 
 # VS Code styff
 /.vscode*
+/.vs/*
 
 # output files
 /.output_files_runai*
@@ -39,7 +41,7 @@ OAI_CONFIG_LIST
 # Python cache
 /__pycache__*
 /__pycache__/*
-
+__pycache__/
 
 # Mac finder droppings
 *.DS_Store
