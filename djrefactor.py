@@ -1,4 +1,9 @@
-# Copyright (C) 2023-2025 David Joffe / DJ Software
+# runai — https://github.com/djsoftware1/runai
+# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+#
+# runai refactoring helpers
+
+# This should probably move under run_ai folder
 import os
 import re
 import fnmatch

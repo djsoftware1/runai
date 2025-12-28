@@ -1,6 +1,9 @@
-# Copyright (C) David Joffe / DJ Software 2023-2025
+# runai — https://github.com/djsoftware1/runai
+# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+#
 # Command line argument parser helper class
 # "djargs" = "dj arguments" (commandl line arguments)
+
 import argparse
 
 class CmdLineParser:

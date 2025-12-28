@@ -1,4 +1,7 @@
-# Copyright (C) David Joffe / DJ Software 2023-2025
+# runai — https://github.com/djsoftware1/runai
+# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+#
+# Descriptor containing information about the task(s) to be performed
 
 from djtasktypes import djTaskType
 import djsettings

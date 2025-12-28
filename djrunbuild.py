@@ -1,4 +1,7 @@
-# Copyright (C) 2023-2024 David Joffe
+# runai — https://github.com/djsoftware1/runai
+# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+#
+# 'run builds' task helper ... not quite sure if we need dedicated build runs 
 import os
 
 # Configure build command and build folder

@@ -1,8 +1,19 @@
+# runai todo list
+
+* runai — https://github.com/djsoftware1/runai
+* (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+
+
 High:
 * Issue with CRLF
 * Correctly handle different newline cases? E.g. sometimes if replacing in a .cpp 'git diff --stat' shows hundreds of changes but there are only a few ... think it's newline format issues ... but is inconsistent and maybe platform-dependent and filetype-dependent and git setting dependent - see what's going on. Should we rather try detect the file type (eg NL or NL/CR etc.) on file open?
 
 * [done] Refactoring should exclude our own e.g. 'output_files'/'__output_files__'/.output_files_runai folder?
+
+* Idea: 'plugins' or 'extensions' type of thing where can do custom configurable 'pre' and 'post' actions? For example after a build we might want to check say compiler error logs and try automatically fix issues someday ... could be either custom scripts or custom AI actions or custom file actions or something else .. should be able to have feedback loops too? e.g. 'fix until builds' or 'implement this todo list'queue
+* Todo 'queues'?
+
+* headless / docker run?
 
 * Refactor and other tasks should allow a list of matching regexes or strings
 * Refactor should have an option to make a backup somewhere of file content before it modifies it (currently it's advised you run on a copy of your files)

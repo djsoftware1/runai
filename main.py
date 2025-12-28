@@ -1,3 +1,5 @@
+# runai — https://github.com/djsoftware1/runai
+# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
 # main.py
 #
 # runai - Run or Automate AI/LLM and other tasks (such as code refactoring), optionally with AutoGen.
