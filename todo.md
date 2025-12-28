@@ -10,6 +10,8 @@ High:
 
 * [done] Refactoring should exclude our own e.g. 'output_files'/'__output_files__'/.output_files_runai folder?
 
+* Idea: feed output from one into next more arbitrarily/easily
+
 * Idea: 'plugins' or 'extensions' type of thing where can do custom configurable 'pre' and 'post' actions? For example after a build we might want to check say compiler error logs and try automatically fix issues someday ... could be either custom scripts or custom AI actions or custom file actions or something else .. should be able to have feedback loops too? e.g. 'fix until builds' or 'implement this todo list'queue
 * Todo 'queues'?
 
