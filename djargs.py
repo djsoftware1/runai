@@ -13,7 +13,7 @@ class CmdLineParser:
         else:
             self.parser = argparse.ArgumentParser(description='runai - Run AI/LLM or other tasks, optionally with autogen', prog=prog_override)
         self.parser.add_argument('--version', action='store_true', help='Show version number and exit.')
-        self.parser.add_argument('-c', '--showsettings', action='store_true', help='Show settings and exit.')
+        self.parser.add_argument('-c', '--showsettings', action='store_true', help='Show settings and exit.') # -c "config"
         self.parser.add_argument('--test', action='store_true', help='Run test task(s).')
         self.parser.add_argument('--prompt', action='store_true', help='Force show task prompt.')
         self.parser.add_argument('-s', '--settings', type=str, help='Specify the task custom settings .py file.')
