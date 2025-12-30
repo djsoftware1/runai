@@ -160,6 +160,7 @@ Try a simple test like this to see if it's working:
 ## Show Settings and Exit
 
 ```
+runai -c
 runai --showsettings
 
 OR e.g. with a task settings:
@@ -288,6 +289,10 @@ runai refactor -w src/MyFile.cpp
 ```
     runai -4 -tf /c/runai/tasks/copyright/task.txt -f ./cppcode_folder/ -s /c/runai/tasks/copyright/settings.py refactor -w "*.cpp"
 ```
+
+## Notes on caching
+
+Note that AutoGen caches results, and sometimes this may cause issues where something appears to not work when it is working. Try remove the cache ('rm -rf .cache') at times and see if that helps.
 
 ## About
 

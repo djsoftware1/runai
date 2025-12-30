@@ -4,6 +4,11 @@
 * (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
 
 
+* design -> main functionality could/should move toward being a package or module (with configurable backends) and the main.py terminal integration a thin/thinnish wrapper using thats
+
+* add --clear-cache or --clearcache arg (note if run from anywhere on command line should find correct cache location)
+
+
 High:
 * Issue with CRLF
 * Correctly handle different newline cases? E.g. sometimes if replacing in a .cpp 'git diff --stat' shows hundreds of changes but there are only a few ... think it's newline format issues ... but is inconsistent and maybe platform-dependent and filetype-dependent and git setting dependent - see what's going on. Should we rather try detect the file type (eg NL or NL/CR etc.) on file open?

@@ -8,7 +8,9 @@ import os
 import re
 import fnmatch
 import djgrep
-import pyautogen as autogen
+# design-wise refactor shouldn't directly use autogen probably
+# should be more like 'do-task' -> 'feed to backend generically' or some-such
+import autogen
 import helper_functions
 # regular expressions
 import globals

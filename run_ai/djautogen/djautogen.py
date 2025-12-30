@@ -1,5 +1,7 @@
+# runai — https://github.com/djsoftware1/runai
+# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
 #dj2025-04
-import pyautogen as autogen
+import autogen
 
 from .settings import djAutoGenSettings
 

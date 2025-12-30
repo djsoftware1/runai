@@ -1,4 +1,4 @@
-pyautogen
+pyautogen<=0.2
 requests
 colorama
 openai

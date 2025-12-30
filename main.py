@@ -19,7 +19,7 @@
 #==================================================================
 # Import necessary libraries
 import sys
-import pyautogen as autogen
+import autogen
 import os
 import json
 import requests
@@ -467,7 +467,7 @@ def show_settings():
     #print("   " * 2, end="")#indent
     # why showing twice
     # HEADING
-    print(f"{Fore.YELLOW}{sBullet1}OpenAI settings:{sHeadingSuffix}{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}{sBullet1}AutoGen OpenAI settings:{sHeadingSuffix}{Style.RESET_ALL}")
     show_setting("USE_OPENAI", 'YES' if use_openai is True else 'NO', 1)
     show_setting("HAVE_OPENAI_CONFIG?", have_openai_config, 1)
     if have_openai_config:
@@ -504,15 +504,13 @@ def show_settings():
 """
 config_list_local_ollama=[
     {
-        'base_url':"http://127.0.0.1:11434",
-        #'model':'deepseek-r1:1.5b',
-        'model':'gemma3:4b',
+        'base_url':"http://127.0.0.1:11434/v1",
+        'model':'gemma3:1b',
         'api_key':"NULL"
     }
 ]
 config_list_localgeneral_LITELLM=[
     {
-        #'base_url':"http://127.0.0.1:8000",#'base_url':"http://127.0.0.1:11434/v1/chat/completions",
         'base_url':"http://127.0.0.1:8000/v1",
         'model':'gemma-3-4b-it',
         'api_key':"NULL"
@@ -523,8 +521,8 @@ config_list_localgeneral_LITELLM=[
 config_list_localgeneral=[
     {
         #'base_url':"http://127.0.0.1:8000",#'base_url':"http://127.0.0.1:11434/v1/chat/completions",
-        'base_url':"http://127.0.0.1:8000",
-        'model':'ollama/gemma3-4b',#'model':'gemma-3-4b-it',
+        'base_url':"http://127.0.0.1:11434/v1",
+        'model':'gemma3:1b',#'model':'gemma-3-4b-it',
         #'model':'deepseek-r1:1.5b',
         #'model':'gemma3:4b',
         'api_key':"NULL"
@@ -533,8 +531,8 @@ config_list_localgeneral=[
 config_list_localcoder=[
     {
         #'base_url':"http://127.0.0.1:8000",
-        'base_url':"http://127.0.0.1:8000",
-        'model':'ollama/gemma3-4b',#'model':'gemma-3-4b-it',
+        'base_url':"http://127.0.0.1:11434/v1",
+        'model':'gemma3:1b',#'model':'gemma-3-4b-it',
         #'model':'deepseek-r1:1.5b',
         #'model':'gemma3:4b',
         'api_key':"NULL"
@@ -543,8 +541,8 @@ config_list_localcoder=[
 config_list_localcoder=[
     {
         #'base_url':"http://127.0.0.1:8000",
-        'base_url':"http://127.0.0.1:8000",
-        'model':'ollama/gemma3-4b',#'model':'gemma-3-4b-it',
+        'base_url':"http://127.0.0.1:11434/v1",
+        'model':'gemma3:1b',#'model':'gemma-3-4b-it',
         #'model':'deepseek-r1:1.5b',
         #'model':'gemma3:4b',
         'api_key':"NULL"
@@ -552,8 +550,8 @@ config_list_localcoder=[
 ]
 config_list_local3=[
     {
-        'base_url':"http://127.0.0.1:8000",
-        'model':'ollama/gemma3-4b',#'model':'gemma-3-4b-it',
+        'base_url':"http://127.0.0.1:11434/v1",
+        'model':'gemma3:1b',#'model':'gemma-3-4b-it',
         #'model':'deepseek-r1:1.5b',
         #'model':'gemma3:4b',
         'api_key':"NULL"
@@ -565,9 +563,9 @@ config_list_local3=[
 config_list_local_ollama=[
     {   
         #'base_url':"http://127.0.0.1:11434/v1/chat/completions",
-        'base_url':"http://127.0.0.1:8000",
+        'base_url':"http://127.0.0.1:11434/v1",
         #'model':'lm_studio/deepseek-r1:1.5b',#'model':'gemma3:4b',
-        'model':'ollama/gemma3-4b',#'model':'gemma-3-4b-it',#'model':'gemma3:4b',
+        'model':'gemma3-1b',#'model':'gemma-3-4b-it',#'model':'gemma3:4b',
         'api_key':"NULL"
     }
 ]
@@ -679,6 +677,64 @@ if os.path.exists(config_list_path):
         # Otherwise if user has (say) their own better preferred model than gpt-4 e.g. "gpt-4o-mini" then our '"gpt-4"' filter below kills and overrides that.
         config_list = autogen.config_list_from_json(config_list_path)
     have_openai_config = True
+
+    def sanitize_oai_config_list(cfg_list):
+        ALLOWED_KEYS = {
+            "model",
+            "api_key",
+            "base_url",
+            "temperature",
+            "max_tokens",
+            "timeout",
+            "stream"
+        }
+
+        return [
+            {k: v for k, v in cfg.items() if k in ALLOWED_KEYS}
+            for cfg in cfg_list
+        ]
+
+    # dj2025-12 some autogen versions don't like the "api_type" and "tags" and give errors
+    # Fix it by pre-sanitizing the list ..
+    # but we may have to later re-implement the idea of tags differently ..
+    print("--- Sanitize openAI config")
+    original_raw_config = config_list
+    clean_config = sanitize_oai_config_list(original_raw_config)
+    config_list = clean_config
+
+    def resolve_value(v, strict=True):
+        if isinstance(v, str) and v.startswith("env:"):
+            name = v[4:]
+            val = os.getenv(name)
+            if val is None and strict:
+                raise RuntimeError(f"Missing env var: {name}")
+            return val
+        return v
+    def resolve_env_vars(obj):
+        if isinstance(obj, dict):
+            return {k: resolve_env_vars(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [resolve_env_vars(v) for v in obj]
+        else:
+            return resolve_value(obj)
+
+        return {k: resolve_value(v) for k, v in cfg.items()}
+    # Resolve environment variable values
+    # This allows us to put (say) the following in the config:
+    # "api_key": "env:OPENAI_API_KEY",
+    # then at runtime it converts that to get key from ENV
+    # This allows us to support others also e.g.:
+    #"env:OPENAI_API_KEY": "OPENAI_API_KEY",
+    #"env:AZURE_OPENAI_KEY": "AZURE_OPENAI_KEY",
+    #"env:ANTHROPIC_API_KEY": "ANTHROPIC_API_KEY",
+    #"env:GROQ_API_KEY": "GROQ_API_KEY",
+    print("--- Resolve env vars such as env:OPENAI_API_KEY")
+    resolved_cfg = resolve_env_vars(clean_config)
+    config_list = resolved_cfg
+    #clean_cfg = sanitize_oai_config(resolved_cfg)
+
+
+
     #print(f"{Fore.GREEN}'--- {config_list_path}' found. have_openai_config=Y{Style.RESET_ALL}")
     print("--- setting have-AutoGen-config_list")
     #print("OpenAI configuration loaded")
