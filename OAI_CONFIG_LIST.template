@@ -1,35 +1,35 @@
 [
  {
     "model": "gpt-4o-mini",
-    "api_key": "your-openai-api-key",
+    "api_key": "env:OPENAI_API_KEY",
     "base_url": "https://api.openai.com/v1",
     "api_type": "openai",
     "tags": ["openai", "cloud", "gpt4o"]
   },  
   {
     "model": "gpt-4.1-mini",
-    "api_key": "",
+    "api_key": "env:OPENAI_API_KEY",
     "api_type": "openai",
     "tags": ["openai", "cloud", "gpt-4.1"]
   },
   {
       "model": "gpt-4",
-      "api_key": "<your OpenAI API key here>",
+      "api_key": "env:OPENAI_API_KEY",
       "tags": ["gpt-4", "tool"]
   },
   {
       "model": "o1-mini",
-      "api_key": "<your key here>"
+      "api_key": "env:OPENAI_API_KEY"
   },
   {
-    "model": "gemma3:4b",
+    "model": "gemma3:1b",
     "api_key": "ollama",
     "base_url": "http://localhost:11434/v1",
     "api_type": "openai",
     "tags": ["local", "ollama", "localcoder"]
   },
   {
-    "model": "gemma-3-4b-it",
+    "model": "stable-code-3b",
     "api_key": "lmstudio",
     "base_url": "http://localhost:1234/v1",
     "api_type": "openai",
