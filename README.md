@@ -6,6 +6,8 @@ A kind of integrated 'AI extension' of your terminal or command prompt
 
 General AI/LLM-driven task execution and automation tool for tasks such as code refactoring (or many other tasks, including non-coding-related tasks), supporting AutoGen.
 
+“Any project you’re working on, runai becomes another tool in your terminal.”
+
 **Use also straight from VS Code and Cursor terminal:**
 
 ![runai screenshot by David Joffe and icon symbol](https://djoffe.com/dj-software/runai/media/runai_crop_center_logo.png)
