@@ -1,4 +1,8 @@
-# runai OpenAI Backend class
+# runai — https://github.com/djsoftware1/runai
+# (c) David Joffe / DJ Software 2025 - Business Source License (BSL 1.1). See LICENSE
+#
+# runai OpenAI Backend class - directly send task to OpenAI backend.
+# (This is not to be confused with the OpenAI under AutoGen backend options.)
 # dj2025-03
 
 from run_ai.backends.base import Backend

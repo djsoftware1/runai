@@ -143,7 +143,7 @@ refactor_negmatches=[]
 
 do_refactor=False
 # [Setting] default task file to use if none specified
-taskfile='autotask.txt'
+taskfile='runai.autotask.txt'#autotask.txt'
 #taskfile='optional-autostart-task.txt'
 #if os.path.exists('autotask.txt'):
 #    taskfile = 'autotask.txt'  # Or set a default value as needed
@@ -802,19 +802,19 @@ if taskfile!='':
             print(f"{Fore.RED}Warning: TaskFile is empty!{Style.RESET_ALL}")
     else:
         
-        # [dj2025-03] Remember the file name "autotask.txt" is like a special "auto-start" "autotask.txt" task file that is fully optional
-        # So if "taskfile" is not found, if it is on the default special  "auto-start" "autotask.txt" file, then we just print a message and continue
+        # [dj2025-03] Remember the file name "runai.autotask.txt" is like a special "auto-start" task file that is fully optional
+        # So if "taskfile" is not found, if it is on the default special  "auto-start" file, then we just print a message and continue
         status=''
         color='GREEN'
         if os.path.exists(taskfile):
             color = 'GREEN'
-            if taskfile=='autotask.txt':
-                status='found autostart.txt'
+            if taskfile=='runai.autotask.txt':
+                status='found runai.autotask.txt'
             else:
                 # file exists and name is not "autostart.txt" (likely user used "-tf" to specify a taskfile)
                 status='found'
         else: # FILE DOES NOT EXIST
-            if taskfile=='autotask.txt':
+            if taskfile=='runai.autotask.txt':
                 status='not found, but that is fine as autostart.txt is optional'
                 color = 'GREEN'
             else:
@@ -830,7 +830,7 @@ if taskfile!='':
         
         # dj2025-03 Hmm I am not sure I am mad about several lines of guidance info like this is good or bad here or if it should move elsewhere (low prio)
         print("--------------------------[ NOTES ]----------------------------")
-        print("The name \"autotask.txt\" is a special OPTIONAL filename to \"auto-load/start\" the task.")
+        print("The name \"runai.autotask.txt\" is a special OPTIONAL filename to \"auto-load/start\" the task.")
         print("It is the default task file name that is used if no task file name is specified.")
         print("If you want to use a different task file name, please specify it with the -tf parameter.")
         print("---------------------------------------------------------------")

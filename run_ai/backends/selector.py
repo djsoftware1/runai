@@ -1,4 +1,6 @@
-
+# runai — https://github.com/djsoftware1/runai
+# (c) David Joffe / DJ Software 2025 - Business Source License (BSL 1.1). See LICENSE
+#
 # runai backend selector
 # Allocate/instantiate backend(s) like a factory
 # dj2025-03

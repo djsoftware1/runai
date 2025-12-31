@@ -1,7 +1,10 @@
+# runai — https://github.com/djsoftware1/runai
+# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+#
+# runai backend for my own 'chatbot' / 'robot' module (with text to speech functionality allowing voice output) ...
 # dj2025-03
 
 import os
-
 from run_ai.backends.base import Backend
 
 import importlib

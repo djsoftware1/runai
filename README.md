@@ -33,7 +33,9 @@ Use `-t "task"` to specify task to be done.
 
 **Example:**
 ```
-runai --gpt3 -t "Repeat the word coffee five times"`
+runai --gpt4 -t "Repeat the word coffee five times"
+
+runai -t "Repeat the word coffee five times, then help cure aging"
 ```
 
 ### Common settings quick-reference
@@ -177,9 +179,9 @@ runai  refactor -w "main.py" -r "findme" --replace-with "foo"
 etc.
 ```
 
-### Task files and autotask.txt
+### Task files and runai.autotask.txt
 
-By default, it looks for a file named "autotask.txt" in the folder you run it, and if found, automatically loads the task from that file.
+By default, it looks for a file named "runai.autotask.txt" in the folder you run it, and if found, automatically loads the task from that file.
 
 Or, you can specify a task file with "-tf" or "--taskfile" (or task string with -t).
 

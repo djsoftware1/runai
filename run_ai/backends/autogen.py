@@ -1,3 +1,9 @@
+# runai — https://github.com/djsoftware1/runai
+# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+#
+# AutoGen backend
+# AutoGen itself can use different mix of eg OpenAI and/or local LLMs like ollama.
+# This is not to be confused with the actual 'OpenAI backend' which does direct OpenAI with no AutoGen.
 #dj2025-03
 
 from run_ai.backends.base import Backend
