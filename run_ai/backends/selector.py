@@ -1,5 +1,5 @@
 # runai — https://github.com/djsoftware1/runai
-# (c) David Joffe / DJ Software 2025 - Business Source License (BSL 1.1). See LICENSE
+# (c) David Joffe / DJ Software 2025-2026 - Business Source License (BSL 1.1). See LICENSE
 #
 # runai backend selector
 # Allocate/instantiate backend(s) like a factory
@@ -13,6 +13,7 @@ from run_ai.backends.base import djAISettings
 from run_ai.backends.djchat import djChatBackend
 from run_ai.backends.autogen import AutoGenBackend
 from run_ai.backends.openai import OpenAIBackend
+from run_ai.backends.dummy import DummyBackend
 # future?
 # from run_ai.backends.ollama import OllamaBackend
 
@@ -37,6 +38,8 @@ class BackendSelector:
         elif self.backend_name == "openai":
             # Initialize OpenAIBackend with settings
             return [OpenAIBackend(self.ai_settings)]
+        elif self.backend_name == "dummy":
+            return [DummyBackend(self.ai_settings)]
         # elif self.backend_name == "ollama":
         #if self.backend_name == "openai":
         #    return [OpenAIBackend(self.settings)]

@@ -1,5 +1,5 @@
 # runai — https://github.com/djsoftware1/runai
-# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+# (c) David Joffe / DJ Software 2023-2026 - Business Source License (BSL 1.1). See LICENSE
 #
 # Command line argument parser helper class
 # "djargs" = "dj arguments" (commandl line arguments)
@@ -39,6 +39,9 @@ class CmdLineParser:
         group = self.parser.add_argument_group('Backend selection', 'Backend selection options.')
         group.add_argument('--openai', action='store_true', help='Use OpenAI backend directly (without AutoGen) for tasks.')
         group.add_argument('--djchat', action='store_true', help='Use djchatbot backend for tasks if available.')
+        group.add_argument('--dummy', action='store_true', help='Use dummy echo style backend for testing.')
+        group.add_argument('--autogen', action='store_true', help='Use AutoGen backend.')
+        #refactor_parser.add_argument('--backend', type=str, help='Specify the backend name')
 
         subparsers = self.parser.add_subparsers(dest='subcommand')
 

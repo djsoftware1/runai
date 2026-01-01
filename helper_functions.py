@@ -56,14 +56,24 @@ def create_files_from_ai_output(ai_output, output_directory='.output_files_runai
     #matches = re.findall(pattern, ai_output, re.DOTALL)
     # Regular expression to find code blocks and filenames (filename is optional)
     #pattern = r"```(.*?)\n(// filename: (.*?)\n)?(.*?)```"
-    pattern = r"```(.*?)\n([/#][/#]? filename: (.*?)\n)?(.*?)```"
+    #pattern = r"```(.*?)\n([/#][/#]? filename: (.*?)\n)?(.*?)```"
+    # dj2026 extend this to handle more cases: (was above)
+    # slightly over-flexible/fuzzy in that it allows odd things like filename:=foo but that's ok for now
+    # it may be better since we wlil be dealing with dirty input from lots of weird local llms
+    pattern = r"```(.*?)[\n ]+([/#]* *filename *:?=? *([^ ].*?)\n)?(.*?)```"
+
     matches = re.findall(pattern, ai_output, re.DOTALL)
+    # ```cpp fake2.cpp
+    # ```cpp
+    # // filename: fake5.cpp
+    # todo: syntax: ```md filename=README.md
+    # ```md  filename  =  spaces.md
 
     global g_ai_output_saved_last_code_block
 
     # Create the output directory if it doesn't exist
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
+#    if not os.path.exists(output_directory):
+#        os.makedirs(output_directory)
     
     # Return array of created files (if any) else return empty array
     ret_created_files = []
@@ -71,6 +81,14 @@ def create_files_from_ai_output(ai_output, output_directory='.output_files_runai
         language, _, filename, content = match
         # Strip whitespace and unwanted characters from filename
         filename = filename.strip().replace('/', os.sep)
+
+        # adding output here causes problems due to capture->handle recursion dual output stuff:
+        #print(f"<DEBUG> create_files_from_ai_output: match found: language='{language}', filename='{filename}', content length={len(content)}")
+
+        # Create the output directory if it doesn't exist
+        # but only if we have files to save
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
 
         extension = 'txt'  # Default extension if not provided
         if language=='cpp':
@@ -88,6 +106,8 @@ def create_files_from_ai_output(ai_output, output_directory='.output_files_runai
         elif language=='xml':
             extension = 'xml'
         elif language=='markdown':
+            extension = 'md'
+        elif language=='md':
             extension = 'md'
         elif language=='bash':
             extension = 'sh'
@@ -188,7 +208,7 @@ def create_files_from_ai_output(ai_output, output_directory='.output_files_runai
 
 
         if not filename:
-            filename = "outfile." + extension  # Default filename if not provided
+            filename = "runai_out." + extension  # Default filename if not provided
 
         # Strip whitespace and unwanted characters from filename
         filename = filename.strip().replace('/', os.sep)
@@ -197,7 +217,8 @@ def create_files_from_ai_output(ai_output, output_directory='.output_files_runai
 
         # Check if file exists and modify filename accordingly
         # by adding a number in parentheses
-        file_counter = 1
+        # (dj2026 changing this from 1 to 2 as first duplicate should be (2) not (1) .. the first is just with no number so "2" will be more natural to humans reading output as it's the second)
+        file_counter = 2
         file_base, file_extension = os.path.splitext(file_path)
         while os.path.exists(file_path):
             file_path = f"{file_base}({file_counter}){file_extension}"

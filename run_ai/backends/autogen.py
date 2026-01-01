@@ -29,8 +29,8 @@ class AutoGenBackend(Backend):
         super().__init__(ai_settings)
         self.autogen_settings = settings#run_ai.config.settings.autogen_settings
         self.djautogen = None
-        print("INIT: Creating AutoGenBackend")
-        print("AutoGen initialized with settings:", self.autogen_settings.__dict__)
+        #print("INIT: Creating AutoGenBackend")
+        print("AutoGen-backend initialize with settings:", self.autogen_settings.__dict__)
 
     def create(self):
         # Initialize the AutoGen backend

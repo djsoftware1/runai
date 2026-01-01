@@ -18,6 +18,7 @@ env/*
 /.output_files_runai*
 /output_files*
 /output_runai*
+**/output_runai/
 # Not sure yet but leaning towards "._output_files_"
 /_output_files_*
 /._output_files_*
@@ -37,6 +38,7 @@ OAI_CONFIG_LIST
 # pyagent cache
 /.cache*
 */.cache/*
+**/.cache/
 
 # Python cache
 /__pycache__*

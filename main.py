@@ -48,9 +48,15 @@ from run_ai.djapp import App
 from run_ai.djautogen.settings import djAutoGenSettings
 from run_ai.config.settings import autogen_settings
 
-use_backend='autogen'
+# this will probably change in future but the idea is moving toward having general user settings like default backend
+# there should also someday be project-specific backend selection stuff ... a bit like git global config vs local config
+#user_settings_default_backend='openai'
+user_settings_default_backend='autogen'
+#user_settings_default_backend='dummy'
+#use_backend='autogen'
+use_backend=user_settings_default_backend
 run_tests=False
-print(f"USE_BACKEND={use_backend}")
+print(f"default_backend={user_settings_default_backend}")
 
 #=== BACKEND SELECTOR:
 #settings = djAISettings()
@@ -78,6 +84,7 @@ class djAppController:
         self.session_stats = None
 
     def AppInitialize(self):
+        # 'controller' app initialize
         # verbosity level?
         print(f"{Fore.GREEN}🤖 controller app-initialize{Style.RESET_ALL}")
         # Show short core 'about this application' info on commandline - (dj)
@@ -87,10 +94,11 @@ class djAppController:
         print(f"{Fore.GREEN}=== App directory: {self.app.app_dir}{Style.RESET_ALL}")
 
     def AppDone(self):
-        print(f"{Fore.GREEN}🤖 controller app-done{Style.RESET_ALL}")
+        # 'controller' app-done
+        #print(f"{Fore.GREEN}🤖 app-done{Style.RESET_ALL}")
         self.session_stats.datetime_end = datetime.datetime.now()
         self.session_stats.elapsed_time = self.session_stats.datetime_end - self.session_stats.datetime_start
-        print(f"{Fore.GREEN}🤖[controller] Elapsed time: {self.session_stats.elapsed_time}{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}🤖 app-done: Elapsed time: {self.session_stats.elapsed_time}{Style.RESET_ALL}")
 
 
 # Create a new application instance
@@ -160,6 +168,15 @@ inputfile='input.txt'
 #files_to_send = ["djNode.h", "djNode.cpp"]
 files_to_send = None
 #files_to_create = ["djVec3d.h", "djVec3d.cpp"]
+# !! todo clear up confusion between related settings here for output files:
+#   ■ task_output_directory/outfiles_final: output_runai/2026-01-01 02-14-53/outfiles_final
+#   ■ Task info:
+#      ■ runtask.type: djTaskType.create
+#      ■ files_to_create: 
+#         -> same idea as out_files but currently autogen code-path only which shouldn't be... should maybe be one setting? to think about ..
+#      ■ files_to_send: -
+#   ■ File-related info:
+#      ■ runtask.settings.out_files: ['test1.cpp']
 files_to_create=None
 #targetfolder = "modified_tlex/DicLib"
 # currently not used:
@@ -285,8 +302,12 @@ if args.djchat:
     use_backend = 'djchat'
 elif args.openai:
     use_backend = 'openai'
-else:
+elif args.dummy:
+    use_backend = 'dummy'
+elif args.autogen:
     use_backend = 'autogen'
+else:
+    use_backend = user_settings_default_backend
     
 if args.model:
     # Specify preferred model to use
@@ -657,8 +678,9 @@ if os.path.exists(config_list_path):
         # And/or if we add a commandline parameter like "--local" and/or "--url_base" etc.
         if config_list:
             s = json.dumps(config_list)
-            show_setting('FILTER LIST FROM MODEL {user_select_preferred_model}', s)
+            show_setting(f'FILTER LIST FROM MODEL user_select_preferred_model={user_select_preferred_model}', s)
         else:
+            # If this is say a local ollama and it's present why not just allow it and bypass? it's an extra pain to have to edit OAI_CONFIG dj2026 ..
             print(f"{Fore.RED}FILTER LIST FROM MODEL {user_select_preferred_model}: MODEL NOT FOUND IN CONFIG LIST{Style.RESET_ALL}")
             # And/or fallback to some existing model from the list (the first? first local one?) but try specify model
             # Here just fallback to first in list for now
@@ -697,7 +719,7 @@ if os.path.exists(config_list_path):
     # dj2025-12 some autogen versions don't like the "api_type" and "tags" and give errors
     # Fix it by pre-sanitizing the list ..
     # but we may have to later re-implement the idea of tags differently ..
-    print("--- Sanitize openAI config")
+    print("--- Sanitize openAI config and resolve env vars such as env:OPENAI_API_KEY")
     original_raw_config = config_list
     clean_config = sanitize_oai_config_list(original_raw_config)
     config_list = clean_config
@@ -728,7 +750,7 @@ if os.path.exists(config_list_path):
     #"env:AZURE_OPENAI_KEY": "AZURE_OPENAI_KEY",
     #"env:ANTHROPIC_API_KEY": "ANTHROPIC_API_KEY",
     #"env:GROQ_API_KEY": "GROQ_API_KEY",
-    print("--- Resolve env vars such as env:OPENAI_API_KEY")
+    #print("--- Resolve env vars such as env:OPENAI_API_KEY")
     resolved_cfg = resolve_env_vars(clean_config)
     config_list = resolved_cfg
     #clean_cfg = sanitize_oai_config(resolved_cfg)
@@ -996,22 +1018,22 @@ if __name__ == '__main__':
     ####captured_output = io.StringIO()
     ####sys.stdout = captured_output
 
+    ###############################################
+    # NB! Be careful here, from below any output is auto-captured and redirected for things like auto-codeblock extraction to save to files
     # Redirect output to both console and StringIO
     dual_output = DualOutput(task_output_directory)
     sys.stdout = dual_output
 
 
 
+    # The stuff below is not part of the actual captured AI output but is part of the main program output
+    # but it's getting added to it ... hmmm
+    # We may need to separate these output streams better ... distinguish what should be 'logged' in output folder for user, what should be visible but not captured
 
     # todo add option whether to wait on keypress or auto go-ahead
     print(f"DEBUG: selector.get_active_backends: {selector.get_active_backends()}")
     ##input(f"■ Press a key to run task: {Fore.CYAN}{task}{Style.RESET_ALL}")
-    #djAutoGenDoTask(task)
-    #elif len(backend.response)==0:
-    #    # this will still happen with autogen as our autogen backend is a stub... (dj2025-03)
-    #    print(f"empty response")
     print("---------------------------------------")
-    # dj2025-04:
 
     llm_config_general={
         "config_list":config_list, "cache_seed": autogen_settings.use_cache_seed, "stream": False
@@ -1019,8 +1041,24 @@ if __name__ == '__main__':
     llm_config_coder={
         "config_list":config_list, "cache_seed": autogen_settings.use_cache_seed, "stream": False
     }
-    print(f"=== {Fore.CYAN}llm_config_general: {llm_config_general}{Style.RESET_ALL}")
-    print(f"=== {Fore.CYAN}llm_config_coder: {llm_config_coder}{Style.RESET_ALL}")
+
+    # NB hide keys! Also this should be before general output capture probably? It's like settings info
+    #print(f"=== {Fore.CYAN}llm_config_general: {llm_config_general}{Style.RESET_ALL}")
+    #print(f"=== {Fore.CYAN}llm_config_coder: {llm_config_coder}{Style.RESET_ALL}")
+    # show_setting does important stuff like hide sk-* keys for privacy
+    #dual_output.PauseSaveFiles()
+    show_setting("■ autogen:llm_config_general", llm_config_general)
+    show_setting("■ autogen:llm_config_coder  ", llm_config_coder)
+    #dual_output.UnpauseSaveFiles()
+    # this is incorrectly going into our captured output log file ...
+
+    #djAutoGenDoTask(task)
+    #elif len(backend.response)==0:
+    #    # this will still happen with autogen as our autogen backend is a stub... (dj2025-03)
+    #    print(f"empty response")
+    print("---------------------------------------")
+    # dj2025-04:
+
     #input('Press a key ....')
 
     # create an AssistantAgent named "assistant"
@@ -1306,16 +1344,17 @@ if __name__ == '__main__':
 
     # We're effectively doing below twice now ..
     # Use ai_output with create_files_from_ai_output function in order to actually create any files in the returned code
-    print("Creating files from AI output task_output_directory {task_output_directory}/outfiles_final")
-    files_created = create_files_from_ai_output(ai_output, task_output_directory + '/outfiles_final')
+    print("runai: Creating files from AI output task_output_directory {task_output_directory}/outfiles")
+    files_created = create_files_from_ai_output(ai_output, task_output_directory + '/outfiles')
     #ret_created_files
 
     # Print the captured output to the console
     print('')
     print('')
-    print("=== Captured AI Output:")
+    print("runai: Captured AI Output:")
+    print('____________________ AI OUTPUT ______________________________')
     print(ai_output)
-    print('____________________________')
+    print('____________________ END OF AI OUTPUT _______________________')
 
 
     # dj2025-03 list files created and list files first required (e.g. "runai create -o file1.cpp file2.h") so we can see if all files were created
@@ -1350,8 +1389,8 @@ if __name__ == '__main__':
     print(f"   {Fore.YELLOW}         {Fore.WHITE}completed: {Fore.BLUE}{controller.session_stats.datetime_end}{Style.RESET_ALL}")
     print(f"   {Fore.YELLOW}         {Fore.WHITE}time: {Fore.BLUE}{controller.session_stats.elapsed_time}{Style.RESET_ALL}")
     #show_setting('total tasks', controller.session_stats.total_tasks, 1)
-    show_setting('task_output_directory', f"\"task_output_directory\"", 1)
-    show_setting('task_output_directory/outfiles_final', task_output_directory+'/outfiles_final', 1)
+    show_setting('task_output_folder', task_output_directory, 1)
+    show_setting('outfiles', task_output_directory+'/outfiles', 1)
     #HEADING: Task info
     show_setting(f"{Fore.YELLOW}Task info{Style.RESET_ALL}", '', 1)
     show_setting("runtask.type", runtask.type, 2)
@@ -1361,6 +1400,6 @@ if __name__ == '__main__':
     show_setting(f"{Fore.YELLOW}File-related info{Style.RESET_ALL}", '', 1)
     show_setting("runtask.settings.out_files", runtask.settings.out_files, 2)
     show_setting("runtask.settings.send_files", runtask.settings.send_files, 2)
-    show_setting("files_created", files_created, 2)
+    #show_setting("files_created", files_created, 2)
     print(f"🤖 - \"{Fore.MAGENTA}Done! What else can I help you with next?\"{Style.RESET_ALL}")
 

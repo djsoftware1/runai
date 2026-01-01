@@ -1,5 +1,5 @@
 # runai — https://github.com/djsoftware1/runai
-# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+# (c) David Joffe / DJ Software 2023-2026 - Business Source License (BSL 1.1). See LICENSE
 #dj2025-04
 import autogen
 
@@ -20,11 +20,10 @@ class djAutoGen:
         """
         Initialize AutoGen settings and objects.
         """
-        print("djAutoGen: InitAutoGen")
         # Initialize the AutoGen settings and objects here
         # This is where you would set up the coder, autogen_coder, assistant, manager, and user_proxy
         # For now, we'll just print a message indicating that the initialization is complete
-        print("djAutoGen: Initialized with settings:", self.settings.__dict__)
+        print("djAutoGen: Initialize with settings:", self.settings.__dict__)
         #input('debug press a key')
         return
 

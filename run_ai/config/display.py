@@ -33,7 +33,15 @@ def show_setting(name, value, indent=0, descriptionString="", strKeyShortcut="")
 
         # NB hide sensitive data like API keys
         s = f"{value}"
-        s = re.sub(r'sk-(.*)["\']', "\"(hidden)\"", s, flags=re.MULTILINE)
+        # Commenting out below as overly-greedy!
+        #s = re.sub(r'sk-(.*)["\']', "\"(hidden)\"", s, flags=re.MULTILINE)
+        s = re.sub(
+            r'(["\']?)\s*(sk-[^"\']+)\s*(["\']?)',
+            r'"(hidden)"',
+            s,
+            flags=re.IGNORECASE,
+        )
+
         #show_setting("openai.config_list", config_list, 1)
 
         print(f"{Fore.GREEN}{strDashesBefore}{name}:{Style.RESET_ALL} {Fore.CYAN}{s}{Style.RESET_ALL}{strDescription} {strShortCut}")
