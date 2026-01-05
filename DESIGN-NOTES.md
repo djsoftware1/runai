@@ -28,3 +28,10 @@ There is a generic backend class from which backend instances derive. That's all
 But in fact the idea and intention is to extend this to support multiple backends potentially. So for example, you might want to say "generate a dictionary" with these 3 backends or models and compare the output. Or ask say a question about physics to multiple backends at once, comparing the output. And so on.
 
 With the current design, this may not even be too difficult ... the backend selector has an array of instantiated backends which at time of writing simply just has one, but could be expanded to allow a list of backends.
+
+
+### "selected backend" vs preferred backends or multi backends etc.
+
+settings_default_backend='openai'
+
+Things like above could also become fallback lists? Say for a 'stress-testing' folder we might want it to be either 'dummy' or 'dummy,djchat,autogen,openai' (or whatever) but if some of those not available - either for multiple, or, cascading fallback preference. So if djchat and autogen not available we end up with two available in above case. For a real project it might be something like, hmm, 'openai,claude'
