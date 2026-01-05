@@ -19,4 +19,10 @@ Want to expand on this but the model selection: I am still thinking about whethe
 For example for certain demanding, commercial tasks one may want to force and make sure we are using high-quality particular models. But for other types we may prefer either certain local models or even a list of models in order of preference to fall back on, or something, or a way to specify or list or get available models like query ollama or LM studio etc. ...
 
 
+## BACKEND ARCHITECTURE
 
+There is a generic backend class from which backend instances derive. That's all fine and well and good. And there is a 'selected backend' which 'for now is fine and well and good.
+
+But in fact the idea and intention is to extend this to support multiple backends potentially. So for example, you might want to say "generate a dictionary" with these 3 backends or models and compare the output. Or ask say a question about physics to multiple backends at once, comparing the output. And so on.
+
+With the current design, this may not even be too difficult ... the backend selector has an array of instantiated backends which at time of writing simply just has one, but could be expanded to allow a list of backends.
