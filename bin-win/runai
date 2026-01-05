@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# David Joffe
+# dj2026-01
+# https://github.com/djsoftware1/runai
+# Small wrapper/shim for runai cmd for git bash for Windows to work
+
+# echo "runai wrapper"
+# echo "runai win-bin wrapper"
+exec runai.cmd "$@"
