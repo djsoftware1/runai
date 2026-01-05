@@ -2,6 +2,8 @@
 
 In-progress thoughts on design
 
+## SETTINGS
+
 dj2026-01:
 Several things to think about: re: "djUserSettings" should it exist vs "djSettings" and so on:
 'user settings': Firstly what is a user anyway in this day and age? It could be an AI using this ...
@@ -9,3 +11,12 @@ So it's just 'settings' but different categories of settings .. some backend-spe
 Some general settings but meant to go to in backend like say preferred model, maybe system prompt, some basic info like current date for the AI,
 maybe some custom user info like the user has setup some info to prefix like their name and goals and what they want to achieve and info about their projects and so on.
 Again that may or may not be a human. And some of these may be project-specific e.g. inside a ~/medical-longevity-simulator we want something differently configure to say a small local humor dictionary generator or a game project like Dave Gnukem or a game engine or someone's thesis or a commercial proposals folder or academic research project, or even runai source code itself ... we may want different default models, different styles of output (different register e.g. formal or informal, academic or business language for proposals, or specific high-quality models for say longevity research or coding tasks ... different custom prompts or system prompts specific to the project .. maybe some 'common prefix' or 'common suffix' to auto prepend or append to tasks.)
+
+### Preferred model idea:
+
+Want to expand on this but the model selection: I am still thinking about whether this should act like 'force model' or have a separate 'force model' option or something ... maybe sometimes user want or need to force a specific model ... but maybe sometimes it should just be a soft preference with fallbacks.
+
+For example for certain demanding, commercial tasks one may want to force and make sure we are using high-quality particular models. But for other types we may prefer either certain local models or even a list of models in order of preference to fall back on, or something, or a way to specify or list or get available models like query ollama or LM studio etc. ...
+
+
+
