@@ -18,6 +18,8 @@ Want to expand on this but the model selection: I am still thinking about whethe
 
 For example for certain demanding, commercial tasks one may want to force and make sure we are using high-quality particular models. But for other types we may prefer either certain local models or even a list of models in order of preference to fall back on, or something, or a way to specify or list or get available models like query ollama or LM studio etc. ...
 
+One thing that feels odd is the idea of backend-specific settings design-wise a generic core 'settings' should it 'know about' things like highly-autogen-specific settings?
+
 
 ## BACKEND ARCHITECTURE
 
