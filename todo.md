@@ -3,6 +3,13 @@
 * runai — https://github.com/djsoftware1/runai
 * (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
 
+* [Done] task: prefix, project name etc. --ls?
+-> files to send
+
+
+* keep tasklog
+say with date?
+* runai --history ? or --logs? show tasks
 
 * design -> main functionality could/should move toward being a package or module (with configurable backends) and the main.py terminal integration a thin/thinnish wrapper using thats
 

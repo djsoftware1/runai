@@ -12,7 +12,25 @@ class DualOutput:
         self.str_building = ''
         self.outfiles_directory = outfiles_directory
         self.pause_capture = 0 # Whilst echo-ing our input prompt which might contain code blocks to send to the AI we don't want it auto-saving files from the code .. use this to temporarily pause optionally
+        # dj2026-01 help capture 'actual AI output' (start/end) .. currently we have a mix of application output and the actual task result
+        self.ai_phase = False # use begin_ai()/end_ai()
+        self.ai_result = None#[]
 
+    # dj2026-01 'actual' AI output capture - not to be confused with overall capture
+    def get_captured(self):
+        return self.ai_result
+
+    def begin_ai(self):
+        #with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8') as log2:
+        #    log2.write(f" START !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        self.ai_phase = True
+        #self.ai_result = None#[]
+
+    def end_ai(self):
+        #with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8') as log2:
+        #    log2.write(f" END !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        self.ai_phase = False
+        
     def PauseSaveFiles(self):
         self.pause_capture = 1#self.pause_capture + 1
 
@@ -21,6 +39,25 @@ class DualOutput:
         self.pause_capture = 0#self.pause_capture - 1
 
     def write(self, message):
+        if message is None:
+            return
+        # try catch recursive re-entry here in log if happening? dj2026-01
+        #with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8') as log2:
+        #    log2.write(f"<debug:{message}>")
+        #    log2.write(f"({message})")
+
+        # capture actual 
+        if self.ai_phase:
+            #with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8') as log2:
+            #    log2.write(f"debug(((({message})))))")
+            if self.ai_result is None:
+                self.ai_result = [message]
+            else:
+                self.ai_result.append(message)
+            
+        # full log string of all output from AI
+        self.str_total = self.str_total + message
+
         self.console.write(message)
         self.capture.write(message)
         with open('log_capture_output_dj_full.txt', 'a', encoding='utf-8') as log_file_capture_output_dj:
@@ -28,8 +65,7 @@ class DualOutput:
         with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8') as log2:
             log2.write(message)
 
-        # full log string of all output from AI
-        self.str_total = self.str_total + message
+
 
         # Try already save code blocks returned 'so far', to files, and then clear the string
         # so we can see and maybe use or evaluate the files as quick as possible already
@@ -48,6 +84,9 @@ class DualOutput:
             # if we saved code blocks to files then clear the already done saved code blocks by clearing string
             if len(ret_created_files) > 0:
                 self.str_building = ''
+
+        with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8') as log2:
+            log2.write(f" >>> ")
 
 
     def getvalue(self):

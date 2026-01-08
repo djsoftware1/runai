@@ -1,5 +1,5 @@
 # runai — https://github.com/djsoftware1/runai
-# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+# (c) David Joffe / DJ Software 2023-2026 - Business Source License (BSL 1.1). See LICENSE
 #
 # runai refactoring helpers
 
@@ -8,9 +8,11 @@ import os
 import re
 import fnmatch
 import djgrep
-# design-wise refactor shouldn't directly use autogen probably
+# design-wise refactor shouldn't directly use autogen probably - todo
 # should be more like 'do-task' -> 'feed to backend generically' or some-such
-import autogen
+from run_ai.backends.autogendetect import has_autogen
+if has_autogen():
+    import autogen
 import helper_functions
 # regular expressions
 import globals

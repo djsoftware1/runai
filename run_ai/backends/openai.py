@@ -1,5 +1,5 @@
 # runai — https://github.com/djsoftware1/runai
-# (c) David Joffe / DJ Software 2025 - Business Source License (BSL 1.1). See LICENSE
+# (c) David Joffe / DJ Software 2025-2026 - Business Source License (BSL 1.1). See LICENSE
 #
 # runai OpenAI Backend class - directly send task to OpenAI backend.
 # (This is not to be confused with the OpenAI under AutoGen backend options.)
@@ -26,10 +26,22 @@ class OpenAIBackend(Backend):
             self.ai_settings.model = 'gpt-4o-mini'
             print(f"do_task: OpenAI model not set, using default: {self.ai_settings.model}")
         print(f"OpenAI model {self.ai_settings.model} task: {task}")
+
+        # --- tool selection (CRITICAL PART) ---
+        # some tools require ... without this we get an error if we get "Error code: 400 - {'error': {'message': "Deep research models require at least one of 'web_search_preview', 'mcp', or 'file_search' tools."
+        # todo later make 'tools selection' more user configurable so it can be customized better per task .. 
+        tools = None
+        if model == "o3-deep-research":
+            tools = [
+                {
+                    "type": "web_search_preview"
+                }
+            ]        
         # Call the OpenAI API with the task
         response = self.client.responses.create(
             model=model,#"gpt-4o",#todo model
-            input=task
+            input=task,
+            tools=tools
         )
         self.response = response.output_text
         print(f"{Style.DIM}OpenAI response: {response}{Style.RESET_ALL}")

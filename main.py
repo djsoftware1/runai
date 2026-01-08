@@ -15,11 +15,21 @@
 # runai website: https://djoffe.com/dj-software/runai/
 # runai github repo: https://github.com/djsoftware1/runai
 # Created by David Joffe - 'Initially to try help with some of my own tasks, and partly as a learning exercise, but have not had enough time to work on it'.
-# Copyright (C) 2023-2025 David Joffe / DJ Software
+# Copyright (C) 2023-2026 David Joffe / DJ Software
 #==================================================================
 # Import necessary libraries
+
 import sys
-import autogen
+import io
+# force utf8 for unicode handling etc.
+sys.stdout = io.TextIOWrapper(
+    sys.stdout.buffer,
+    encoding="utf-8",
+    errors="replace",
+)
+from run_ai.backends.autogendetect import has_autogen
+if has_autogen():
+    import autogen
 import os
 import json
 import requests
@@ -46,17 +56,40 @@ from run_ai.backends.base import djAISettings
 from run_ai.djapp import App
 
 from run_ai.djautogen.settings import djAutoGenSettings
-from run_ai.config.settings import autogen_settings
+from run_ai.config.settings import autogen_settings, djSettings
+
+
+# [dj2026-01] Redirect stdout to stderr
+# but save stdout handle so we can just output
+# that when we have the real output so that
+# Unix piping of output works!
+# e.g. we can do:
+# $ runai -t "make a list" > newlist.txt
+# $ runai -t "cure aging, thanks" |cowsay
+# redirect testing stuff for stdoud todo and cleanup so we can pipe output
+# This makes it very powerful as it becomes another composable Unix-style CLI tool!
+import sys
+save_real_stdout = sys.stdout
+sys.stdout = sys.stderr
+
+
+# careful, we have currently two djSettings, for in-progress refactoring ...dj2026-01
+# we have 'default settings' and current user settings at runtime
+#settings_default = runai_ai.config.djSettings()
+settings_default = djSettings()
+settings_default.backend = 'openai'
 
 # this will probably change in future but the idea is moving toward having general user settings like default backend
 # there should also someday be project-specific backend selection stuff ... a bit like git global config vs local config
-#user_settings_default_backend='openai'
-user_settings_default_backend='autogen'
-#user_settings_default_backend='dummy'
+settings_default_backend='openai'
+#settings_default_backend='autogen'
+#settings_default_backend='dummy'
 #use_backend='autogen'
-use_backend=user_settings_default_backend
+use_backend=settings_default.backend
 run_tests=False
-print(f"default_backend={user_settings_default_backend}")
+# dj2026-01:
+echo_mode=False
+project_name = ''
 
 #=== BACKEND SELECTOR:
 #settings = djAISettings()
@@ -189,9 +222,24 @@ user_select_preferred_model=''
 
 #==================================================================
 ##user_proxy.initiate_chat(coder, message=task_message)
+# This started as autogen-specific then we added more backends
+# The idea is to refactor more still .. everywhere this appears - dj2026
 def djAutoGenDoTask(task: str, do_handle_task=False):
     print(f"{Fore.YELLOW}■ DOTASK[{use_backend}]: {Fore.CYAN}{task}{Style.RESET_ALL}")
-
+    # dj2026 add if not have autogen just return
+    #if not run_ai.backends.autogendetect.have_autogen():
+    if use_backend=='autogen' and not has_autogen():
+        if not selector is None:
+            print(f"{Fore.YELLOW}■ DOTASK[{use_backend}]: ERROR: autogen selected but not supported - falling back{Style.RESET_ALL}")
+            result = selector.do_task(task)
+            backend = selector.get_backend()
+            return result
+        # should not happen? todo test and clean up all this .. dj2026
+        print(f"{Fore.RED}■ DOTASK[{use_backend}]: ERROR: autogen selected but not supported{Style.RESET_ALL}")
+        # don't really want exception but for now want to debug incorrectly being here
+        raise RuntimeError('autogen selected but not supported')
+        return ''
+    # If we aren't using ..
     if use_backend!='autogen' and not selector is None:
         #result = djAutoGenDoTask(task)
         result = selector.do_task(task)
@@ -204,7 +252,21 @@ def djAutoGenDoTask(task: str, do_handle_task=False):
             #print(f"{result}")
         else:
             print(f"■ DoTask[backend:{selector.backend_name}] {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")    
-            print(f"{Fore.GREEN}{result}{Style.RESET_ALL}")
+            #print(f"{Fore.GREEN}{result}{Style.RESET_ALL}")
+            dual_output.begin_ai()
+            print(result,end="") # no automatic newline or we end up with an extra newline in the captured output
+
+            # PIPE TO STDOUT!
+            # THIS IS THE REAL IMPORTANT OUTPUT THAT CAN BE PIPED:
+            print(result, file=save_real_stdout, end='')
+            # prefix = 'runai-AGI say: '
+            #print(f"runai-AGI say: {result}", file=save_real_stdout, end='')
+            #sys.stdout = save_real_stdout
+            # todo should we flush?
+            save_real_stdout.flush()
+            sys.stdout.flush()
+            dual_output.end_ai()
+            #dual_output.flush()
 
         # Use the backend selector to get the appropriate backend for the task
         #backend = selector.get_backend()
@@ -233,6 +295,13 @@ def djAutoGenDoTask(task: str, do_handle_task=False):
             message=task_message,
         )
     """
+    if not has_autogen():
+        raise RuntimeError('check fallback path autogen not supported')
+        return ''
+
+    response = ''
+    # not 100% sure about these yet .. dj2026-01:
+    dual_output.begin_ai()
     if autogen_settings.coder_only and autogen_settings.no_autogen_user_proxy:
         if do_handle_task:
             response = coder.handle_task(task)
@@ -255,12 +324,17 @@ def djAutoGenDoTask(task: str, do_handle_task=False):
         user_proxy.initiate_chat(
             assistant,message=task,
         )
+    dual_output.end_ai()
     print(f"{Fore.YELLOW}=== DOTASK DONE{Style.RESET_ALL}")
     return ''
 #==================================================================
 
 
 print(f"{Fore.YELLOW}=== {Fore.YELLOW}USAGE: runai (or python main.py) [taskfile] [targetfolder] [settings.py]{Style.RESET_ALL}")
+
+# dj2026-01 auto-detect warning
+if not has_autogen():
+    print(f"{Fore.YELLOW}WARNING autogen modules not found, disabling autogen support{Style.RESET_ALL}")
 
 # Check if defaultsettings.py exists in runai folder and run it if it does
 default_settings = os.path.join(app.app_dir, "defaultsettings.py")
@@ -304,15 +378,25 @@ elif args.openai:
     use_backend = 'openai'
 elif args.dummy:
     use_backend = 'dummy'
+elif args.echo: # dummy backend but in echo mode
+    use_backend = 'dummy'
+    echo_mode = True
 elif args.autogen:
-    use_backend = 'autogen'
+    if not has_autogen():
+        print("No autogen support, try install the required modules")
+    else:
+        use_backend = 'autogen'
 else:
-    use_backend = user_settings_default_backend
+    use_backend = settings_default.backend
     
 if args.model:
     # Specify preferred model to use
     user_select_preferred_model = args.model
     print(f"[args] Select Model: {user_select_preferred_model}")
+if args.project:
+    # Set the project name
+    project_name = args.project
+    print(f"[args] Project Name: {project_name}")
 elif args.gpt4:
     user_select_preferred_model = "gpt-4"
     print(f"[args] Select Model: {user_select_preferred_model}")
@@ -435,6 +519,12 @@ def show_settings():
     print(f"{Fore.BLUE}____________________________________________________{Style.RESET_ALL}")
     #print(f"{Fore.BLUE}=== SETTINGS:"):
     print(f"{Fore.YELLOW}=== SETTINGS:")
+    #print(f"default_backend={settings_default.backend}")
+    # show_setting gives us not just things like coloring but critical things like hiding sensitive keys!
+    # SHOW DEFAULT SETTINGS?
+    #show_setting('default-backend', settings_default.backend)#, strEnd=' ')
+    #show_setting('default-backend', settings_default.backend, strEnd=' ')
+
     sBullet1='x'
     sBullet1='→'
     sBullet1='● '
@@ -480,10 +570,6 @@ def show_settings():
     show_setting("coder_only", autogen_settings.coder_only, 1)
     show_setting("max_consecutive_auto_replies", autogen_settings.max_consecutive_auto_replies, 1)
 
-    # HEADING
-    # LLM SETTINGS/PREFERENCES/COMMAND-LINE OPTIONS
-    print(f"{Fore.YELLOW}{sBullet1}LLM settings:{sHeadingSuffix}{Style.RESET_ALL}")
-    show_setting("user-selected-model", user_select_preferred_model, 1, "", "-m -4 -o1-mini")
     #sBULLET_SQUARE="■"
     #print("   " * 2, end="")#indent
     # why showing twice
@@ -497,6 +583,10 @@ def show_settings():
         #s = re.sub(r'sk-(.*)["\']', "\"(hidden)\"", s, flags=re.MULTILINE)
         #show_setting("openai.config_list", config_list, 1)
         show_setting("openai.config_list", s, 1)
+    # HEADING
+    # LLM SETTINGS/PREFERENCES/COMMAND-LINE OPTIONS
+    print(f"{Fore.YELLOW}{sBullet1}LLM settings:{sHeadingSuffix}{Style.RESET_ALL}")
+    show_setting("user-selected-model", user_select_preferred_model, 1, "", "-m")
 
     #global config_list
     if config_list:
@@ -510,8 +600,9 @@ def show_settings():
          config_list: [
         """
         show_setting("global.config_list", s)
-    show_setting("dryrun only", runtask.dryrun)
-    show_setting("use-backend", use_backend)
+    show_setting("dryrun", runtask.dryrun, strEnd=' ')
+    show_setting("echo_mode", echo_mode, strEnd=' ')
+    show_setting("selected-backend", use_backend, defaultValue=settings_default.backend)
     print(f"{Fore.BLUE}__________________________________{Style.RESET_ALL}")
     # TODO also try let coder handle things more directly?
     return
@@ -641,7 +732,8 @@ else:
         )
 
 # Check if the OAI_CONFIG_LIST file exists
-if os.path.exists(config_list_path):
+# dj2026-01 should we just not do this at all if no autogen or does it make sense for other backends?
+if os.path.exists(config_list_path) and has_autogen():
     #"model": ["gpt-4", "gpt-4-0314", "gpt4", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-v0314"],
     if user_select_preferred_model=="gpt-4": # Force gpt4 if possible if --gpt4 passed?
         print("Trying selected model gpt-4")
@@ -798,7 +890,11 @@ show_settings()
 # Get date/time to use in filenames and directories and session logfiles etc.
 task_datetime = datetime.datetime.now()
 task_formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
-task_output_directory='output_runai' + '/' + task_formatted_datetime
+#if project_name=='':
+#    task_output_directory='output_runai' + '/' + task_formatted_datetime
+#else:
+task_output_directory = os.path.join(project_name, 'output_runai', task_formatted_datetime) if project_name else os.path.join('output_runai', task_formatted_datetime)
+#task_output_directory='output_runai' + '/' + task_formatted_datetime
 # Create the output directory if it doesn't exist
 if not os.path.exists(task_output_directory):
     os.makedirs(task_output_directory)
@@ -968,6 +1064,8 @@ if __name__ == '__main__':
     settings = djAISettings()
     if len(user_select_preferred_model)>0:
         settings.model = user_select_preferred_model
+    # hmm todo/fixme where does echo_mode belong?
+    settings.echo_mode = echo_mode
     print('=== BackendSelector setup')
     selector = BackendSelector(settings, use_backend)
 
@@ -1061,69 +1159,70 @@ if __name__ == '__main__':
 
     #input('Press a key ....')
 
-    # create an AssistantAgent named "assistant"
-    assistant = autogen.AssistantAgent(
-        name="assistant",
-        llm_config={
-            #"use_system_message": False,  # <-- critical: disables system role
-            "cache_seed": autogen_settings.use_cache_seed,  # seed for caching and reproducibility
-            #"config_list": config_list,  # a list of OpenAI API configurations
-            # above line for OPENAI and this below line for our LOCAL LITE LLM:
-            "config_list": config_list,#_localgeneral,  # a list of OpenAI API configurations
-            "temperature": 0,  # temperature for sampling
-        },  # configuration for autogen's enhanced inference API which is compatible with OpenAI API
-    )
-    # Below had to do with LM studio compatibility niggledies [dj2025-03/04]
-    assistant.use_system_message = False
-    assistant.llm_config["stream"] = False
-    # Create a coder agent
-    coder = autogen.AssistantAgent(
-        name="coder",
-        llm_config=llm_config_coder#llm_config_coder_openai if use_openai else llm_config_localcoder
-    )
-    # create a UserProxyAgent instance named "user_proxy"
-    user_proxy = autogen.UserProxyAgent(
-        name="user_proxy",
-        human_input_mode="NEVER",
-        ########### ollama-testing:
-        # [dj2025-04] working on ollama/LiteLLM compatibility issues but double-check if below line causes issues with OpenAI API
-        llm_config=llm_config_general,
-        #llm_config=llm_config_localgeneral if use_openai else llm_config_localgeneral,
-        #code_execution_config=code_execution_enabled,
-        max_consecutive_auto_reply=autogen_settings.max_consecutive_auto_replies,
-        is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
-        #code_execution_config=code_execution_enabled,
-        code_execution_config=False,
-        #code_execution_config={
-        #    "work_dir": "__coding__",
-        #    "use_docker": False,  # set to True or image name like "python:3" to use docker
-        #},
-    )
-
-    """
-    if autogen_settings.coder_only:
-        # the assistant receives a message from the user_proxy, which contains the task description
-        #user_proxy.initiate_chat(
-        coder.initiate_chat(
-            coder,
-            message=f"Please do the following task: {task}",
+    if has_autogen():
+        # create an AssistantAgent named "assistant"
+        assistant = autogen.AssistantAgent(
+            name="assistant",
+            llm_config={
+                #"use_system_message": False,  # <-- critical: disables system role
+                "cache_seed": autogen_settings.use_cache_seed,  # seed for caching and reproducibility
+                #"config_list": config_list,  # a list of OpenAI API configurations
+                # above line for OPENAI and this below line for our LOCAL LITE LLM:
+                "config_list": config_list,#_localgeneral,  # a list of OpenAI API configurations
+                "temperature": 0,  # temperature for sampling
+            },  # configuration for autogen's enhanced inference API which is compatible with OpenAI API
         )
-    else:
-        # the assistant receives a message from the user_proxy, which contains the task description
-        user_proxy.initiate_chat(
-            assistant,
-            message=f"Please do the following task: {task}",
+        # Below had to do with LM studio compatibility niggledies [dj2025-03/04]
+        assistant.use_system_message = False
+        assistant.llm_config["stream"] = False
+        # Create a coder agent
+        coder = autogen.AssistantAgent(
+            name="coder",
+            llm_config=llm_config_coder#llm_config_coder_openai if use_openai else llm_config_localcoder
         )
-    """
+        # create a UserProxyAgent instance named "user_proxy"
+        user_proxy = autogen.UserProxyAgent(
+            name="user_proxy",
+            human_input_mode="NEVER",
+            ########### ollama-testing:
+            # [dj2025-04] working on ollama/LiteLLM compatibility issues but double-check if below line causes issues with OpenAI API
+            llm_config=llm_config_general,
+            #llm_config=llm_config_localgeneral if use_openai else llm_config_localgeneral,
+            #code_execution_config=code_execution_enabled,
+            max_consecutive_auto_reply=autogen_settings.max_consecutive_auto_replies,
+            is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
+            #code_execution_config=code_execution_enabled,
+            code_execution_config=False,
+            #code_execution_config={
+            #    "work_dir": "__coding__",
+            #    "use_docker": False,  # set to True or image name like "python:3" to use docker
+            #},
+        )
 
-    if not autogen_settings.NoGroup:
-        print("=== Creating groupchat and manager")
-        groupchat = autogen.GroupChat(agents=[user_proxy, coder, assistant], messages=[])
-        manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config_localgeneral)
-    else:
-        print("=== no groupchat or manager")
-        groupchat = None
-        manager = None
+        """
+        if autogen_settings.coder_only:
+            # the assistant receives a message from the user_proxy, which contains the task description
+            #user_proxy.initiate_chat(
+            coder.initiate_chat(
+                coder,
+                message=f"Please do the following task: {task}",
+            )
+        else:
+            # the assistant receives a message from the user_proxy, which contains the task description
+            user_proxy.initiate_chat(
+                assistant,
+                message=f"Please do the following task: {task}",
+            )
+        """
+
+        if not autogen_settings.NoGroup:
+            print("=== Creating groupchat and manager")
+            groupchat = autogen.GroupChat(agents=[user_proxy, coder, assistant], messages=[])
+            manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config_localgeneral)
+        else:
+            print("=== no groupchat or manager")
+            groupchat = None
+            manager = None
 
     # Check if we have a input.txt file and if so use that as input to the AI to run on all lines of the file
     inputlines_array = []
@@ -1310,6 +1409,7 @@ if __name__ == '__main__':
         djAutoGenDoTask(task_message)
 
 
+
     # [IO redirect] Reset stdout to original
     ####sys.stdout = original_stdout
     # [IO redirect] Get the content from the captured output
@@ -1349,12 +1449,16 @@ if __name__ == '__main__':
     #ret_created_files
 
     # Print the captured output to the console
-    print('')
-    print('')
-    print("runai: Captured AI Output:")
-    print('____________________ AI OUTPUT ______________________________')
-    print(ai_output)
-    print('____________________ END OF AI OUTPUT _______________________')
+    #ai_output_actual = dual_output.
+    if dual_output.get_captured() is not None:
+        capture_output_actual = dual_output.get_captured()
+        #print(f"runai: Captured AI Output:{len(dual_output.get_captured())}")
+        print('____________________ AI OUTPUT ______________________________')
+        #print(ai_output)
+        for line in capture_output_actual:
+            #print("[" + line + "]" + f"{len(line)}")
+            print(line)#+ f"{len(line)}")
+        print('____________________ END OF AI OUTPUT _______________________')
 
 
     # dj2025-03 list files created and list files first required (e.g. "runai create -o file1.cpp file2.h") so we can see if all files were created
@@ -1402,4 +1506,9 @@ if __name__ == '__main__':
     show_setting("runtask.settings.send_files", runtask.settings.send_files, 2)
     #show_setting("files_created", files_created, 2)
     print(f"🤖 - \"{Fore.MAGENTA}Done! What else can I help you with next?\"{Style.RESET_ALL}")
-
+    # Debug / verbose / progress → stderr
+    #print("Using backend: ollama", file=sys.stderr)
+    #print("Tokens used: 1234", file=sys.stderr)
+    #sys.stdout.flush()
+    #print("out", file=sys.stdout)
+    #sys.stdout.flush()

@@ -12,6 +12,7 @@ class CmdLineParser:
             self.parser = argparse.ArgumentParser(description='runai - Run AI/LLM or other tasks, optionally with autogen')
         else:
             self.parser = argparse.ArgumentParser(description='runai - Run AI/LLM or other tasks, optionally with autogen', prog=prog_override)
+        self.parser.add_argument('--project', '-p', type=str, help='Specify the project name to organize output.')
         self.parser.add_argument('--version', action='store_true', help='Show version number and exit.')
         self.parser.add_argument('-c', '--showsettings', action='store_true', help='Show settings and exit.') # -c "config"
         self.parser.add_argument('--test', action='store_true', help='Run test task(s).')
@@ -31,6 +32,20 @@ class CmdLineParser:
         self.parser.add_argument('--dryrun', action='store_true', help='Show roughly what would be done but do not actually execute the task.')
 
         """
+        # todo-future:
+        # Capture anything not a flag e.g.:
+        # runai "Hi"
+        # runai -t "task string" more task string
+        # runai --openai "task string"
+        # runai --openai "task string" --echo
+        self.parser.add_argument(
+            'task',
+            nargs='*',
+            help='Task string (can be multiple words)'
+        )
+        """
+
+        """
         group = self.parser.add_argument_group('AutoGen settings', 'AutoGen settings.')
         group.add_argument('--local', action='store_true', help='Use only own local AI instances (tag local).')
         group.add_argument('--tag', action='store_true', help='Filter config_list by tag for model selection.')"
@@ -39,8 +54,9 @@ class CmdLineParser:
         group = self.parser.add_argument_group('Backend selection', 'Backend selection options.')
         group.add_argument('--openai', action='store_true', help='Use OpenAI backend directly (without AutoGen) for tasks.')
         group.add_argument('--djchat', action='store_true', help='Use djchatbot backend for tasks if available.')
-        group.add_argument('--dummy', action='store_true', help='Use dummy echo style backend for testing.')
         group.add_argument('--autogen', action='store_true', help='Use AutoGen backend.')
+        group.add_argument('--dummy', action='store_true', help='Use dummy echo style backend for testing.')
+        group.add_argument('--echo', action='store_true', help='Echo mode: Echo back task string for testing.')
         #refactor_parser.add_argument('--backend', type=str, help='Specify the backend name')
 
         subparsers = self.parser.add_subparsers(dest='subcommand')

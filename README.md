@@ -42,7 +42,7 @@ runai -t "Repeat the word coffee five times, then help cure aging"
 ```
 runai -h  show full help  --showsettings  just show settings  --version  show version number  --dryrun 
       -t "TASK"  task instructions for LLM to do  -tf "TaskFile" task file to load (default autotasks.txt)
-      -m "MODEL" select model  -3 use gpt-3  -4 use gpt-4  --o1-mini  --o1-preview
+      -m "MODEL" select model  -p "PROJECT-NAME"  -4 use gpt-4  --o1-mini  --o1-preview
       -f "FOLDER"  set work-folder   subcommands (refactor,build,create,createfrom,modify) ...
       -i "InputFile" to batch-run task on all lines, with substitution. default=input.txt
 ```
@@ -91,7 +91,19 @@ Options for selecting the model to use:
    --o1-preview - use o1-preview
 ```
 
-**Example:** `runai -3 -t "Write a short story about cats"`
+**Example:** `runai --openai -t "Write a short story about cats"`
+
+### Project Name
+
+Use --project or -p to specify a project name, which will be used when auto-generating output such as automatically-generated output files and folder name.
+
+```sh
+runai -p "coding" -t "Write a C++ vec3d class"
+
+runai -p "Thesis" -t "Help me brainstorm ideas on my thesis research about the following subject: ..."
+```
+
+Generated output will be placed under a subfolder of the given project name.
 
 ### Selecting Backend
 
@@ -101,6 +113,14 @@ Options for selecting the backend
    --openai Use OpenAI backend directly (without AutoGen) for tasks
 
    --djchat Use djchat/djchatbot backend (without AutoGen) if available
+```
+
+#### Testing
+
+```
+   --dummy Special 'dummy' backend for testing
+
+   --echo Echo mode: Dummy backend just sends back task string as "result" for testing
 ```
 
 **Note:** For some tasks, this tool can modify files, so use with caution. Always backup all your data first, work in a 'sandbox' copy, and check all ch ananges. Test things first. Use at own risk.
@@ -306,10 +326,11 @@ Other potential names: dj-runAI, or djrun, or perhaps 'dj-run-tasks' (to reflect
 
 ## Copyright
 
-This project Copyright (C) David Joffe and [DJ Software](https://djoffe.com/dj-software/) 2023-2025
+This project Copyright (C) David Joffe and [DJ Software](https://djoffe.com/dj-software/) 2023-2026
 
 "**DJ Software**" is just short for "David Joffe Software", and is a name I created to place some of my software under (and of 1. a potential entity, and 2. of this [GitHub organization "djsoftware1" I created for DJ Software](https://github.com/djsoftware1/)).
 
 See also [djoffe.com/dj-software/](https://djoffe.com/dj-software/)
 
 - [David Joffe](https://davidjoffe.github.io/)
+

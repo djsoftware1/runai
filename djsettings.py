@@ -1,5 +1,5 @@
 # runai — https://github.com/djsoftware1/runai
-# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+# (c) David Joffe / DJ Software 2023-2026 - Business Source License (BSL 1.1). See LICENSE
 
 #import djtasktypes
 
@@ -32,8 +32,22 @@ class ModifyTaskSettings:
         self.out_files = []
 
 
+# See DESIGN-NOTES.md (dj2026-01) on "SETTINGS" ... below is quite fluid still not set in stone but a WIP ..
+
 class djSettings:
     def __init__(self):
+
+        # BACKEND RELATED:
+
+        # system or runai instance related
+
+        # See DESIGN-NOTES.md in-progress thoughts on below: dj2026-01
+        #self.user_select_preferred_model = ''
+        #self.model = ''
+        self.backend = ''
+
+        # TASK-RELATED:
+
         # User-required output files
         # E.g. "runai --o1-mini -t "Please create a full C++ vec3d helper class, and return it in codeblocks with file names vec3d.h and vec3d.cpp." create -o vec3d.h vec3d.cpp"
         # then this should be ["vec3d.h", "vec3d.cpp"]

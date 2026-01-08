@@ -4,6 +4,8 @@ In-progress thoughts on design
 
 ## SETTINGS
 
+* NB: `show_setting()` helper may seem cosmetic, but it gives us not just things like coloring, but also critical things like hiding sensitive user API keys from the output! So when coding and displaying settings, use it, don't just dump settings to screen with e.g. print etc.
+
 dj2026-01:
 Several things to think about: re: "djUserSettings" should it exist vs "djSettings" and so on:
 'user settings': Firstly what is a user anyway in this day and age? It could be an AI using this ...
@@ -35,3 +37,22 @@ With the current design, this may not even be too difficult ... the backend sele
 settings_default_backend='openai'
 
 Things like above could also become fallback lists? Say for a 'stress-testing' folder we might want it to be either 'dummy' or 'dummy,djchat,autogen,openai' (or whatever) but if some of those not available - either for multiple, or, cascading fallback preference. So if djchat and autogen not available we end up with two available in above case. For a real project it might be something like, hmm, 'openai,claude'
+
+fix immediately aider
+also could help batch test and or more :
+printf "\n--dummy\n--echo\n--openai \ndjchat\nautogen\nollama(infuture)" | runai -t "test task "
+
+printf "\
+--dummy
+--echo
+--openai
+djchat
+autogen
+ollama
+" | runai -t "test task"
+
+-----
+
+Another idea for runai code tasks: "Scan this code for todo's that are maybe not implemenetd and make a list, turn them into task strings
+
+i can even find my own old TODOs i forgot :) automate the task of turning them into task strings, creating feedback loops 

@@ -8,8 +8,12 @@
 
 from run_ai.backends.base import Backend
 from run_ai.djautogen.settings import djAutoGenSettings
-from run_ai.djautogen.djautogen import djAutoGen
-import autogen
+
+from run_ai.backends.autogendetect import has_autogen
+if has_autogen():
+    import autogen
+    from run_ai.djautogen.djautogen import djAutoGen
+
 
 """
 # todo refactor better .. refactoring-in-progress:

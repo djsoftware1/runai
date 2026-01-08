@@ -11,7 +11,9 @@
 from run_ai.backends.base import Backend
 from run_ai.backends.base import djAISettings
 from run_ai.backends.djchat import djChatBackend
-from run_ai.backends.autogen import AutoGenBackend
+from run_ai.backends.autogendetect import has_autogen
+if has_autogen():
+    from run_ai.backends.autogen import AutoGenBackend
 from run_ai.backends.openai import OpenAIBackend
 from run_ai.backends.dummy import DummyBackend
 # future?
@@ -30,8 +32,12 @@ class BackendSelector:
 
     def _initialize_backends(self):
         if self.backend_name=='autogen':
-            # Initialize AutoGenBackend with settings
-            return [AutoGenBackend(self.ai_settings)]
+            if has_autogen():
+                # Initialize AutoGenBackend with settings
+                return [AutoGenBackend(self.ai_settings)]
+            else:
+                # else what to do? error? for now create dummy but this is not right .. dj2026-01
+                return [DummyBackend(self.ai_settings)]
         elif self.backend_name == "djchat":
             # Initialize djChatBackend with settings
             return [djChatBackend(self.ai_settings)]

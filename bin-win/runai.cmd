@@ -16,19 +16,19 @@
 
 @rem Basically we are just a thin wrapper to make it easy to call from anywhere
 
-set "CMD_DIR=%~dp0"
-set "ROOT_DIR=%CMD_DIR%\.."
-set CMD_DIR="%~$PATH:0"
-set cmdpathsearch=%~dp$PATH:0
+@rem set "CMD_DIR=%~dp0"
+@rem set "ROOT_DIR=%CMD_DIR%\.."
+@rem set CMD_DIR="%~$PATH:0"
+@set cmdpathsearch=%~dp$PATH:0
 
-@echo bin-win/runai.cmd Folder:
-@echo cd=%cd%
-@echo dp0=%~dp0
-@echo fileName=%~nx0
-@echo f0 %~f0 %~p0
-@echo pathsearch=%~$PATH:0
+@rem @echo bin-win/runai.cmd Folder:
+@rem  cd=%cd%
+@rem  dp0=%~dp0
+@rem @echo fileName=%~nx0
+@rem @echo f0 %~f0 %~p0
+@rem @echo pathsearch=%~$PATH:0
 @rem Do this to work around for-each 
-@echo cmdpathsearch=%~dp$PATH:0
+@rem @echo cmdpathsearch=%~dp$PATH:0
 @rem  ~$PATH:I   - searches the directories listed in the PATH
 @rem environment variable and expands %I to the
 @rem fully qualified name of the first one found.
@@ -36,10 +36,10 @@ set cmdpathsearch=%~dp$PATH:0
 @rem defined or the file is not found by the
 @rem search, then this modifier expands to the
 @rem empty string
-@echo CmdCmdLine=%CmdCmdLine%
-@echo ROOT_DIR=%ROOT_DIR%
-@echo CMD_DIR=%CMD_DIR%
-@echo running python "%cmdpathsearch%\..\main.py" %*
+@rem @echo CmdCmdLine=%CmdCmdLine%
+@rem @echo ROOT_DIR=%ROOT_DIR%
+@rem @echo CMD_DIR=%CMD_DIR%
+@rem @echo running python "%cmdpathsearch%\..\main.py" %*
 @rem @pause
 
 @echo off

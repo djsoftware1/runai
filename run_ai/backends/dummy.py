@@ -16,6 +16,11 @@ class DummyBackend(Backend):
         print(f"debug:runai-dummy-backend-init")
 
     def do_task(self, task: str) -> str:
+        # dj2026-01 echo mode? return exact task string 'as is'!
+        if getattr(self.ai_settings, 'echo_mode', False):
+            #[debug?verbose]print(task,end='')
+            return task
+
         teststring="""
 Here is sample runai test output to test codeblock extraction:
 ```cpp
@@ -99,4 +104,4 @@ End of runai test output.
         #print(teststring)
 
         newline_char = "\n"
-        return f"Hey, I am the dummy backend and did the following task:{newline_char}{newline_char}'{task}'{newline_char}{newline_char}Codeblock test string:{newline_char}{teststring}"
+        return f"Hey, I am the dummy backend and did the following task:[{newline_char}{newline_char}'{task}'{newline_char}{newline_char}Codeblock test string:{newline_char}{teststring}"

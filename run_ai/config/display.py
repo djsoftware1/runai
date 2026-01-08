@@ -1,4 +1,7 @@
-
+# runai — https://github.com/djsoftware1/runai
+# (c) David Joffe / DJ Software 2023-2026 - Business Source License (BSL 1.1). See LICENSE
+#
+# display.py
 
 # regex for show_setting for hiding sensitive data
 import re
@@ -6,7 +9,8 @@ import re
 from colorama import Fore, Style
 
 # Small helper to show setting name and value in different color
-def show_setting(name, value, indent=0, descriptionString="", strKeyShortcut=""):
+# NB! This is important to use as it hides sensitive info like user API keys!
+def show_setting(name, value, indent=0, descriptionString="", strKeyShortcut="", strEnd='\n', defaultValue=''):
     # dj2025-03 add indent and descriptionString (optional)
     #sBULLET_INFO=
     sBULLET_INFO=""#"→""→ 🛈"
@@ -21,6 +25,9 @@ def show_setting(name, value, indent=0, descriptionString="", strKeyShortcut="")
     strDescription=""
     if len(descriptionString) > 0:
         strDescription = f" {sBULLET_INFO} {Fore.MAGENTA}{descriptionString}{Style.RESET_ALL}"
+    if len(defaultValue) > 0:
+        strDescription = strDescription + f" (default {Fore.MAGENTA}{defaultValue}{Style.RESET_ALL})"
+
 
     # e.g. "-f FOLDER" info stuff
     # ■ -f FOLDER: Nodjfsdj dsfkjl → Work-folder for tasks like auto-refactoring
@@ -44,7 +51,7 @@ def show_setting(name, value, indent=0, descriptionString="", strKeyShortcut="")
 
         #show_setting("openai.config_list", config_list, 1)
 
-        print(f"{Fore.GREEN}{strDashesBefore}{name}:{Style.RESET_ALL} {Fore.CYAN}{s}{Style.RESET_ALL}{strDescription} {strShortCut}")
+        print(f"{Fore.GREEN}{strDashesBefore}{name}:{Style.RESET_ALL} {Fore.CYAN}{s}{Style.RESET_ALL}{strDescription} {strShortCut}", end=strEnd)
     else:
-        print(f"{Fore.GREEN}{strDashesBefore}{name}:{Style.RESET_ALL} {Fore.RED}-{Style.RESET_ALL}{strDescription} {strShortCut}")
+        print(f"{Fore.GREEN}{strDashesBefore}{name}:{Style.RESET_ALL} {Fore.RED}-{Style.RESET_ALL}{strDescription} {strShortCut}", end=strEnd)
 
