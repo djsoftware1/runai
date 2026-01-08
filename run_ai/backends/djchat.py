@@ -8,7 +8,8 @@ import os
 from run_ai.backends.base import Backend
 
 import importlib
-
+# todo temp for voice/speech:
+import time
 # NB: Not all users wil have djchatbot/djchat installed, so we need to check for it
 def try_import_backend(name: str):
     try:
@@ -112,13 +113,76 @@ class djChatBackend(Backend):
             return ''
                 
         ret = response['choices'][0]['message']['content']
+        
+
+        # paste-start from chat client - dj2026-01
+        bot_message = ret
+        #if self.chatbot.sound is not None:
+            #self.chatbot.sound.text_to_speech("Hi, my name is Cat girl", -1, '', 'f')#current_config.profile.get_field('preferred_voicetype'))
+            #self.chatbot.sound.text_to_speech(ret, -1, '', 'f')#current_config.profile.get_field('preferred_voicetype'))
+        #if self.debug_level>=1:
+        print("-----------------------------------------------------------")
+        print(f"[chat]BOT: {ret}")
+        print("-----------------------------------------------------------")
+        # CHAT HISTORY
+        """
+        {"role": "user", "content" : "How are you?"},
+        {"role": "assistant", "content" : "I am doing well"},
+        {"role": "user", "content" : "What are the top 5 sites in Pretoria?"}]
+        """
+        # Add the user input and response to the chat history
+        # We need a way to keep track of which are user messages and which are the AI's responses
+        # Though in future this may be extended to be AI to AI conversations, so keep that in mind
+        # We must JSON-escape the messages in the history
+        self.chatbot.chat_history.add_message("user", task)#prompt)
+        self.chatbot.chat_history.add_message("assistant", bot_message)
+        # Function to count the number of words in a string for eg history len stuff and context window size
+        def count_words(text):
+            # Split the text into words based on spaces
+            words = text.split()
+            # Return the number of words
+            return len(words)
+
+        history_words = count_words(self.chatbot.chat_history.get_context())
+        #if self.debug_level>=2:
+        #    print(f"[HISTORY-LEN:{history_words} words {len(self.chat_history.get_context())}]")
+        #print(self.chat_history.get_context())
+        # If the chat history gets longer than N messages trim it
+        # Maximum length of chat history
+        # todo in future this could try be smarter like us count words and max tokens and context window size to determine how much history to trim
+        max_history_len = 20
+        # Trim the chat history if it's too long
+        self.chatbot.chat_history.trim_history(max_history_len)
+
+
+        #dt = datetime.datetime.now()
+        #formatted_datetime = dt.strftime("%Y-%m-%d %H-%M-%S")
+        with open('query.log', 'a', encoding='utf-8') as f:
+            f.write(f"<bot>\n{bot_message}\n</bot>\n")
+        with open('query.xml', 'a', encoding='utf-8') as f:
+            f.write(f"<response>\n{bot_message}\n</response>\n")
+
+        #return response_json
+        # paste-end from chat client - dj2026-01
+
+
+
+
+        
         print(f"SUCCESS:runai-djchat: do_task ret: {ret}")
 
         # Hmm (dj2025-03) not sure about autospeak stuff but on first test, it is working!
         auto_speak = True
         if auto_speak and self.chatbot.sound!=None:
             print("[djchat-backend]DEBUG:auto speak result")
-            self.chatbot.sound.text_to_speech(ret, -1, self.userconfig.lang, self.profile.get_field('preferred_voicetype'))
+            print(f"result={ret}")
+            self.chatbot.sound.text_to_speech(ret, -1, '', 'f')#self.userconfig.lang, self.profile.get_field('preferred_voicetype'))
+            # the longer the reply the longer we wait to finish .. that's crude .. more correct is a background daemon.
+            # todo low-priority but handle background sound in this mode? process launches and immediately closes ... 
+            time.sleep(8)
+            # this could do something like 'wait until no playing sounds' in a sleep 1 loop
+        else:
+            print("[djchat-backend]NO SOUND")
         #f"Task '{task}' executed using djChat backend."
         return ret
     
