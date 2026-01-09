@@ -1,5 +1,5 @@
 # runai — https://github.com/djsoftware1/runai
-# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+# (c) David Joffe / DJ Software 2023-2026 - Business Source License (BSL 1.1). See LICENSE
 # main.py
 #
 # runai - Run or Automate AI/LLM and other tasks (such as code refactoring), optionally with AutoGen.
@@ -1577,7 +1577,8 @@ if __name__ == '__main__':
     #app = controller.apps
     #datetime_completed = controller.datetime_end#djGetFormattedDatetime(datetime.datetime.now())
     print(f"🤖=== Done! All tasks processed. Completed {controller.session_stats.datetime_end}")
-    print(f"{Fore.YELLOW}_______________________________\nFinal Session Stats & Info:{Style.RESET_ALL}")
+    #print(f"{Fore.YELLOW}_______________________________\nFinal Session Stats & Info:{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}Final Session Stats & Info:{Style.RESET_ALL}")
     #HEADING: Session Stats
     #show_setting(f"{Fore.YELLOW}Session Stats{Style.RESET_ALL}", '', 1)
     print(f"   {Fore.YELLOW}Session: {Fore.WHITE}started: {Fore.BLUE}{controller.session_stats.datetime_start}{Style.RESET_ALL}")
@@ -1587,16 +1588,31 @@ if __name__ == '__main__':
     show_setting('task_output_folder', task_output_directory, 1)
     show_setting('outfiles', task_output_directory+'/outfiles', 1)
     #HEADING: Task info
-    show_setting(f"{Fore.YELLOW}Task info{Style.RESET_ALL}", '', 1)
+    show_setting(f"{Fore.YELLOW}Task settings{Style.RESET_ALL}", "", 1)
     show_setting("runtask.type", runtask.type, 2)
     show_setting("files_to_create", files_to_create, 2)
     show_setting("files_to_send", files_to_send, 2)
+
     #HEADING: File-related info
     #show_setting(f"{Fore.YELLOW}File-related info{Style.RESET_ALL}", '', 1)
-    show_setting("runtask.settings.out_files", runtask.settings.out_files, 2)
-    show_setting("runtask.settings.send_files", runtask.settings.send_files, 2)
+    show_setting("out_files", runtask.settings.out_files, 2)
+    show_setting("send_files", runtask.settings.send_files, 2)
     #show_setting("files_created", files_created, 2)
-    print(f"🤖 - \"{Fore.MAGENTA}Done! What else can I help you with next?\"{Style.RESET_ALL}")
+    
+    # Show MODEL SPEC and backend used:
+    show_setting('backend',use_backend,strEnd='')
+    if settings.model_spec:
+        #KEY_COLOR   = "\033[36m"  # cyan
+        #VALUE_COLOR = "\033[33m"  # yellow
+        #RESET       = "\033[0m"
+        for key, value in settings.model_spec.items():
+            # this is confusing 'key, value' is standard map terminology yes but "key" below is entirely different
+            # it means if this is a value like "api_key" hide it as it's sensitive!
+            if "key" in key.lower() and value:
+                value = '*'
+            show_setting(f"{key}", value, strEnd='')
+        print("")
+    print(f"🤖 - {Fore.MAGENTA}\"Done! What else can I help you with next?\"{Style.RESET_ALL}")
     # Debug / verbose / progress → stderr
     #print("Using backend: ollama", file=sys.stderr)
     #print("Tokens used: 1234", file=sys.stderr)
