@@ -16,16 +16,31 @@ class OpenAIBackend(Backend):
         super().__init__(ai_settings)
         if len(self.ai_settings.model) == 0:
             self.ai_settings.model = 'gpt-4o-mini'
-            print(f"OpenAI model not set, using default: {self.ai_settings.model}")
-        self.client = OpenAI()
+            #print(f"DEBUG[runai:OAI] model not set, using default: {self.ai_settings.model}")
+        #print(f"DEBUG[runai:OAI] {ai_settings.model} {ai_settings.model_spec}")
+
+        if self.ai_settings.model_spec:
+            self.client = OpenAI(
+                base_url=self.ai_settings.model_spec["base_url"],
+                api_key=self.ai_settings.model_spec["api_key"],
+            )
+            model = self.ai_settings.model_spec.get("model")
+            if model:
+                self.ai_settings.model = model
+        else:
+            # fallback: legacy/default behavior
+            self.client = OpenAI()
 
     def do_task(self, task: str) -> str:
         # Implement the logic to interact with OpenAI API
-        model = self.ai_settings.model
+        #print(f"BACKEND[OAI]:do_task: MODEL {self.ai_settings.model} SPEC {self.ai_settings.model_spec}")
         if len(self.ai_settings.model) == 0:
             self.ai_settings.model = 'gpt-4o-mini'
             print(f"do_task: OpenAI model not set, using default: {self.ai_settings.model}")
-        print(f"OpenAI model {self.ai_settings.model} task: {task}")
+        model = self.ai_settings.model
+        # The message "OpenAI model" is confusing if you are using say "ollama/deepseek-1:8b"
+        # it just means OpenAI BACKEND which can work local ollama etc.
+        print(f"[OAI-backend] MODEL: {self.ai_settings.model} task: {task}")
 
         # --- tool selection (CRITICAL PART) ---
         # some tools require ... without this we get an error if we get "Error code: 400 - {'error': {'message': "Deep research models require at least one of 'web_search_preview', 'mcp', or 'file_search' tools."

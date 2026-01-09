@@ -4,10 +4,13 @@
 # runai base Backend class
 # dj2025-03
 
+from run_ai.modelspec import parse_model_spec
+
 class djAISettings:
     def __init__(self, model: str=''):#, temperature: float, max_tokens: int):
         #self.model = 'openai/gpt-4o-mini'#model
         self.model = 'gpt-4o-mini'#model
+        self.model_spec = parse_model_spec(self.model)#None
         #self.temperature = temperature
         #self.max_tokens = max_tokens
 
@@ -31,8 +34,9 @@ class Backend:
     def __init__(self, ai_settings: djAISettings):
         self.ai_settings = ai_settings
         if not self.ai_settings is None:
+            # NB these may contain sensitive keys so be careful .. don't display all settings for now .
             print(f"backend:ai_settings: initialized with model: {self.ai_settings.model}")
-            print("backend:ai_settings:", self.ai_settings.__dict__)
+            #print("backend:ai_settings:", self.ai_settings.__dict__)
         else:
             raise ValueError("AISettings cannot be None")
         # last error from backend

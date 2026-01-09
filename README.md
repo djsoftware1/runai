@@ -82,6 +82,9 @@ Options for selecting the model to use:
 
 ```
    -m "model" OR --model "model" - use "model"
+   -m "ollama/deepseek-r1:8b"
+   -m "openai/gpt-4o-mini"
+   -m "lmstudio/phi-3"
    -m "gpt-4.1-mini"
    -m "gpt-4.1-nano"
    -m "gpt-4.1"

@@ -25,6 +25,8 @@ class BackendSelector:
     #def __init__(self, settings: None, backend_name: str = "openai"):
     def __init__(self, ai_settings: djAISettings, backend_name: str = "autogen"):
         self.ai_settings = ai_settings
+        # NB model_spec may contain sensitive keys
+        print(f"DEBUG[runai:SELECTOR] MODEL={ai_settings.model}")
         self.backend_name = backend_name.lower()
         self.backends = self._initialize_backends()
         for backend in self.backends:

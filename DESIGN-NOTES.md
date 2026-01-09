@@ -1,5 +1,9 @@
 # runai Design Notes
 
+## Important for security:
+
+All code relating to displaying model_spec should never 'print' it directly, if you must show it, use show_setting() helper so that it auto-hides sensitive keys.
+
 In-progress thoughts on design
 
 ## SETTINGS

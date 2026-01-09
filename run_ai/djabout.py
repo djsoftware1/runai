@@ -1,5 +1,5 @@
 # djabout.py: Small helper class to show some core 'about this application' info
-# Copyright (C) 2023-2025 David Joffe and DJ Software
+# Copyright (C) 2023-2026 David Joffe and DJ Software
 # runai https://github.com/djsoftware1/runai GitHub source repo
 # By David Joffe / DJ Software.
 #-------------------------------------------------------------------------------
@@ -24,7 +24,7 @@ class djAbout:
         print(f"{Fore.YELLOW}      -f \"FOLDER\" {Fore.CYAN}\"set work-folder\" {Style.RESET_ALL}")
         print(f"{Fore.YELLOW}      -i \"InputFile\" {Fore.CYAN}to batch-run task on all lines, with substitution. default={Fore.GREEN}input.txt{Style.RESET_ALL}")
         print(f"{Fore.CYAN}      [subcommand] (refactor,build,create,createfrom,modify) ...{Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}Created by{Fore.GREEN} David Joffe. v{djversion.Version().get_version()} beta {Fore.BLUE}{Style.BRIGHT}github.com/djsoftware1/runai{Fore.BLUE} djoffe.com/dj-software/runai")
+        print(f"{Fore.YELLOW}Created by{Fore.GREEN} David Joffe. v{djversion.Version().get_version()} {Fore.BLUE}{Style.BRIGHT}github.com/djsoftware1/runai{Fore.BLUE} djoffe.com/dj-software/runai")
         print(f"{Style.RESET_ALL}__________________________________________________________________")
         print(f"{Fore.GREEN}Note for some tasks this tool may modify files. Use with caution. You should")
         print(f"{Fore.GREEN}always backup your data, work in a 'sandbox' copy, and check changes.{Style.RESET_ALL}")

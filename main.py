@@ -54,6 +54,7 @@ from run_ai.config.display import show_setting
 from run_ai.backends.selector import BackendSelector
 from run_ai.backends.base import djAISettings
 from run_ai.djapp import App
+from run_ai.modelspec import parse_model_spec
 
 from run_ai.djautogen.settings import djAutoGenSettings
 from run_ai.config.settings import autogen_settings, djSettings
@@ -78,6 +79,37 @@ sys.stdout = sys.stderr
 #settings_default = runai_ai.config.djSettings()
 settings_default = djSettings()
 settings_default.backend = 'openai'
+
+
+# Specify preferred model to use. NB you must save the return value.
+def do_select_model(model: str):    
+    print(f"(select_model \"{model}\"",end='')
+    # Specify preferred model to use
+    global user_select_preferred_model
+    user_select_preferred_model = model
+    # Force use specified AI model
+    #userconfig.model = args.model
+    #print(f"Select Model: {user_select_preferred_model}")
+    # in long run these globals should be refactored to live in module ... dj2026-01 todo
+    global model_spec
+    model_spec = parse_model_spec(model)
+    # must use show setting to hide keys just in case
+    show_setting(f"[DOSELECT] {Fore.YELLOW}MODEL{Fore.GREEN} '{model}' spec", model_spec, strEnd=')');
+    #time.sleep(100)
+    return model_spec
+
+####################
+# LLM settings:
+####################
+user_select_preferred_model=''
+
+# don't use more costly models by default but here for testing/convenience ..
+#model_spec = parse_model_spec('openai/gpt-5.2')
+# default .. gpt-4o-mini = cheaper default for mid-range tasks... dj2026-01
+#model_spec = parse_model_spec('openai/gpt-4o-mini')
+# hm wouldn't "do_select_model" be better than parse? yes...
+model_spec = do_select_model('openai/gpt-4o-mini')
+####################
 
 # this will probably change in future but the idea is moving toward having general user settings like default backend
 # there should also someday be project-specific backend selection stuff ... a bit like git global config vs local config
@@ -215,10 +247,6 @@ files_to_create=None
 # currently not used:
 targetfolder = ''
 
-####################
-# LLM settings:
-####################
-user_select_preferred_model=''
 
 #==================================================================
 ##user_proxy.initiate_chat(coder, message=task_message)
@@ -263,7 +291,10 @@ def djAutoGenDoTask(task: str, do_handle_task=False):
             #print(f"runai-AGI say: {result}", file=save_real_stdout, end='')
             #sys.stdout = save_real_stdout
             # todo should we flush?
-            save_real_stdout.flush()
+            # NB: in Windows testing it seems save_real_stdout can become invalid along the way
+            # so we avoid save_real_stdout.flush here
+            #save_real_stdout.flush()
+            # TODO: add safer handlers and checks also eg wrap in exception check etc. in case handle is invalid
             sys.stdout.flush()
             dual_output.end_ai()
             #dual_output.flush()
@@ -408,7 +439,9 @@ else:
 if args.model:
     # Specify preferred model to use
     user_select_preferred_model = args.model
-    print(f"[args] Select Model: {user_select_preferred_model}")
+    model_spec = do_select_model(user_select_preferred_model)
+    #show_setting(f"[args] MODEL {args.model}", model_spec);
+    show_setting(f"[args] {Fore.YELLOW}MODEL{Fore.GREEN} '{args.model}' spec", model_spec);
 if args.project:
     # Set the project name
     project_name = args.project
@@ -606,7 +639,6 @@ def show_settings():
     # HEADING
     # LLM SETTINGS/PREFERENCES/COMMAND-LINE OPTIONS
     print(f"{Fore.YELLOW}{sBullet1}LLM settings:{sHeadingSuffix}{Style.RESET_ALL}")
-    show_setting("user-selected-model", user_select_preferred_model, 1, "", "-m")
 
     #global config_list
     if config_list:
@@ -622,6 +654,7 @@ def show_settings():
         show_setting("global.config_list", s)
     show_setting("dryrun", runtask.dryrun, strEnd=' ')
     show_setting("echo_mode", echo_mode, strEnd=' ')
+    show_setting(f'MODEL: "{user_select_preferred_model}" modelspec', model_spec);
     show_setting("selected-backend", use_backend, defaultValue=settings_default.backend)
     print(f"{Fore.BLUE}__________________________________{Style.RESET_ALL}")
     # TODO also try let coder handle things more directly?
@@ -880,11 +913,16 @@ else:
     # {Hmm .. hould we have something like 'default to local ollama or LM Studio' settings?}
     # If the OAI_CONFIG_LIST file does not exist, print a warning message
     #print(f"{Fore.RED}Warning: '{config_list_path}' file not found{Style.RESET_ALL}")
-    print("Warning: No OpenAI configuration - this is not critical if using local AI instances like LiteLLM")
+
+    # NB this warning only applies to autogen backend now at this stage (dj2026-01)
+    if has_autogen() and use_backend=='autogen':
+        print("runai[autogen] Warning: No AutoGen OpenAI configuration - this is not critical if using local LLMs")
+
     #dj-check: should we set have_openai_config to False here? (dj2025-03)
     # should we override config_list ..not 100% sure
     #have_openai_config = False
-    print("selecting config_list_localgeneral")
+    # I am not sure if config_list_localgeneral still applies outside of autogen stuff - probalby not especially now we have new model_spec - check later during refactor (dj2026-01)
+    print(f"[use-backend:{use_backend}] runai[autogen] selecting config_list_localgeneral")
     config_list = config_list_localgeneral
     #config_list.model = ["deepseek-r1:1.5b"]
     have_openai_config = False
@@ -1077,16 +1115,24 @@ if __name__ == '__main__':
         for file_name in files_to_send:
             print(f"SETTINGS:File={file_name}...")
     print(f"SETTINGS: Task={task}")
-    print(f"USE_OPENAI={use_openai}")
+    print(f"[autogen-USE_OPENAI]={use_openai}")
 
     # dj2025-03 adding backend selector
     print(f"USE_BACKEND={use_backend}")
     settings = djAISettings()
     if len(user_select_preferred_model)>0:
         settings.model = user_select_preferred_model
+        # Kind of JIT-style do it again in case it (model) changed right here before we actually need it
+        model_spec = do_select_model(user_select_preferred_model)
+    settings.model_spec = model_spec
     # hmm todo/fixme where does echo_mode belong?
     settings.echo_mode = echo_mode
     print('=== BackendSelector setup')
+    #print(f"SELECT MODEL {settings.model} {settings.model_spec}")
+    show_setting(f"[run] {Fore.YELLOW}MODEL{Fore.GREEN} '{settings.model}' spec", settings.model_spec);
+
+    #show_setting()
+
     selector = BackendSelector(settings, use_backend)
 
     # RUN BACKEND TEST:
@@ -1248,7 +1294,7 @@ if __name__ == '__main__':
     inputlines_array = []
 
     # STDIN PIPED?
-    if len(stdin_text)>0:
+    if stdin_text is not None and len(stdin_text)>0:
         # encode STDIN as a triple-backtick codeblock e.g. 
         # $ cat main.cpp | runai -t "Review for errors"
         # task:
