@@ -60,9 +60,9 @@ class DualOutput:
 
         self.console.write(message)
         self.capture.write(message)
-        with open('log_capture_output_dj_full.txt', 'a', encoding='utf-8') as log_file_capture_output_dj:
+        with open('log_capture_output_dj_full.txt', 'a', encoding='utf-8', errors="replace") as log_file_capture_output_dj:
             log_file_capture_output_dj.write(message)
-        with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8') as log2:
+        with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8', errors="replace") as log2:
             log2.write(message)
 
 

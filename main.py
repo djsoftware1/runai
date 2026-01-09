@@ -341,9 +341,25 @@ default_settings = os.path.join(app.app_dir, "defaultsettings.py")
 if os.path.exists(default_settings):
     # Read and exec the .py file
     settings_py = ''
-    with open(default_settings, 'r', encoding='utf-8') as file:
+    with open(default_settings, 'r', encoding='utf-8', errors="replace") as file:
         settings_py = file.read()
     exec(settings_py)
+
+
+# dj2026-01 UNIX-STYLE PIPED INPUT e.g. cat myfile.txt | runai -t "Summarize this"
+def read_stdin_if_piped():
+    if sys.stdin is None:
+        return None
+    if sys.stdin.isatty():
+        return None
+    #return sys.stdin.read().strip()
+    data = sys.stdin.buffer.read()
+    # if we just return sys.stdin.read().strip() we get errors like "UnicodeEncodeError: 'utf-8' codec can't encode character '\udc8f' in position 22036: surrogates not allowed"
+    # doing this seems to fix it but we must do more testing ... not sure if it's obscure edge cases or common etc.: dj 2026-01
+    return data.decode("utf-8", errors="replace")
+
+# read stdin
+stdin_text = read_stdin_if_piped()
 
 
 # [Application flow control]
@@ -425,6 +441,8 @@ if args.settings:
     settings_pyscript = args.settings
 if args.input:
     inputfile = args.input
+#elif stdin_text:
+#    task = stdin_text
 if args.test:
     #use_sample_default_task=True
     run_tests=True
@@ -435,7 +453,7 @@ if args.prompt:
     # Force ask for task prompt from input?
     print("=== Force show user prompt for task: True")
     force_show_prompt = True
-if args.subcommand:    
+if args.subcommand:
     if args.subcommand == 'refactor':
         print("TASK: Refactor")
         do_refactor = True
@@ -538,6 +556,8 @@ def show_settings():
     #default_values['InputFile']='input.txt'
     show_setting("TaskFile", taskfile, 1)#
     show_setting("InputFile", inputfile, 1, "input-file to batch-run task on all lines, with substitution", "-i")
+    if stdin_text!='':
+        show_setting('STDIN', True, 1)
     show_setting("Settings.py", settings_pyscript, 1)
     show_setting("WorkFolder", worktree, 1, "work-folder for tasks like auto-refactoring. (default: \".\" current-folder)", "-f")
     show_setting("TargetFolder", targetfolder, 1, "", "  ")
@@ -1036,7 +1056,7 @@ def process_files(files_to_send, worktree, targetfolder, task):
                 # Save modified file
                 target_path = os.path.join(targetfolder, file_name)
                 os.makedirs(os.path.dirname(target_path), exist_ok=True)
-                with open(target_path, 'w', encoding='utf-8') as file:
+                with open(target_path, 'w', encoding='utf-8', errors="replace") as file:
                     file.write(modified_content)
                 print(f"Saved modified {file_name} to {targetfolder}")
             except Exception as e:
@@ -1107,7 +1127,7 @@ if __name__ == '__main__':
 
     # Log the task to keep a record of what we're doing and help study/analyze results
     log_task = f"{task_output_directory}/tasklog.txt"
-    with open(log_task, 'a', encoding='utf-8') as log_file:
+    with open(log_task, 'a', encoding='utf-8', errors="replace") as log_file:
         log_file.write(task)
 
     # [IO redirect begin] Backup the original stdout
@@ -1226,10 +1246,35 @@ if __name__ == '__main__':
 
     # Check if we have a input.txt file and if so use that as input to the AI to run on all lines of the file
     inputlines_array = []
-    if os.path.exists(inputfile):
+
+    # STDIN PIPED?
+    if len(stdin_text)>0:
+        # encode STDIN as a triple-backtick codeblock e.g. 
+        # $ cat main.cpp | runai -t "Review for errors"
+        # task:
+        # Review for errors
+        # ``
+        # contents of main.cpp
+        # ```
+        # Add contents of STDIN as "attachment" to task
+        # Naming:
+        #stdin_mode = "attachment"
+        #stdin_mode = "taskfile"
+        #stdin_mode = "task"
+        #Once named, bugs disappear.
+        stdin_mode = "attachment"
+        if len(task)>0 and stdin_mode=="attachment":
+            newline_char='\n'
+            task_message = task + newline_char + "```" + newline_char + stdin_text + "```"
+            print("runai:DEBUG:STD ATTACHMENT MODE")
+            djAutoGenDoTask(task_message)
+        elif len(inputfile)==0:
+            # If NO input file specified but we have a task treat it rather like 'inputfile' though we may still need to split it ...
+            inputlines_array.append(stdin_text)
+    elif os.path.exists(inputfile):
         print(f"=== Using inputfile: {inputfile}")
         #input = ""
-        with open(inputfile, 'r', encoding='utf-8') as file:
+        with open(inputfile, 'r', encoding='utf-8', errors="replace") as file:
             for line in file:
                 line = line.rstrip('\n')
                 inputlines_array.append(line)
@@ -1299,7 +1344,7 @@ if __name__ == '__main__':
 
             # Add some logging so user can see where we left off quickly if we need to restart
             log_task = f"_inputlines_tasklog_runinfo.log"
-            with open(log_task, 'a', encoding='utf-8') as log_file:
+            with open(log_task, 'a', encoding='utf-8', errors="replace") as log_file:
                 # Get date/time to use in filenames and directories and session logfiles etc.
                 log_datetime = datetime.datetime.now()
                 log_formatted_datetime = log_datetime.strftime("%Y-%m-%d %H-%M-%S")
@@ -1352,7 +1397,7 @@ if __name__ == '__main__':
                 while os.path.exists(task_message_filename):
                     str_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
                     task_message_filename = f"{filename}__{str_datetime}-task.txt"
-                with open(task_message_filename, 'w', encoding='utf-8') as file:
+                with open(task_message_filename, 'w', encoding='utf-8', errors="replace") as file:
                     file.write(task_message)
                 
                 # wait for keypress
@@ -1429,7 +1474,7 @@ if __name__ == '__main__':
     # Not quite sure if this should also be in task_output_directory or not
     log_filename_base = f"dj_AI_log.txt"
     # Write the AI output to the log file
-    with open(log_filename_base, 'a', encoding='utf-8') as log_file:
+    with open(log_filename_base, 'a', encoding='utf-8', errors="replace") as log_file:
         log_file.write(f"[{formatted_datetime}] Captured AI Output:\n")
         log_file.write(ai_output)
         log_file.write("----------------------\n")
@@ -1437,7 +1482,7 @@ if __name__ == '__main__':
     # Create the log filename
     log_filename1 = f"{task_output_directory}/dj_AI_log.txt"
     # Write the AI output to the log file
-    with open(log_filename1, 'a', encoding='utf-8') as log_file:
+    with open(log_filename1, 'a', encoding='utf-8', errors="replace") as log_file:
         log_file.write(f"[{formatted_datetime}] Captured AI Output:\n")
         log_file.write(ai_output)
         log_file.write("----------------------\n")
@@ -1501,7 +1546,7 @@ if __name__ == '__main__':
     show_setting("files_to_create", files_to_create, 2)
     show_setting("files_to_send", files_to_send, 2)
     #HEADING: File-related info
-    show_setting(f"{Fore.YELLOW}File-related info{Style.RESET_ALL}", '', 1)
+    #show_setting(f"{Fore.YELLOW}File-related info{Style.RESET_ALL}", '', 1)
     show_setting("runtask.settings.out_files", runtask.settings.out_files, 2)
     show_setting("runtask.settings.send_files", runtask.settings.send_files, 2)
     #show_setting("files_created", files_created, 2)

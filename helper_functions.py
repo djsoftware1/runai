@@ -239,12 +239,12 @@ def create_files_from_ai_output(ai_output, output_directory='.output_files_runai
         #    file1.write("\n</CAPTURE2>\n")
 
         # Write the content to the file, this is the important stuff like the code we want
-        with open(file_path, 'w', encoding='utf-8') as file:
+        with open(file_path, 'w', encoding='utf-8', errors="replace") as file:
             file.write(content)
 
         # Write the content to the filename in append mode and in current directory so e.g. if we are getting XML dictionary for many entries the output arrives in here appended each entry
         # This behaviour needs some fine-tuning/cleaning up etc. but it's a start
-        with open(filename, 'a', encoding='utf-8') as file:
+        with open(filename, 'a', encoding='utf-8', errors="replace") as file:
             file.write(content)
 
         ret_created_files.append(file_path)

@@ -157,9 +157,9 @@ class djChatBackend(Backend):
 
         #dt = datetime.datetime.now()
         #formatted_datetime = dt.strftime("%Y-%m-%d %H-%M-%S")
-        with open('query.log', 'a', encoding='utf-8') as f:
+        with open('query.log', 'a', encoding='utf-8', errors="replace") as f:
             f.write(f"<bot>\n{bot_message}\n</bot>\n")
-        with open('query.xml', 'a', encoding='utf-8') as f:
+        with open('query.xml', 'a', encoding='utf-8', errors="replace") as f:
             f.write(f"<response>\n{bot_message}\n</response>\n")
 
         #return response_json
