@@ -80,6 +80,11 @@ sys.stdout = sys.stderr
 settings_default = djSettings()
 settings_default.backend = 'openai'
 
+# this may be refactored away or elsewhere or differently later ... dj2026-01
+def using_autogen():
+    if has_autogen() and use_backend=='autogen':
+        return True
+    return False
 
 # Specify preferred model to use. NB you must save the return value.
 def do_select_model(model: str):    
@@ -253,6 +258,17 @@ targetfolder = ''
 # This started as autogen-specific then we added more backends
 # The idea is to refactor more still .. everywhere this appears - dj2026
 def djAutoGenDoTask(task: str, do_handle_task=False):
+    # verbose debug info: Show MODEL SPEC and backend used just before task exec:
+    show_setting('backend',use_backend,strEnd='')
+    if settings.model_spec:
+        for key, value in settings.model_spec.items():
+            # this is confusing 'key, value' is standard map terminology yes but "key" below is entirely different.
+            # it means if this is a value like "api_key" hide it as it's sensitive!
+            if "key" in key.lower() and value:
+                value = '.'
+            show_setting(f"{Fore.YELLOW}{key}", value, strEnd='')
+        print("")
+
     print(f"{Fore.YELLOW}■ DOTASK[{use_backend}]: {Fore.CYAN}{task}{Style.RESET_ALL}")
     # dj2026 add if not have autogen just return
     #if not run_ai.backends.autogendetect.have_autogen():
@@ -1197,22 +1213,24 @@ if __name__ == '__main__':
     # todo add option whether to wait on keypress or auto go-ahead
     print(f"DEBUG: selector.get_active_backends: {selector.get_active_backends()}")
     ##input(f"■ Press a key to run task: {Fore.CYAN}{task}{Style.RESET_ALL}")
-    print("---------------------------------------")
 
-    llm_config_general={
-        "config_list":config_list, "cache_seed": autogen_settings.use_cache_seed, "stream": False
-    }
-    llm_config_coder={
-        "config_list":config_list, "cache_seed": autogen_settings.use_cache_seed, "stream": False
-    }
+    #print("---------------------------------------")
+    if using_autogen():
+        llm_config_general={
+            "config_list":config_list, "cache_seed": autogen_settings.use_cache_seed, "stream": False
+        }
+        llm_config_coder={
+            "config_list":config_list, "cache_seed": autogen_settings.use_cache_seed, "stream": False
+        }
 
     # NB hide keys! Also this should be before general output capture probably? It's like settings info
     #print(f"=== {Fore.CYAN}llm_config_general: {llm_config_general}{Style.RESET_ALL}")
     #print(f"=== {Fore.CYAN}llm_config_coder: {llm_config_coder}{Style.RESET_ALL}")
     # show_setting does important stuff like hide sk-* keys for privacy
     #dual_output.PauseSaveFiles()
-    show_setting("■ autogen:llm_config_general", llm_config_general)
-    show_setting("■ autogen:llm_config_coder  ", llm_config_coder)
+    if using_autogen():
+        show_setting("■ autogen:llm_config_general", llm_config_general)
+        show_setting("■ autogen:llm_config_coder  ", llm_config_coder)
     #dual_output.UnpauseSaveFiles()
     # this is incorrectly going into our captured output log file ...
 
@@ -1225,7 +1243,7 @@ if __name__ == '__main__':
 
     #input('Press a key ....')
 
-    if has_autogen():
+    if has_autogen() and using_autogen():
         # create an AssistantAgent named "assistant"
         assistant = autogen.AssistantAgent(
             name="assistant",
