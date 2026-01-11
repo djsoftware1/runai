@@ -1,5 +1,9 @@
 # runai Design Notes
 
+## OpenAI-compatible backends
+
+Note many models are OpenAI-compatible and these may be routed to the OpenAI backend if no backend specified (see OPENAI_COMPATIBLE var).
+
 ## Important for security:
 
 All code relating to displaying model_spec should never 'print' it directly, if you must show it, use show_setting() helper so that it auto-hides sensitive keys.
