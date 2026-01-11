@@ -15,6 +15,8 @@ from run_ai.backends.autogendetect import has_autogen
 if has_autogen():
     from run_ai.backends.autogen import AutoGenBackend
 from run_ai.backends.openai import OpenAIBackend
+from run_ai.backends.anthropic import AnthropicBackend
+from run_ai.backends.gemini import GeminiBackend
 from run_ai.backends.dummy import DummyBackend
 # future?
 # from run_ai.backends.ollama import OllamaBackend
@@ -46,6 +48,10 @@ class BackendSelector:
         elif self.backend_name == "openai":
             # Initialize OpenAIBackend with settings
             return [OpenAIBackend(self.ai_settings)]
+        elif self.backend_name == "anthropic":
+            return [AnthropicBackend(self.ai_settings)]
+        elif self.backend_name == "gemini":
+            return [GeminiBackend(self.ai_settings)]
         elif self.backend_name == "dummy":
             return [DummyBackend(self.ai_settings)]
         # elif self.backend_name == "ollama":

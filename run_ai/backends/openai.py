@@ -40,7 +40,7 @@ class OpenAIBackend(Backend):
         model = self.ai_settings.model
         # The message "OpenAI model" is confusing if you are using say "ollama/deepseek-1:8b"
         # it just means OpenAI BACKEND which can work local ollama etc.
-        print(f"[OAI-backend] MODEL: {self.ai_settings.model} task: {task}")
+        print(f"[OAI-backend] MODEL:{self.ai_settings.model} task:{task}")
 
         # --- tool selection (CRITICAL PART) ---
         # some tools require ... without this we get an error if we get "Error code: 400 - {'error': {'message': "Deep research models require at least one of 'web_search_preview', 'mcp', or 'file_search' tools."
@@ -59,6 +59,7 @@ class OpenAIBackend(Backend):
             tools=tools
         )
         self.response = response.output_text
-        print(f"{Style.DIM}OpenAI response: {response}{Style.RESET_ALL}")
+        # This was saying "OpenAI response" but that's confusing if we using this OpenAI but with local backend like "ollama/deepseek-r1:8b"
+        print(f"{Style.DIM}{model} response:{response}{Style.RESET_ALL}")
         print(response.output_text)
         return response.output_text

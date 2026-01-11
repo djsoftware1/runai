@@ -3,6 +3,9 @@
 
 #import djtasktypes
 
+# os.genenv for RUNAI_DEBUG environment variable enables debug
+import os
+
 """
 Thinking out loud:
 
@@ -44,8 +47,14 @@ class djSettings:
         # See DESIGN-NOTES.md in-progress thoughts on below: dj2026-01
         #self.user_select_preferred_model = ''
         #self.model = ''
+        # This is maybe now in djAISettings ..:
         self.backend = ''
 
+        # Overall application I/O setting and/or debug setting ..
+        self.debug = False
+        # Environment
+        if os.getenv("RUNAI_DEBUG") not in (None, "", "0"):
+            self.debug = True
         # TASK-RELATED:
 
         # User-required output files
@@ -55,6 +64,13 @@ class djSettings:
         self.send_files = []
         # still in-dev:
         self.exec = None
+
+    def is_debug(self):
+        # hm we don't want to scan/check env var 'continually' but we do want to update if it changes
+        #if os.getenv("RUNAI_DEBUG") not in (None, "", "0"):
+        #    self.debug = True
+        return self.debug
+
 
 """
 todo and flesh out, something like below for LLMsettings, say, and more:

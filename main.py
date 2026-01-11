@@ -17,8 +17,12 @@
 # Created by David Joffe - 'Initially to try help with some of my own tasks, and partly as a learning exercise, but have not had enough time to work on it'.
 # Copyright (C) 2023-2026 David Joffe / DJ Software
 #==================================================================
-# Import necessary libraries
 
+# todo[med] - add auto-todo named tasks
+# todo[main.py djargs.py] - add batcat-if-have support --batcat
+# todo[] stress-tests should have the dummy mode auto-generate exceptions to help test smooth recovery from errors from backends (eg 404s, 'no credit' API situations, other errors)
+
+# Import necessary libraries
 import sys
 import io
 # force utf8 for unicode handling etc.
@@ -36,6 +40,7 @@ import requests
 import io
 import time
 import datetime
+import logging
 # For colored text in output
 from colorama import Fore, Style
 from globals import g_ai_output_saved_last_code_block
@@ -74,11 +79,17 @@ save_real_stdout = sys.stdout
 sys.stdout = sys.stderr
 
 
+import logging
+log = logging.getLogger("runai")
+
 # careful, we have currently two djSettings, for in-progress refactoring ...dj2026-01
 # we have 'default settings' and current user settings at runtime
 #settings_default = runai_ai.config.djSettings()
-settings_default = djSettings()
+settings_default = djsettings.djSettings()
 settings_default.backend = 'openai'
+# todo rename/refactor .. maybe move ..
+settings_runai = djsettings.djSettings()
+settings_runai = settings_default
 
 # this may be refactored away or elsewhere or differently later ... dj2026-01
 def using_autogen():
@@ -87,7 +98,7 @@ def using_autogen():
     return False
 
 # Specify preferred model to use. NB you must save the return value.
-def do_select_model(model: str):    
+def do_select_model(model: str):
     print(f"(select_model \"{model}\"",end='')
     # Specify preferred model to use
     global user_select_preferred_model
@@ -100,21 +111,30 @@ def do_select_model(model: str):
     model_spec = parse_model_spec(model)
     # must use show setting to hide keys just in case
     show_setting(f"[DOSELECT] {Fore.YELLOW}MODEL{Fore.GREEN} '{model}' spec", model_spec, strEnd=')');
+
+    # we may need to try auto-change selected default backend e.g. for anthropic
+    #openai_compatible=['openai','xai','ollama','lmstudio']
+    # note though Gemini is technically 'OpenAI compatible' it works differently to our OpenAI backend hence it's handle specially ...
+    OPENAI_COMPATIBLE = {'openai', 'xai', 'ollama', 'lmstudio'}
+    global use_backend
+    if model_spec:
+        provider = model_spec.get("provider")
+        if provider:
+            provider = provider.lower()        # use lower() kn case user passes e.g. "XaI/foo"
+            if provider=='google' or provider=='gemini':
+                use_backend = 'gemini'
+            if provider not in OPENAI_COMPATIBLE:
+                use_backend = provider
+                show_setting(f"[DOSELECT][{provider} backend={use_backend}] {Fore.YELLOW}MODEL{Fore.GREEN} '{model}' spec", model_spec, strEnd=')');
+
+    show_setting(f"[DOSELECT][provider={provider} backend={use_backend}] {Fore.YELLOW}MODEL{Fore.GREEN} '{model}' spec", model_spec, strEnd=')');
     #time.sleep(100)
     return model_spec
 
-####################
+####################s
 # LLM settings:
 ####################
 user_select_preferred_model=''
-
-# don't use more costly models by default but here for testing/convenience ..
-#model_spec = parse_model_spec('openai/gpt-5.2')
-# default .. gpt-4o-mini = cheaper default for mid-range tasks... dj2026-01
-#model_spec = parse_model_spec('openai/gpt-4o-mini')
-# hm wouldn't "do_select_model" be better than parse? yes...
-model_spec = do_select_model('openai/gpt-4o-mini')
-####################
 
 # this will probably change in future but the idea is moving toward having general user settings like default backend
 # there should also someday be project-specific backend selection stuff ... a bit like git global config vs local config
@@ -122,7 +142,15 @@ settings_default_backend='openai'
 #settings_default_backend='autogen'
 #settings_default_backend='dummy'
 #use_backend='autogen'
-use_backend=settings_default.backend
+use_backend=settings_runai.backend
+
+# don't use more costly models by default but here for testing/convenience ..
+#model_spec = parse_model_spec('openai/gpt-5.2')
+# default .. gpt-4o-mini = cheaper default for mid-range tasks... dj2026-01
+#model_spec = parse_model_spec('openai/gpt-4o-mini')
+# hm wouldn't "do_select_model" be better than parse? yes...
+model_spec = do_select_model('openai/gpt-4o-mini')
+
 run_tests=False
 # dj2026-01:
 echo_mode=False
@@ -310,8 +338,19 @@ def djAutoGenDoTask(task: str, do_handle_task=False):
             # NB: in Windows testing it seems save_real_stdout can become invalid along the way
             # so we avoid save_real_stdout.flush here
             #save_real_stdout.flush()
+            
+
+            # this should be optional but add more saving of results
+            # todo put project name in here too
+            if len(project_name)>0:
+                with open(f'_runai_out_all-{project_name}.txt', 'a', encoding='utf-8', errors="replace") as f:
+                    f.write(f"{result}\n")
+            else:
+                with open('_runai_out_all.txt', 'a', encoding='utf-8', errors="replace") as f:
+                    f.write(f"{result}\n")
+
             # TODO: add safer handlers and checks also eg wrap in exception check etc. in case handle is invalid
-            sys.stdout.flush()
+            #sys.stdout.flush()
             dual_output.end_ai()
             #dual_output.flush()
 
@@ -450,7 +489,7 @@ elif args.autogen:
     else:
         use_backend = 'autogen'
 else:
-    use_backend = settings_default.backend
+    use_backend = settings_runai.backend
     
 if args.model:
     # Specify preferred model to use
@@ -586,11 +625,11 @@ def show_settings():
     print(f"{Fore.BLUE}____________________________________________________{Style.RESET_ALL}")
     #print(f"{Fore.BLUE}=== SETTINGS:"):
     print(f"{Fore.YELLOW}=== SETTINGS:")
-    #print(f"default_backend={settings_default.backend}")
+    #print(f"default_backend={settings_runai.backend}")
     # show_setting gives us not just things like coloring but critical things like hiding sensitive keys!
     # SHOW DEFAULT SETTINGS?
-    #show_setting('default-backend', settings_default.backend)#, strEnd=' ')
-    #show_setting('default-backend', settings_default.backend, strEnd=' ')
+    #show_setting('default-backend', settings_runai.backend)#, strEnd=' ')
+    #show_setting('default-backend', settings_runai.backend, strEnd=' ')
 
     sBullet1='x'
     sBullet1='→'
@@ -1515,7 +1554,22 @@ if __name__ == '__main__':
         dual_output.UnpauseSaveFiles()
         task_message=task
         print("--- final-else")
-        djAutoGenDoTask(task_message)
+
+        # Start adding exception catching for elegant recovery and better user experience
+        # e.g.: Anthropic error: {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API"
+        #task_success = False
+        try:
+            djAutoGenDoTask(task_message)
+            #task_success = True
+        except Exception as e:
+            #task_success = False
+            log.error("Backend DO-TASK failed", exc_info=settings_runai.debug)
+            print(f"{Fore.RED}ERROR{Fore.YELLOW}:runai[Backend DO-TASK]:{str(e)}{Style.RESET_ALL}")
+            # we want the traceback to help debug if debug mode, but normal users it should just display a message but continue operating ... not a crash-y-like traceback
+            if settings_runai.is_debug():
+                import traceback
+                traceback.print_exc()
+                raise   # preserves original traceback
 
 
 
@@ -1553,8 +1607,13 @@ if __name__ == '__main__':
 
     # We're effectively doing below twice now ..
     # Use ai_output with create_files_from_ai_output function in order to actually create any files in the returned code
-    print("runai: Creating files from AI output task_output_directory {task_output_directory}/outfiles")
-    files_created = create_files_from_ai_output(ai_output, task_output_directory + '/outfiles')
+    
+    if dual_output.get_captured() is not None:
+        print("runai: Creating files from AI output task_output_directory {task_output_directory}/outfiles")
+        files_created = create_files_from_ai_output(ai_output, task_output_directory + '/outfiles')
+    #else:
+    #    # this will happen on errors from bad URLs to 'no credits' results from API ...
+    #    print("runai: no output to capture")
     #ret_created_files
 
     # Print the captured output to the console
@@ -1568,6 +1627,10 @@ if __name__ == '__main__':
             #print("[" + line + "]" + f"{len(line)}")
             print(line)#+ f"{len(line)}")
         print('____________________ END OF AI OUTPUT _______________________')
+    else:
+        # eg failure
+        print(f"{Fore.YELLOW}No result{Style.RESET_ALL}")
+
 
 
     # dj2025-03 list files created and list files first required (e.g. "runai create -o file1.cpp file2.h") so we can see if all files were created
