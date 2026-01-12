@@ -5,7 +5,7 @@
 #-------------------------------------------------------------------------------
 # Import necessary libraries
 
-import djversion
+from . import djversion
 # For colored text in output
 from colorama import Fore, Style
 #old:

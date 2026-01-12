@@ -1,21 +1,37 @@
 [project]
-name = "run-ai"
-version = "0.8.3"
-description = "General AI/LLM-driven task automation tool"
-authors = [{ name = "David Joffe" }]
-license = "commercial"
+name = "runai-cli"
+version = "1.0.2"
+description = "Run and automate AI tasks from anywhere on the command line"
 readme = "README.md"
-requires-python = ">=3.8"
-
-dependencies = [
-    "pyautogen",
-    "requests",
-    "colorama",
+requires-python = ">=3.9"
+license = { text = "BSL-1.1" }
+authors = [
+  { name = "David Joffe", email = "davjof@gmail.com" }
 ]
 
+dependencies = [
+  "requests",
+  "colorama"
+]
+
+
+## #[tool.setuptools]
+## #packages = ["run_ai"]
+## [tool.setuptools.packages.find]
+## where = ["."]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["run_ai*"]  # The asterisk is the key—it grabs run_ai.backends, etc.
+
+
+
+#[project.scripts]
+#runai = "run_ai.cli:main"
 [project.scripts]
-runai = "run_ai.cli:main"
+runai = "run_ai.cli:entry"
+
 
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"

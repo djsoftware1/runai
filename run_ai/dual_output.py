@@ -1,8 +1,8 @@
-# Copyright (C) 2023-2024 David Joffe / DJ Software
+# Copyright (C) 2023-2026 David Joffe / DJ Software
 import sys
 import io
 
-from helper_functions import create_files_from_ai_output
+from .helper_functions import create_files_from_ai_output
 
 class DualOutput:
     def __init__(self, outfiles_directory):

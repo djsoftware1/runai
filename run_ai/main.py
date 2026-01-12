@@ -43,17 +43,17 @@ import datetime
 import logging
 # For colored text in output
 from colorama import Fore, Style
-from globals import g_ai_output_saved_last_code_block
+from .globals import g_ai_output_saved_last_code_block
 
 # custom dual output to capture output and echo it to console so we can both log it and extract code from it but also see it in real-time
-from dual_output import DualOutput
-from helper_functions import create_files_from_ai_output
-import djrefactor
-import djversion
-import djargs
-import djsettings
-from djtasktypes import djTaskType
-from djtask import djTask
+from .dual_output import DualOutput
+from .helper_functions import create_files_from_ai_output
+from . import djrefactor
+from . import djversion
+from . import djargs
+from . import djsettings
+from .djtasktypes import djTaskType
+from .djtask import djTask
 import run_ai.djabout # show_about() core about/usage info
 from run_ai.config.display import show_setting
 from run_ai.backends.selector import BackendSelector
@@ -63,6 +63,11 @@ from run_ai.modelspec import parse_model_spec
 
 from run_ai.djautogen.settings import djAutoGenSettings
 from run_ai.config.settings import autogen_settings, djSettings
+
+#=== BACKEND SELECTOR:
+#settings = djAISettings()
+selector = None
+backend = None
 
 
 # [dj2026-01] Redirect stdout to stderr
@@ -91,8 +96,12 @@ settings_default.backend = 'openai'
 settings_runai = djsettings.djSettings()
 settings_runai = settings_default
 
+# AI settings .. todo refactor this should live 'per task' for multi-task running in future
+settings = djAISettings()
+
 # this may be refactored away or elsewhere or differently later ... dj2026-01
 def using_autogen():
+    global use_backend
     if has_autogen() and use_backend=='autogen':
         return True
     return False
@@ -285,9 +294,11 @@ targetfolder = ''
 ##user_proxy.initiate_chat(coder, message=task_message)
 # This started as autogen-specific then we added more backends
 # The idea is to refactor more still .. everywhere this appears - dj2026
-def djAutoGenDoTask(task: str, do_handle_task=False):
+def djAutoGenDoTask(task: str, do_handle_task=False):#, settings_ai=settings):
+    # DEBUG/INFO START
     # verbose debug info: Show MODEL SPEC and backend used just before task exec:
-    show_setting('backend',use_backend,strEnd='')
+    show_setting('[backend',use_backend,strEnd='')
+    global settings
     if settings.model_spec:
         for key, value in settings.model_spec.items():
             # this is confusing 'key, value' is standard map terminology yes but "key" below is entirely different.
@@ -295,7 +306,13 @@ def djAutoGenDoTask(task: str, do_handle_task=False):
             if "key" in key.lower() and value:
                 value = '.'
             show_setting(f"{Fore.YELLOW}{key}", value, strEnd='')
-        print("")
+        print("]")
+    # DEBUG/INFO END
+    # todo scalability[low] put fastest paths first ..
+
+    global selector
+    if selector is None:
+        raise RuntimeError('Error[runai]: Should have backend selector if we have reached here')
 
     print(f"{Fore.YELLOW}■ DOTASK[{use_backend}]: {Fore.CYAN}{task}{Style.RESET_ALL}")
     # dj2026 add if not have autogen just return
@@ -312,7 +329,7 @@ def djAutoGenDoTask(task: str, do_handle_task=False):
         raise RuntimeError('autogen selected but not supported')
         return ''
     # If we aren't using ..
-    if use_backend!='autogen' and not selector is None:
+    if use_backend!='autogen':
         #result = djAutoGenDoTask(task)
         result = selector.do_task(task)
         backend = selector.get_backend()
@@ -325,6 +342,8 @@ def djAutoGenDoTask(task: str, do_handle_task=False):
         else:
             print(f"■ DoTask[backend:{selector.backend_name}] {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")    
             #print(f"{Fore.GREEN}{result}{Style.RESET_ALL}")
+            global dual_output
+            global save_real_stdout
             dual_output.begin_ai()
             print(result,end="") # no automatic newline or we end up with an extra newline in the captured output
 
@@ -342,6 +361,7 @@ def djAutoGenDoTask(task: str, do_handle_task=False):
 
             # this should be optional but add more saving of results
             # todo put project name in here too
+            global project_name
             if len(project_name)>0:
                 with open(f'_runai_out_all-{project_name}.txt', 'a', encoding='utf-8', errors="replace") as f:
                     f.write(f"{result}\n")
@@ -1161,7 +1181,11 @@ def process_files(files_to_send, worktree, targetfolder, task):
 from colorama import init
 init()
 
-if __name__ == '__main__':
+dual_output = None
+# dj2026-01 new main() for refactoring for a.o. pip install...
+def main():
+    global dual_output
+    global selector, settings, user_select_preferred_model
     print("--- start-main")
     # CWD is not so much a 'setting' as a 'current state' of runtime environment but we log it here anyway, it may be useful to know
     sCWD=os.getcwd()#getcwd just for logging
@@ -1174,7 +1198,7 @@ if __name__ == '__main__':
 
     # dj2025-03 adding backend selector
     print(f"USE_BACKEND={use_backend}")
-    settings = djAISettings()
+    #settings = djAISettings()
     if len(user_select_preferred_model)>0:
         settings.model = user_select_preferred_model
         # Kind of JIT-style do it again in case it (model) changed right here before we actually need it
@@ -1188,9 +1212,11 @@ if __name__ == '__main__':
 
     #show_setting()
 
+    # Create backend selector
     selector = BackendSelector(settings, use_backend)
 
     # RUN BACKEND TEST:
+    global run_tests
     if run_tests:
         #input(f"Press a key to run tests")
         #task = 'Say Hi 3 times'
@@ -1700,3 +1726,9 @@ if __name__ == '__main__':
     #sys.stdout.flush()
     #print("out", file=sys.stdout)
     #sys.stdout.flush()
+
+
+
+if __name__ == '__main__':
+    main()
+

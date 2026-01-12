@@ -3,8 +3,8 @@
 #
 # Descriptor containing information about the task(s) to be performed
 
-from djtasktypes import djTaskType
-import djsettings
+from .djtasktypes import djTaskType
+from . import djsettings
 
 class djTask:
     def __init__(self):

@@ -144,6 +144,18 @@ See the [LICENSE](LICENSE.md) file for details.
 
 First, either download runai (as a zip), or clone this GitHub repo: `$ git clone https://github.com/djsoftware1/runai`
 
+Then do (preferably create an env and activate it, then):
+
+```
+$ pip install . 
+OR if you are using uv:
+$ uv pip install .
+```
+
+That's it! If you activate your env, you should now be able to use runai from anywhere on your command-line, including integrated terminal windows in IDEs like VS Code or Cursor.
+
+### Old way:
+
 Then install requirements (you may use an env, though may be useful to install globally to more easily run "runai" from anywhere on command line):
 
 ```
@@ -163,7 +175,7 @@ If you follow the instructions here to add this to your system PATH, then you ca
 If using OpenAI, then place your configuration with API key in OAI_CONFIG_LIST
 
 
-### PATH Setup
+### PATH Setup (Optional - not necessary if using pip install as above)
 
 runai "works best" if you optionally add to your system PATH - then you can just type "runai" on the command line from any folder to run - potentially very powerful.
 

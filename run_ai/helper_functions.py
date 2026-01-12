@@ -2,8 +2,8 @@
 import re
 import os
 import sys
-from globals import g_ai_output_saved_last_code_block
-import globals
+from .globals import g_ai_output_saved_last_code_block
+#import globals
 """
 --------------------------------------------------------------------------------
 coder (to user_proxy):

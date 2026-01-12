@@ -7,16 +7,15 @@
 import os
 import re
 import fnmatch
-import djgrep
+from . import djgrep
 # design-wise refactor shouldn't directly use autogen probably - todo
 # should be more like 'do-task' -> 'feed to backend generically' or some-such
 from run_ai.backends.autogendetect import has_autogen
 if has_autogen():
     import autogen
-import helper_functions
+from . import helper_functions
 # regular expressions
-import globals
-from globals import g_ai_output_saved_last_code_block
+from .globals import g_ai_output_saved_last_code_block
 # Global variable initialization at the top level of the module
 #g_ai_output_saved_last_code_block = None
 

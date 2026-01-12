@@ -21,8 +21,6 @@ if "error" in logs.lower():
 else:
     print("No errors found in the build logs.")
 
-import os
-
 # Configure build command and build folder
 build_command = "your_build_command"
 build_folder = "your_build_folder"
