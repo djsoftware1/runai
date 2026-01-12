@@ -11,7 +11,8 @@ authors = [
 
 dependencies = [
   "requests",
-  "colorama"
+  "colorama",
+  "openai"
 ]
 
 
