@@ -228,7 +228,8 @@ def create_files_from_ai_output(ai_output, output_directory='.output_files_runai
         #file_path = os.path.join(output_directory, filename)
 
         if content is not None and content!='':
-            globals.g_ai_output_saved_last_code_block = content
+            global g_ai_output_saved_last_code_block
+            g_ai_output_saved_last_code_block = content
         #g_ai_output_saved_last_code_block = "["+content+"]"
         with open('DEBUGLOG.txt', 'a', encoding='utf-8') as file1:
             file1.write("\n<CAPTURE1>\n")
