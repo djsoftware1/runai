@@ -209,7 +209,7 @@ OR e.g. with a task settings:
 
 runai --showsettings refactor -w "*.cpp" "*.h"
 
-runai -t mytask.txt --showsettings refactor -w "*.cpp" "*.h"
+runai -tf mytask.txt --showsettings refactor -w "*.cpp" "*.h"
 
 # Straight-forward non-AI replace:
 runai  refactor -w "main.py" -r "findme" --replace-with "foo"
