@@ -15,6 +15,7 @@ class CmdLineParser:
         self.parser.add_argument('--project', '-p', type=str, help='Specify the project name to organize output.')
         self.parser.add_argument('--version', action='store_true', help='Show version number and exit.')
         self.parser.add_argument('-c', '--showsettings', action='store_true', help='Show settings and exit.') # -c "config"
+        self.parser.add_argument('-q', '--quiet', action='store_true', help='Quiet file output mode: do not generate any output files (still prints to stdout).')
         self.parser.add_argument('--test', action='store_true', help='Run test task(s).')
         self.parser.add_argument('--prompt', action='store_true', help='Force show task prompt.')
         self.parser.add_argument('-s', '--settings', type=str, help='Specify the task custom settings .py file.')

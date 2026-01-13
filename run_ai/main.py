@@ -69,6 +69,14 @@ from run_ai.config.settings import autogen_settings, djSettings
 selector = None
 backend = None
 
+# AutoGen objects are created later (inside main()) but referenced by djAutoGenDoTask().
+# Initialize them here so static analysis (flake8) and runtime both have defined names.
+assistant = None
+coder = None
+user_proxy = None
+groupchat = None
+manager = None
+
 
 # [dj2026-01] Redirect stdout to stderr
 # but save stdout handle so we can just output
@@ -106,7 +114,7 @@ def using_autogen():
         return True
     return False
 
-# Specify preferred model to use. NB you must save the return value.
+# Specify preferred model to use. NB you must save the return value. do_select_model() calls parse_model_spec()
 def do_select_model(model: str):
     print(f"(select_model \"{model}\"",end='')
     # Specify preferred model to use
@@ -137,7 +145,6 @@ def do_select_model(model: str):
                 show_setting(f"[DOSELECT][{provider} backend={use_backend}] {Fore.YELLOW}MODEL{Fore.GREEN} '{model}' spec", model_spec, strEnd=')');
 
     show_setting(f"[DOSELECT][provider={provider} backend={use_backend}] {Fore.YELLOW}MODEL{Fore.GREEN} '{model}' spec", model_spec, strEnd=')');
-    #time.sleep(100)
     return model_spec
 
 ####################s
@@ -165,6 +172,9 @@ run_tests=False
 echo_mode=False
 project_name = ''
 
+# Quiet mode: suppress file output only (still prints to stdout/stderr)
+quiet_file_output = False
+
 #=== BACKEND SELECTOR:
 #settings = djAISettings()
 selector = None
@@ -175,7 +185,7 @@ def djGetFormattedDatetime(datetime_input):
     return datetime_input.strftime("%Y-%m-%d %H-%M-%S")
 
 class SessionStats:
-    def __init__(self):        
+    def __init__(self):
         self.datetime_start = datetime.datetime.now()
         self.datetime_end = None
         self.elapsed_time = None
@@ -279,7 +289,7 @@ files_to_send = None
 #   ■ task_output_directory/outfiles_final: output_runai/2026-01-01 02-14-53/outfiles_final
 #   ■ Task info:
 #      ■ runtask.type: djTaskType.create
-#      ■ files_to_create: 
+#      ■ files_to_create:
 #         -> same idea as out_files but currently autogen code-path only which shouldn't be... should maybe be one setting? to think about ..
 #      ■ files_to_send: -
 #   ■ File-related info:
@@ -295,6 +305,8 @@ targetfolder = ''
 # This started as autogen-specific then we added more backends
 # The idea is to refactor more still .. everywhere this appears - dj2026
 def djAutoGenDoTask(task: str, do_handle_task=False):#, settings_ai=settings):
+    global assistant, coder, user_proxy, manager
+
     # DEBUG/INFO START
     # verbose debug info: Show MODEL SPEC and backend used just before task exec:
     show_setting('[backend',use_backend,strEnd='')
@@ -333,18 +345,19 @@ def djAutoGenDoTask(task: str, do_handle_task=False):#, settings_ai=settings):
         #result = djAutoGenDoTask(task)
         result = selector.do_task(task)
         backend = selector.get_backend()
-        
+
         if len(backend.error)>0:
             print(f"■ DoTask[backend:{selector.backend_name}] {Fore.RED}ERROR: {backend.error}. RESPONSE:{Style.RESET_ALL}")
             print(f"{Fore.RED}{backend.response}{Style.RESET_ALL}")
             print(f"{Fore.RED}{result}{Style.RESET_ALL}")
             #print(f"{result}")
         else:
-            print(f"■ DoTask[backend:{selector.backend_name}] {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")    
+            print(f"■ DoTask[backend:{selector.backend_name}] {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")
             #print(f"{Fore.GREEN}{result}{Style.RESET_ALL}")
             global dual_output
             global save_real_stdout
-            dual_output.begin_ai()
+            if dual_output is not None:
+                dual_output.begin_ai()
             print(result,end="") # no automatic newline or we end up with an extra newline in the captured output
 
             # PIPE TO STDOUT!
@@ -357,21 +370,23 @@ def djAutoGenDoTask(task: str, do_handle_task=False):#, settings_ai=settings):
             # NB: in Windows testing it seems save_real_stdout can become invalid along the way
             # so we avoid save_real_stdout.flush here
             #save_real_stdout.flush()
-            
+
 
             # this should be optional but add more saving of results
             # todo put project name in here too
             global project_name
-            if len(project_name)>0:
-                with open(f'_runai_out_all-{project_name}.txt', 'a', encoding='utf-8', errors="replace") as f:
-                    f.write(f"{result}\n")
-            else:
-                with open('_runai_out_all.txt', 'a', encoding='utf-8', errors="replace") as f:
-                    f.write(f"{result}\n")
+            if not quiet_file_output:
+                if len(project_name)>0:
+                    with open(f'_runai_out_all-{project_name}.txt', 'a', encoding='utf-8', errors="replace") as f:
+                        f.write(f"{result}\n")
+                else:
+                    with open('_runai_out_all.txt', 'a', encoding='utf-8', errors="replace") as f:
+                        f.write(f"{result}\n")
 
             # TODO: add safer handlers and checks also eg wrap in exception check etc. in case handle is invalid
             #sys.stdout.flush()
-            dual_output.end_ai()
+            if dual_output is not None:
+                dual_output.end_ai()
             #dual_output.flush()
 
         # Use the backend selector to get the appropriate backend for the task
@@ -407,7 +422,8 @@ def djAutoGenDoTask(task: str, do_handle_task=False):#, settings_ai=settings):
 
     response = ''
     # not 100% sure about these yet .. dj2026-01:
-    dual_output.begin_ai()
+    if dual_output is not None:
+        dual_output.begin_ai()
     if autogen_settings.coder_only and autogen_settings.no_autogen_user_proxy:
         if do_handle_task:
             response = coder.handle_task(task)
@@ -430,7 +446,8 @@ def djAutoGenDoTask(task: str, do_handle_task=False):#, settings_ai=settings):
         user_proxy.initiate_chat(
             assistant,message=task,
         )
-    dual_output.end_ai()
+    if dual_output is not None:
+        dual_output.end_ai()
     print(f"{Fore.YELLOW}=== DOTASK DONE{Style.RESET_ALL}")
     return ''
 #==================================================================
@@ -473,6 +490,54 @@ force_show_prompt=False
 just_show_settings=False
 use_deprecating_old_arg_handling=True
 
+
+def resolve_setting(key, defaultValue=''):
+    #if cli.has(key):
+    #    return cli[key], "cli"
+    # e.g. "task" -> "RUNAI_TASK"
+    key_env = f"RUNAI_{key.upper()}"
+    if key_env in os.environ:
+        #if env.has(f"RUNAI_{key.upper()}"):
+        env_value = os.getenv(key_env)
+        print(f"{Fore.CYAN}ENV {Fore.YELLOW}{key_env}{Fore.CYAN}={Fore.GREEN}{env_value}{Style.RESET_ALL}")
+        return env_value
+    else:
+        print(f"{Fore.CYAN}ENV {Fore.YELLOW}{key_env}{Fore.CYAN}={Style.RESET_ALL}")
+
+    #if config.has(key):
+    #    return config[key], "config"
+    #if defaults.has(key):
+    #    return defaults[key], "default"
+    #return infer(key), "auto"
+    return defaultValue
+
+"""
+SETTINGS = [
+    "model", "task", "taskfile", "max_tokens", "temperature", "project", "quiet"
+]
+"""
+task = resolve_setting('task')
+model = resolve_setting('model')
+project_name = resolve_setting('project')
+taskfile = resolve_setting('taskfile', 'runai.autotask.txt')
+if model:
+    # we must do this to parse model_spec and set up backend and so on ... though -m may override later again:
+    model_spec = do_select_model(model)
+"""
+RUNAI_MODEL=ollama/deepseek
+RUNAI_BACKEND=ollama
+RUNAI_TEMPERATURE=0.7
+RUNAI_MAX_TOKENS=4096
+RUNAI_PROFILE=lexicography
+RUNAI_POSTPROCESSOR=cowsay
+ENV_VARS = {
+    "RUNAI_MODEL": {
+        "description": "Preferred AI model",
+        #"call": lambda v: do_select_model(v)  # Fixed lambda syntax
+    }
+}
+"""
+
 # More generic new arg parser (dj2025 we must pass appname here so it does noto show "usage: main.py")
 CmdLineParser = djargs.CmdLineParser(app.appname)
 args = CmdLineParser.parser.parse_args()
@@ -488,6 +553,8 @@ if args.showsettings:
     print(f"[runai] Version: {djversion.Version().get_version()}")
     just_show_settings = True
     #sys.exit(0)
+if args.quiet:
+    quiet_file_output = True
 if args.folder:
     # worktree: "." by default
     worktree = args.folder
@@ -510,7 +577,8 @@ elif args.autogen:
         use_backend = 'autogen'
 else:
     use_backend = settings_runai.backend
-    
+
+
 if args.model:
     # Specify preferred model to use
     user_select_preferred_model = args.model
@@ -526,7 +594,7 @@ elif args.gpt4:
     print(f"[args] Select Model: {user_select_preferred_model}")
 elif args.gpt3:
     user_select_preferred_model = "gpt-3"
-    print(f"[args] Select Model: {user_select_preferred_model}") 
+    print(f"[args] Select Model: {user_select_preferred_model}")
 elif args.o1_mini:
     user_select_preferred_model = "o1-mini"
     print(f"[args] Select Model: {user_select_preferred_model}")
@@ -685,10 +753,10 @@ def show_settings():
     show_setting("refactor.replace_with", replace_with, 3)
     show_setting("refactor.refactor_wildcards", refactor_wildcards, 3)
     show_setting("?runtask.settings.send_files", runtask.settings.send_files, 3)
-    
+
 
     show_setting(f"{Fore.YELLOW}task.modify{Fore.GREEN}.send_files", f"{runtask.settings_modify.send_files}", 1)
-    
+
     # HEADING
     print(f"{Fore.YELLOW}{sBullet1}AutoGen settings:{sHeadingSuffix}{Style.RESET_ALL}")
     show_setting("no_autogen_user_proxy", autogen_settings.no_autogen_user_proxy, 1)
@@ -719,7 +787,7 @@ def show_settings():
     if config_list:
         # Convert the object to a JSON string and print it
         #show_setting("global.config_list", json.dumps(config_list, indent=4))
-        # todo if we add a --verbose or something 
+        # todo if we add a --verbose or something
         s = json.dumps(config_list)
         #s = re.sub(r'sk-(.*)["\']', "\"(hidden)\"", s, flags=re.MULTILINE)
         """
@@ -729,6 +797,7 @@ def show_settings():
         show_setting("global.config_list", s)
     show_setting("dryrun", runtask.dryrun, strEnd=' ')
     show_setting("echo_mode", echo_mode, strEnd=' ')
+    show_setting("quiet_file_output (-q)", quiet_file_output, strEnd=' ')
     show_setting(f'MODEL: "{user_select_preferred_model}" modelspec', model_spec);
     show_setting("selected-backend", use_backend, defaultValue=settings_default.backend)
     print(f"{Fore.BLUE}__________________________________{Style.RESET_ALL}")
@@ -801,7 +870,7 @@ config_list_local3=[
 
 #testing
 config_list_local_ollama=[
-    {   
+    {
         #'base_url':"http://127.0.0.1:11434/v1/chat/completions",
         'base_url':"http://127.0.0.1:11434/v1",
         #'model':'lm_studio/deepseek-r1:1.5b',#'model':'gemma3:4b',
@@ -836,7 +905,7 @@ if os.path.exists(config_list_path):
 else:
     print(f"=== config_list_path: {config_list_path} {Fore.RED}warning: not found - please configure.{Style.RESET_ALL}")
     print("Will attempt fallback to local AI instances")
-    
+
     #"deepseek-r1:1.5b""
     # TESTING: Try fall back to local ollama ...
     # ollama is meant to be API-compatible with OpenAI but I'm not 100% sure if we should pass here the ollama modelname or give it modelname "gpt-4" in a sort of pretense for autogen
@@ -906,12 +975,12 @@ if os.path.exists(config_list_path) and has_autogen():
             # Here just fallback to first in list for now
             config_list = autogen.config_list_from_json(config_list_path)
             if config_list:
-                # todo if we add a --verbose or something 
+                # todo if we add a --verbose or something
                 s = json.dumps(config_list)
                 show_setting('FALLBACK-CONFIG_LIST', s)# NB show_setting does important stuff like hide sensitive info like keys
             else:
                 print(f"{Fore.GREEN}FALLBACK-CONFIG_LIST: NONE{Style.RESET_ALL}")
-        
+
     else:
         print("do autogen.config_list_from_json - default")
         # Default
@@ -960,7 +1029,6 @@ if os.path.exists(config_list_path) and has_autogen():
         else:
             return resolve_value(obj)
 
-        return {k: resolve_value(v) for k, v in cfg.items()}
     # Resolve environment variable values
     # This allows us to put (say) the following in the config:
     # "api_key": "env:OPENAI_API_KEY",
@@ -1004,7 +1072,7 @@ else:
     use_openai = False
 
 if config_list:
-    # todo if we add a --verbose or something 
+    # todo if we add a --verbose or something
     s = json.dumps(config_list)
     show_setting('CONFIG_LIST', s) # NB show_setting does important stuff like hide sensitive info like keys
 else:
@@ -1023,14 +1091,14 @@ show_settings()
 # Get date/time to use in filenames and directories and session logfiles etc.
 task_datetime = datetime.datetime.now()
 task_formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
-#if project_name=='':
-#    task_output_directory='output_runai' + '/' + task_formatted_datetime
-#else:
-task_output_directory = os.path.join(project_name, 'output_runai', task_formatted_datetime) if project_name else os.path.join('output_runai', task_formatted_datetime)
-#task_output_directory='output_runai' + '/' + task_formatted_datetime
-# Create the output directory if it doesn't exist
-if not os.path.exists(task_output_directory):
-    os.makedirs(task_output_directory)
+
+# In quiet mode, do not create any output directories/files.
+task_output_directory = ''
+if not quiet_file_output:
+    task_output_directory = os.path.join(project_name, 'output_runai', task_formatted_datetime) if project_name else os.path.join('output_runai', task_formatted_datetime)
+    # Create the output directory if it doesn't exist
+    if not os.path.exists(task_output_directory):
+        os.makedirs(task_output_directory)
 
 
 # Read task from tasks.txt
@@ -1052,7 +1120,7 @@ if taskfile!='':
         if len(task)==0:
             print(f"{Fore.RED}Warning: TaskFile is empty!{Style.RESET_ALL}")
     else:
-        
+
         # [dj2025-03] Remember the file name "runai.autotask.txt" is like a special "auto-start" task file that is fully optional
         # So if "taskfile" is not found, if it is on the default special  "auto-start" file, then we just print a message and continue
         status=''
@@ -1078,14 +1146,14 @@ if taskfile!='':
             print(f"{Fore.RED}Please either create the file now with your task description, or specify a correct filename.{Style.RESET_ALL}")
         else:
             print(f"{Fore.BLUE}■ {Fore.YELLOW}TaskFile: {taskfile}: {Fore.GREEN}{status}{Style.RESET_ALL}")
-        
+
         # dj2025-03 Hmm I am not sure I am mad about several lines of guidance info like this is good or bad here or if it should move elsewhere (low prio)
         print("--------------------------[ NOTES ]----------------------------")
         print("The name \"runai.autotask.txt\" is a special OPTIONAL filename to \"auto-load/start\" the task.")
         print("It is the default task file name that is used if no task file name is specified.")
         print("If you want to use a different task file name, please specify it with the -tf parameter.")
         print("---------------------------------------------------------------")
-        
+
 
 if task=="":
     # Define your coding task, for example:
@@ -1186,6 +1254,9 @@ dual_output = None
 def main():
     global dual_output
     global selector, settings, user_select_preferred_model
+    # autogen vars .. should move later in refactoring ..
+    global assistant, coder, user_proxy, groupchat, manager
+
     print("--- start-main")
     # CWD is not so much a 'setting' as a 'current state' of runtime environment but we log it here anyway, it may be useful to know
     sCWD=os.getcwd()#getcwd just for logging
@@ -1232,7 +1303,7 @@ def main():
             print(f"{Fore.RED}{backend.response}{Style.RESET_ALL}")
             print(f"{Fore.GREEN}{result}{Style.RESET_ALL}")
         else:
-            print(f"=== test DoTask[backend:{selector.backend_name}]: {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")    
+            print(f"=== test DoTask[backend:{selector.backend_name}]: {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")
             print(f"{Fore.RED}{result}{Style.RESET_ALL}")
         print(f"RESULT (TEST): {result}")
         print("---------------------------------------")
@@ -1247,29 +1318,25 @@ def main():
             print(f"{Fore.RED}{backend.response}{Style.RESET_ALL}")
             print(f"{Fore.GREEN}{result}{Style.RESET_ALL}")
         else:
-            print(f"=== test DoTask[backend:{selector.backend_name}]: {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")    
+            print(f"=== test DoTask[backend:{selector.backend_name}]: {Fore.GREEN}SUCCESS:{Style.RESET_ALL}")
             print(f"{Fore.RED}{result}{Style.RESET_ALL}")
         print(f"RESULT (TEST): {result}")
         print("---------------------------------------")
 
     # Log the task to keep a record of what we're doing and help study/analyze results
-    log_task = f"{task_output_directory}/tasklog.txt"
-    with open(log_task, 'a', encoding='utf-8', errors="replace") as log_file:
-        log_file.write(task)
-
-    # [IO redirect begin] Backup the original stdout
-    ####original_stdout = sys.stdout
-    # [IO redirect begin] Create a StringIO object to capture output
-    ####captured_output = io.StringIO()
-    ####sys.stdout = captured_output
+    if not quiet_file_output and task_output_directory:
+        log_task = f"{task_output_directory}/tasklog.txt"
+        with open(log_task, 'a', encoding='utf-8', errors="replace") as log_file:
+            log_file.write(task)
 
     ###############################################
     # NB! Be careful here, from below any output is auto-captured and redirected for things like auto-codeblock extraction to save to files
     # Redirect output to both console and StringIO
+    #if not quiet_file_output and task_output_directory:
     dual_output = DualOutput(task_output_directory)
     sys.stdout = dual_output
-
-
+    #else:
+    #    dual_output = None
 
     # The stuff below is not part of the actual captured AI output but is part of the main program output
     # but it's getting added to it ... hmmm
@@ -1378,7 +1445,7 @@ def main():
 
     # STDIN PIPED?
     if stdin_text is not None and len(stdin_text)>0:
-        # encode STDIN as a triple-backtick codeblock e.g. 
+        # encode STDIN as a triple-backtick codeblock e.g.
         # $ cat main.cpp | runai -t "Review for errors"
         # task:
         # Review for errors
@@ -1435,7 +1502,7 @@ def main():
             task_line = task_line.replace("{$1}", inputline)
             # Replace ${line} with the line number
             task_line = task_line.replace(r'{$line}', str(line_number))
-            
+
             # Note here we use exact date/time of each line not the start date/time of entire task start (later we might desire options for both)
             # Replace ${date} with the current date YYYY-MM-DD (UCT? I think UCT to prevent timezone unambiguity) .. I suppose we could have different variables for users later eg "$dateutc"
             if '{$date}' in task_line:
@@ -1454,7 +1521,7 @@ def main():
                 task_line = task_line.replace(r'{$datetime}', now.strftime("%Y-%m-%d %H-%M-%S"))
 
             # If no files to create, do requested task
-            #pause_capture in case our own task has code blocks in it - we don't want those auto-saving by mistake
+            #pause_capture in case our own task has code blocks in it - we don't want it auto-saving by mistake
             if runtask.start_line > 0:
                 # Skip lines until we reach start_line
                 if line_number < runtask.start_line:
@@ -1462,9 +1529,11 @@ def main():
                     continue
 
             # Log requested task but pause the savefiles thing otherwise it will auto grab our own codeblacks out the task
-            dual_output.PauseSaveFiles()
+            if dual_output is not None:
+                dual_output.PauseSaveFiles()
             print(f"=== Processing task: {task_line}")
-            dual_output.UnpauseSaveFiles()
+            if dual_output is not None:
+                dual_output.UnpauseSaveFiles()
 
 
             if runtask.dryrun:
@@ -1472,16 +1541,17 @@ def main():
 
 
             # Add some logging so user can see where we left off quickly if we need to restart
-            log_task = f"_inputlines_tasklog_runinfo.log"
-            with open(log_task, 'a', encoding='utf-8', errors="replace") as log_file:
-                # Get date/time to use in filenames and directories and session logfiles etc.
-                log_datetime = datetime.datetime.now()
-                log_formatted_datetime = log_datetime.strftime("%Y-%m-%d %H-%M-%S")
+            if not quiet_file_output:
+                log_task = f"_inputlines_tasklog_runinfo.log"
+                with open(log_task, 'a', encoding='utf-8', errors="replace") as log_file:
+                    # Get date/time to use in filenames and directories and session logfiles etc.
+                    log_datetime = datetime.datetime.now()
+                    log_formatted_datetime = log_datetime.strftime("%Y-%m-%d %H-%M-%S")
 
-                log_file.write(f"=== EXECUTING LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}][{log_formatted_datetime}]: {inputline}\n")
-                """
-                log_file.write(f"=== EXECUTING LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}]: {inputline}\n")
-                """
+                    log_file.write(f"=== EXECUTING LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}][{log_formatted_datetime}]: {inputline}\n")
+                    """
+                    log_file.write(f"=== EXECUTING LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}]: {inputline}\n")
+                    """
 
             print("--- 1")
             djAutoGenDoTask(task_line)
@@ -1521,14 +1591,15 @@ def main():
                 # DEBUG/TESTING and maybe actual use: Save the task_message to file
                 # but if filename exists generate new filename
                 #task_message_filename = f"{file}.task"
-                str_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                task_message_filename = f"{filename}__{str_datetime}-task.txt"
-                while os.path.exists(task_message_filename):
+                if not quiet_file_output:
                     str_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
                     task_message_filename = f"{filename}__{str_datetime}-task.txt"
-                with open(task_message_filename, 'w', encoding='utf-8', errors="replace") as file:
-                    file.write(task_message)
-                
+                    while os.path.exists(task_message_filename):
+                        str_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                        task_message_filename = f"{filename}__{str_datetime}-task.txt"
+                    with open(task_message_filename, 'w', encoding='utf-8', errors="replace") as file:
+                        file.write(task_message)
+
                 # wait for keypress
                 input('Please press a key to continue.')
                 # (1) First let the AI do its thing
@@ -1550,23 +1621,27 @@ def main():
             # Note if replace_with defined then it's a simple regex replace that does not actually need AI and we just do ourselves
             djrefactor.Refactor(worktree, wildcard, refactor_matches, refactor_negmatches, replace_with, task, user_proxy, coder)
     elif files_to_create and len(files_to_create)>=1:
-        dual_output.PauseSaveFiles()
+        if dual_output is not None:
+            dual_output.PauseSaveFiles()
         if len(files_to_create)==1:
             task_message = f"Create the following file and return in a ```...``` code block with filename: {', '.join(files_to_create)} with the following specifications: {task}"
         else:
             task_message = f"Create the following files and return in ```...``` code blocks with filenames: {', '.join(files_to_create)} with the following specifications: {task}"
-        dual_output.UnpauseSaveFiles()
+        if dual_output is not None:
+            dual_output.UnpauseSaveFiles()
         #user_proxy.initiate_chat(assistant, message=create_task_message)
         print("--- 3")
         djAutoGenDoTask(task_message, True)
     elif files_to_send and len(files_to_send)>=1:
         # If no files to create, do requested task
-        dual_output.PauseSaveFiles()
+        if dual_output is not None:
+            dual_output.PauseSaveFiles()
         if len(files_to_send)==1:
             print(f"=== Sending file [{runtask.type}]: {', '.join(files_to_send)}")
         else:
             print(f"=== Sending files [{runtask.type}]: {', '.join(files_to_send)}")
-        dual_output.UnpauseSaveFiles()
+        if dual_output is not None:
+            dual_output.UnpauseSaveFiles()
         # Call the function to process files
         # This is maybe not going to be used anymore, not sure..
         # wait for keypress
@@ -1575,9 +1650,11 @@ def main():
     else:
         # If no files to create, do requested task
         #pause_capture in case our own task has code blocks in it - we don't want those auto-saving by mistake
-        dual_output.PauseSaveFiles()
+        if dual_output is not None:
+            dual_output.PauseSaveFiles()
         print(f"=== Processing task [type={runtask.type}]: {task}")
-        dual_output.UnpauseSaveFiles()
+        if dual_output is not None:
+            dual_output.UnpauseSaveFiles()
         task_message=task
         print("--- final-else")
 
@@ -1599,52 +1676,47 @@ def main():
 
 
 
-    # [IO redirect] Reset stdout to original
-    ####sys.stdout = original_stdout
-    # [IO redirect] Get the content from the captured output
-    ####ai_output = captured_output.getvalue()
-
     # Reset stdout to original and get captured output
-    sys.stdout = dual_output.console
-    #captured_output = dual_output.getvalue()
-    ai_output = dual_output.getvalue()
-
-
+    if dual_output is not None:
+        sys.stdout = dual_output.console
+        ai_output = dual_output.getvalue()
+    else:
+        sys.stdout = sys.stderr
+        ai_output = ''
 
     # Get the current date and time
     formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
 
-    # Create the log filename
-    # Not quite sure if this should also be in task_output_directory or not
-    log_filename_base = f"dj_AI_log.txt"
-    # Write the AI output to the log file
-    with open(log_filename_base, 'a', encoding='utf-8', errors="replace") as log_file:
-        log_file.write(f"[{formatted_datetime}] Captured AI Output:\n")
-        log_file.write(ai_output)
-        log_file.write("----------------------\n")
+    if not quiet_file_output and ai_output:
+        # Create the log filename
+        # Not quite sure if this should also be in task_output_directory or not
+        log_filename_base = f"dj_AI_log.txt"
+        # Write the AI output to the log file
+        with open(log_filename_base, 'a', encoding='utf-8', errors="replace") as log_file:
+            log_file.write(f"[{formatted_datetime}] Captured AI Output:\n")
+            log_file.write(ai_output)
+            log_file.write("----------------------\n")
 
-    # Create the log filename
-    log_filename1 = f"{task_output_directory}/dj_AI_log.txt"
-    # Write the AI output to the log file
-    with open(log_filename1, 'a', encoding='utf-8', errors="replace") as log_file:
-        log_file.write(f"[{formatted_datetime}] Captured AI Output:\n")
-        log_file.write(ai_output)
-        log_file.write("----------------------\n")
+        # Create the log filename
+        log_filename1 = f"{task_output_directory}/dj_AI_log.txt"
+        # Write the AI output to the log file
+        with open(log_filename1, 'a', encoding='utf-8', errors="replace") as log_file:
+            log_file.write(f"[{formatted_datetime}] Captured AI Output:\n")
+            log_file.write(ai_output)
+            log_file.write("----------------------\n")
 
     # We're effectively doing below twice now ..
     # Use ai_output with create_files_from_ai_output function in order to actually create any files in the returned code
-    
-    if dual_output.get_captured() is not None:
+
+    if not quiet_file_output and dual_output is not None and dual_output.get_captured() is not None:
         print("runai: Creating files from AI output task_output_directory {task_output_directory}/outfiles")
         files_created = create_files_from_ai_output(ai_output, task_output_directory + '/outfiles')
-    #else:
-    #    # this will happen on errors from bad URLs to 'no credits' results from API ...
-    #    print("runai: no output to capture")
-    #ret_created_files
+    else:
+        files_created = None
 
     # Print the captured output to the console
     #ai_output_actual = dual_output.
-    if dual_output.get_captured() is not None:
+    if dual_output is not None and dual_output.get_captured() is not None:
         capture_output_actual = dual_output.get_captured()
         #print(f"runai: Captured AI Output:{len(dual_output.get_captured())}")
         print('____________________ AI OUTPUT ______________________________')
@@ -1659,13 +1731,14 @@ def main():
 
 
 
+    # dj2026 note if tasktype is create but quiet-no-files-output specified, user has given conflicting signals but I think perhaps some core 'main' output files only, but not all the other plentiful output .. todo improve/streamline in testing
     # dj2025-03 list files created and list files first required (e.g. "runai create -o file1.cpp file2.h") so we can see if all files were created
     if runtask.type == djTaskType.create:
         print("🤖create files requested:")
         if not runtask.settings.out_files is None:
             for file in runtask.settings.out_files:
                 print(f"  '{file}'")
-            
+
         print("🤖 files to create:")
         if not files_to_create is None:
             for file in files_to_create:
@@ -1693,7 +1766,7 @@ def main():
     print(f"   {Fore.YELLOW}         {Fore.WHITE}time: {Fore.BLUE}{controller.session_stats.elapsed_time}{Style.RESET_ALL}")
     #show_setting('total tasks', controller.session_stats.total_tasks, 1)
     show_setting('task_output_folder', task_output_directory, 1)
-    show_setting('outfiles', task_output_directory+'/outfiles', 1)
+    show_setting('outfiles', (task_output_directory+'/outfiles') if task_output_directory else '', 1)
     #HEADING: Task info
     show_setting(f"{Fore.YELLOW}Task settings{Style.RESET_ALL}", "", 1)
     show_setting("runtask.type", runtask.type, 2)
@@ -1705,7 +1778,7 @@ def main():
     show_setting("out_files", runtask.settings.out_files, 2)
     show_setting("send_files", runtask.settings.send_files, 2)
     #show_setting("files_created", files_created, 2)
-    
+
     # Show MODEL SPEC and backend used:
     show_setting('backend',use_backend,strEnd='')
     if settings.model_spec:
@@ -1731,4 +1804,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

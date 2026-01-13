@@ -76,6 +76,10 @@ Try a simple test like this to see if it's working:
 runai -4 -t "Hi, can you help me?"
 ```
 
+### runai Environment Variables (optional)
+
+You may optionally specify settings in environment variables: RUNAI_MODEL, RUNAI_TASKFILE, RUNAI_TASK, RUNAI_PROJECT. (Options specified on the command line will override these.)
+
 ### Selecting Model
 
 Options for selecting the model to use:

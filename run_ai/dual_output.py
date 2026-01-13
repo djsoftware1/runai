@@ -38,6 +38,10 @@ class DualOutput:
         #if (self.pause_capture > 0):
         self.pause_capture = 0#self.pause_capture - 1
 
+    @property
+    def ShouldOutputFiles(self):
+        return self.outfiles_directory
+
     def write(self, message):
         if message is None:
             return
@@ -60,10 +64,12 @@ class DualOutput:
 
         self.console.write(message)
         self.capture.write(message)
-        with open('log_capture_output_dj_full.txt', 'a', encoding='utf-8', errors="replace") as log_file_capture_output_dj:
-            log_file_capture_output_dj.write(message)
-        with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8', errors="replace") as log2:
-            log2.write(message)
+        # if new quiet-no-files mode then don't save here
+        if self.ShouldOutputFiles:#self.outfiles_directory:
+            with open('log_capture_output_dj_full.txt', 'a', encoding='utf-8', errors="replace") as log_file_capture_output_dj:
+                log_file_capture_output_dj.write(message)
+            with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8', errors="replace") as log2:
+                log2.write(message)
 
 
 
@@ -85,8 +91,9 @@ class DualOutput:
             if len(ret_created_files) > 0:
                 self.str_building = ''
 
-        with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8') as log2:
-            log2.write(f" >>> ")
+        if self.ShouldOutputFiles:#self.outfiles_directory:
+            with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8') as log2:
+                log2.write(f" >>> ")
 
 
     def getvalue(self):
