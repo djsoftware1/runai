@@ -2,7 +2,7 @@
 
 * [runai homepage](https://djoffe.com/dj-software/runai/)
 
-A kind of integrated 'AI extension' of your terminal or command prompt
+A kind of integrated 'AI extension' of your terminal or command prompt.
 
 General AI/LLM-driven task execution and automation tool for tasks such as code refactoring (or many other tasks, including non-coding-related tasks), supporting AutoGen.
 
@@ -14,14 +14,14 @@ General AI/LLM-driven task execution and automation tool for tasks such as code 
 
 **Cross-platform:** Integrates into command-line for Windows command prompt, git bash, Linux, or macOS terminal.
 
-Supports either OpenAI, or your own custom AI instances (for example your own LiteLLM server(s)).
+Supports either OpenAI or your own custom AI instances (for example your own LiteLLM server(s)).
 
-**Example:**
+### Example:
 
 ```
 runai -t "Write a Python script that can check daily for updated exchange rate for USD, EUR"
 ```
-Use `-t "task"` to specify task to be done.
+Use `-t "task"` to specify the task to be done.
 
 ## Help and Examples - Getting Started
 
@@ -45,23 +45,59 @@ runai -h  show full help  --showsettings  just show settings  --version  show ve
       -m "MODEL" select model  -p "PROJECT-NAME"  -4 use gpt-4  --o1-mini  --o1-preview
       -f "FOLDER"  set work-folder   subcommands (refactor,build,create,createfrom,modify) ...
       -i "InputFile" to batch-run task on all lines, with substitution. default=input.txt
+      -a attachmentfile
+      -q No-output-files mode
 ```
 ```
 USAGE: runai (or python main.py) [taskfile] [targetfolder] [settings.py]
 ```
 
-You can use "--showsettings" to just check the settings before run! For example:
+You can use "--showsettings" to just check the settings before running! For example:
 ```
 runai --showsettings refactor -w main.py
 ```
 
-### Subcommands Help
+### New Command-Line Option: Attach
+#### Use the `--attach` or `-a` Option
+
+Runai now supports attaching files to tasks using the `--attach` or `-a` option. This feature enables you to include images and various document types (PDF, Word, etc.) as attachments, as long as the selected backend or model supports this feature.
+
+**Example:**
+```
+runai -t "Analyze the attached image for visual elements" --attach example_image.png
+```
+or
+```
+runai -t "Parse the PDF document for key insights" --attach document.pdf
+```
+
+Attachment support is particularly useful for tasks involving image processing or extracting information from documents. 
+
+### Common Use Cases for Attachments
+1. **Image Analysis:**
+   - **Command:** 
+   ```
+   runai -t "What objects do you see in the attached image?" -a sample_image.jpg
+   ```
+   
+2. **Document Processing:**
+   - **Command:** 
+   ```
+   runai -t "Summarize the attached Word document" --attach report.docx
+   ```
+
+3. **Data Extraction:**
+   - **Command:** 
+   ```
+   runai -t "Write a brief on the key points from the attached PDF" --attach notes.pdf
+   ```
+
+### Subcommand Help
 
 * **create**: Create new file(s) mode: `runai create`
-
 * **refactor**: Refactor existing files mode: `runai refactor`
 
-Use `runai __subcommand__ -h` to show usage help for subcommands (create,refactor,build,createfrom,modify)
+Use `runai __subcommand__ -h` to show usage help for subcommands (create, refactor, build, createfrom, modify)
 ```
 runai create -h
 => usage: main.py create [-h] [-o OUT [OUT ...]]
@@ -71,7 +107,8 @@ runai refactor -h
    [-w WILDCARDS [WILDCARDS ...]][--replace-with REPLACE_WITH] [-s SEND [SEND ...]]
 ```
 
-Try a simple test like this to see if it's working: 
+### Testing and Simple Commands
+Try a simple test to see if it's working: 
 ```
 runai -4 -t "Hi, can you help me?"
 ```
@@ -133,7 +170,7 @@ Options for selecting the backend
    --echo Echo mode: Dummy backend just sends back task string as "result" for testing
 ```
 
-**Note:** For some tasks, this tool can modify files, so use with caution. Always backup all your data first, work in a 'sandbox' copy, and check all ch ananges. Test things first. Use at own risk.
+**Note:** For some tasks, this tool can modify files, so use with caution. Always backup all your data first, work in a 'sandbox' copy, and check all changes. Test things first. Use at your own risk.
 
 ## License
 
@@ -178,12 +215,11 @@ If you follow the instructions here to add this to your system PATH, then you ca
 
 If using OpenAI, then place your configuration with API key in OAI_CONFIG_LIST
 
-
 ### PATH Setup (Optional - not necessary if using pip install as above)
 
 runai "works best" if you optionally add to your system PATH - then you can just type "runai" on the command line from any folder to run - potentially very powerful.
 
-On Windows you can use the system Environment Variables dialog to add runai to PATH. (git bash _should_ automatically 'inherit' this for its PATH.)
+On Windows, you can use the system Environment Variables dialog to add runai to PATH. (git bash _should_ automatically 'inherit' this for its PATH.)
 
 For Linux/macOS (or also git bash), add a line like this in e.g. your **.bashrc** or zshrc startup file to add it to PATH on bash startup:
 
@@ -194,13 +230,11 @@ For Linux/macOS (or also git bash), add a line like this in e.g. your **.bashrc*
 
 ("runai" is just a small wrapper for 'python main.py'.)
 
-
-
 ## Simple Test
 
 Try a simple test like this to see if it's working: 
 ```
-    runai -4 -t "Hi, can you help me ?"
+    runai -4 -t "Hi, can you help me?"
 ```
 
 ## Show Settings and Exit
@@ -216,7 +250,7 @@ runai --showsettings refactor -w "*.cpp" "*.h"
 runai -tf mytask.txt --showsettings refactor -w "*.cpp" "*.h"
 
 # Straight-forward non-AI replace:
-runai  refactor -w "main.py" -r "findme" --replace-with "foo"
+runai refactor -w "main.py" -r "findme" --replace-with "foo"
 
 etc.
 ```
@@ -227,7 +261,7 @@ By default, it looks for a file named "runai.autotask.txt" in the folder you run
 
 Or, you can specify a task file with "-tf" or "--taskfile" (or task string with -t).
 
-If no autotask found, and no task or taskfile passed as parameter, it will ask for a task.
+If no autotask is found and no task or taskfile passed as a parameter, it will ask for a task.
 
 ## Custom LiteLLM Server:
 
@@ -244,11 +278,11 @@ $ pip install litellm[proxy]
 
 Then e.g. 'ollama pull codellama' and 'litellm --model ollama/codellama'
 
-Some kinds of tasks don't require AI at all, and are just done locally, e.g. a refactor straightforward regex replace.
+Some kinds of tasks don't require AI at all and are just done locally, e.g. a refactor straightforward regex replace.
 
 ## Multi-line input replacements
 
-If feeding an input list, you can use "{$1}" in the task string to replace it with the line contents, for example if your input lines are:
+If feeding an input list, you can use "{$1}" in the task string to replace it with the line contents. For example, if your input lines are:
 
 ```
 Vec2d
@@ -256,21 +290,20 @@ Vec3d
 Matrix4d
 ```
 
-You can use e.g. "Generate a class called {$1} with implementation" etc.
+You can use e.g. "Generate a class called {$1} with implementation", etc.
 
 The special variable "{$line}" can be replaced with the original line number of the input file.
 
-* {$line} Replace with current input line number in task string for multi-line input
-* {$date} Replace with current date (UTC) in task string
-* {$time} Replace with current time (UTC) in task string
-* {$datetime} Replace with current date and time (UTC) in task string (YYYY-MM-DD HH-MM-SS)
+* {$line} Replace with the current input line number in task string for multi-line input
+* {$date} Replace with the current date (UTC) in task string
+* {$time} Replace with the current time (UTC) in task string
+* {$datetime} Replace with the current date and time (UTC) in task string (YYYY-MM-DD HH-MM-SS)
 
 ## To try force use of GPT3, GPT4, o1-mini or other preferred model:
 
-OpenAI/AutoGen tasks: Provided your OAI_CONFIG_LIST is set up correctly with GPT3 and GPT4 you can use the command-line parameters described above under the 'Help' section to select any preferred model.
+OpenAI/AutoGen tasks: Provided your OAI_CONFIG_LIST is set up correctly, you can use the command-line parameters described above under the 'Help' section to select any preferred model.
 
-
-Design thoughts on main task types:
+### Design thoughts on main task types:
 
 ## Main Task Types:
 
@@ -297,6 +330,7 @@ runai refactor -w "*.cpp" "*.h"
 
 runai refactor -w src/MyFile.cpp
 
+runai -t "Update this README with the latest new features" -p edits modify -e README.md
 ```
 
 4. **Build and Test Automation**
@@ -329,16 +363,19 @@ runai refactor -w src/MyFile.cpp
    - Manage release cycles and deployment schedules.
    - Example: Automatically deploy code to a staging server after passing CI/CD pipelines.
 
-
-## Examples
+## Examples with Attachments
 
 ```
-    runai -4 -tf /c/runai/tasks/copyright/task.txt -f ./cppcode_folder/ -s /c/runai/tasks/copyright/settings.py refactor -w "*.cpp"
+runai -4 -tf /c/runai/tasks/copyright/task.txt -f ./cppcode_folder/ -s /c/runai/tasks/copyright/settings.py refactor -w "*.cpp"
+
+runai -t "Analyze the attached image" --attach sample_image.jpg
+
+runai -t "Summarize the attached PDF document" -a report.pdf
 ```
 
 ## Notes on caching
 
-Note that AutoGen caches results, and sometimes this may cause issues where something appears to not work when it is working. Try remove the cache ('rm -rf .cache') at times and see if that helps.
+Note that AutoGen caches results, and sometimes this may cause issues where something appears to not work when it is working. Try removing the cache ('rm -rf .cache') at times and see if that helps.
 
 ## About
 
@@ -355,4 +392,3 @@ This project Copyright (C) David Joffe and [DJ Software](https://djoffe.com/dj-s
 See also [djoffe.com/dj-software/](https://djoffe.com/dj-software/)
 
 - [David Joffe](https://davidjoffe.github.io/)
-
