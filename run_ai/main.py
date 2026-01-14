@@ -138,7 +138,8 @@ def do_select_model(model: str):
         provider = model_spec.get("provider")
         if provider:
             provider = provider.lower()        # use lower() kn case user passes e.g. "XaI/foo"
-            if provider=='google' or provider=='gemini':
+            # for now map deepseek to gemini as that seems to be closest to working but re-test still
+            if provider=='google' or provider=='gemini' or provider=='deepseek':
                 use_backend = 'gemini'
             if provider not in OPENAI_COMPATIBLE:
                 use_backend = provider

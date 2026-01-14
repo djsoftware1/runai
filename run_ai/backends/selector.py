@@ -52,6 +52,9 @@ class BackendSelector:
             return [AnthropicBackend(self.ai_settings)]
         elif self.backend_name == "gemini":
             return [GeminiBackend(self.ai_settings)]
+        # for now map deepseek to gemini as that seems to be closest to working but re-test still
+        elif self.backend_name == "deepseek":
+            return [GeminiBackend(self.ai_settings)]
         elif self.backend_name == "dummy":
             return [DummyBackend(self.ai_settings)]
         # elif self.backend_name == "ollama":

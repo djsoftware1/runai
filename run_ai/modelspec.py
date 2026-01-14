@@ -176,6 +176,7 @@ def parse_model_spec(spec: str):
         return {
             "provider": "deepseek",
             "model": model,
+            #"#base_url": "https://api.deepseek.com/chat/completions",#"https://api.deepseek.com/v1",
             "base_url": "https://api.deepseek.com/v1",
             "api_key": os.getenv("DEEPSEEK_API_KEY"),
         }
@@ -185,6 +186,7 @@ def parse_model_spec(spec: str):
             "provider": "xai",
             "model": model,
             "base_url": "https://api.xai.com/v1",
+            #"base_url": "https://api.x.ai/v1",
             "api_key": os.getenv("XAI_API_KEY"),
         }
 
