@@ -19,7 +19,7 @@ class djAbout:
         print(f"{Fore.YELLOW}runai {Fore.CYAN}Run or automate AI tasks from anywhere on command line, optionally with AutoGen agents{Style.RESET_ALL}")
         #print(f"      {Fore.CYAN}Easily run or automate AI/LLM & other kinds of tasks, like code refactoring, optionally with AutoGen.{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}runai -h {Fore.CYAN}show full help {Fore.YELLOW}--showsettings {Fore.CYAN}just show settings {Fore.YELLOW}--version {Fore.CYAN}show version number {Fore.YELLOW}--dryrun{Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}      -t \"TASK\" {Fore.CYAN}\"task for AI to do\" {Fore.YELLOW}-tf \"TaskFile\"{Fore.CYAN} \"file with task\" (default {Fore.GREEN}autotasks.txt{Fore.CYAN}){Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}      -t \"TASK\" {Fore.CYAN}\"task for AI to do\" {Fore.YELLOW}-tf \"TaskFile\"{Fore.CYAN} \"file with task\" (default {Fore.GREEN}runai.autotask.txt{Fore.CYAN}){Style.RESET_ALL}")
         print(f"{Fore.YELLOW}      -m \"MODEL\" {Fore.CYAN}\"select model\" {Fore.YELLOW}-3 {Fore.CYAN}use gpt-3 {Fore.YELLOW}-4 {Fore.CYAN}use gpt-4 {Fore.YELLOW}--o1-mini --o1-preview{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}      -f \"FOLDER\" {Fore.CYAN}\"set work-folder\" {Style.RESET_ALL}")
         print(f"{Fore.YELLOW}      -i \"InputFile\" {Fore.CYAN}to batch-run task on all lines, with substitution. default={Fore.GREEN}input.txt{Style.RESET_ALL}")

@@ -41,11 +41,11 @@ runai -t "Repeat the word coffee five times, then help cure aging"
 ### Common settings quick-reference
 ```
 runai -h  show full help  --showsettings  just show settings  --version  show version number  --dryrun 
-      -t "TASK"  task instructions for LLM to do  -tf "TaskFile" task file to load (default autotasks.txt)
+      -t "TASK" task instructions for LLM to do  -tf "TaskFile" task file to load (default runai.autotask.txt)
       -m "MODEL" select model  -p "PROJECT-NAME"  -4 use gpt-4  --o1-mini  --o1-preview
       -f "FOLDER"  set work-folder   subcommands (refactor,build,create,createfrom,modify) ...
       -i "InputFile" to batch-run task on all lines, with substitution. default=input.txt
-      -a attachmentfile
+      -a FileAttachment [-a ...]
       -q No-output-files mode
 ```
 ```
