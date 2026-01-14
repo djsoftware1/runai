@@ -43,26 +43,61 @@ class GeminiBackend(Backend):
                 api_key=os.getenv("GEMINI_API_KEY")
             )
 
+    def _build_responses_input(self, task: str):
+        attachments = getattr(self.ai_settings, "attachments", None) or []
+        if not attachments:
+            return task
+
+        content = []
+        if task and len(task) > 0:
+            content.append({"type": "input_text", "text": task})
+
+        for a in attachments:
+            kind = a.get("kind")
+            mime_type = a.get("mime_type") or "application/octet-stream"
+            filename = a.get("filename") or "attachment"
+            data_b64 = a.get("data_base64")
+            if not data_b64:
+                continue
+
+            if kind == "image":
+                data_url = f"data:{mime_type};base64,{data_b64}"
+                content.append({
+                    "type": "input_image",
+                    "image_url": data_url
+                })
+            else:
+                content.append({
+                    "type": "input_file",
+                    "filename": filename,
+                    "file_data": data_b64,
+                    "mime_type": mime_type
+                })
+
+        return [
+            {
+                "role": "user",
+                "content": content
+            }
+        ]
+
     def do_task(self, task: str) -> str:
         model = self.ai_settings.model
         print(f"[Gemini-Backend] MODEL:{model} task:{task}")
 
-        # Gemini supports standard OpenAI tools, but we'll stick to a simple chat call first
         tools = None
         
         try:
-            # CHANGE: Use chat.completions.create with messages format
-            response = self.client.chat.completions.create(
+            input_payload = self._build_responses_input(task)
+
+            # Use Responses API for consistency with OpenAIBackend and to support attachments
+            response = self.client.responses.create(
                 model=model,
-                messages=[
-                    {"role": "system", "content": "You are a helpful CLI assistant."},
-                    {"role": "user", "content": task}
-                ],
+                input=input_payload,
                 tools=tools
             )
 
-            # CHANGE: Extract text from the choices object
-            output_text = response.choices[0].message.content
+            output_text = response.output_text
             
             # Print for debug/visibility in CLI
             print(f"{Style.DIM}{model} response: {output_text}{Style.RESET_ALL}")

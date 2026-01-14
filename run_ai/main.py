@@ -41,6 +41,9 @@ import io
 import time
 import datetime
 import logging
+# for attachments --attach:
+import base64
+import mimetypes
 # For colored text in output
 from colorama import Fore, Style
 from .globals import g_ai_output_saved_last_code_block
@@ -175,6 +178,9 @@ project_name = ''
 
 # Quiet mode: suppress file output only (still prints to stdout/stderr)
 quiet_file_output = False
+
+# Attachments passed on command line
+attach_files = []
 
 #=== BACKEND SELECTOR:
 #settings = djAISettings()
@@ -579,7 +585,6 @@ elif args.autogen:
 else:
     use_backend = settings_runai.backend
 
-
 if args.model:
     # Specify preferred model to use
     user_select_preferred_model = args.model
@@ -618,6 +623,8 @@ if args.settings:
     settings_pyscript = args.settings
 if args.input:
     inputfile = args.input
+if args.attach:
+    attach_files = args.attach
 #elif stdin_text:
 #    task = stdin_text
 if args.test:
@@ -705,6 +712,62 @@ if settings_pyscript is not None and len(settings_pyscript) > 0:
         # Execute the settings.py file
         exec(settings_py)
 
+# ATTACHMENTS
+def _guess_mime_type(path: str) -> str:
+    mt, _ = mimetypes.guess_type(path)
+    if mt:
+        return mt
+    return "application/octet-stream"
+
+def _is_image_mime(mime_type: str) -> bool:
+    return isinstance(mime_type, str) and mime_type.startswith("image/")
+
+def _load_attachments(paths):
+    """
+    Returns list of attachment dicts:
+      { path, filename, mime_type, kind, data_base64 }
+    kind: "image" or "file"
+    """
+    attachments = []
+    if not paths:
+        return attachments
+
+    for p in paths:
+        if p is None:
+            continue
+        path = os.path.expanduser(p)
+        if not os.path.isabs(path):
+            path = os.path.abspath(path)
+
+        if not os.path.exists(path):
+            print(f"{Fore.RED}ERROR: attachment not found: {path}{Style.RESET_ALL}")
+            continue
+        if os.path.isdir(path):
+            print(f"{Fore.RED}ERROR: attachment is a directory (expected file): {path}{Style.RESET_ALL}")
+            continue
+
+        mime_type = _guess_mime_type(path)
+        kind = "image" if _is_image_mime(mime_type) else "file"
+        filename = os.path.basename(path)
+
+        try:
+            with open(path, "rb") as f:
+                data = f.read()
+            data_b64 = base64.b64encode(data).decode("ascii")
+        except Exception as e:
+            print(f"{Fore.RED}ERROR: failed to read attachment {path}: {e}{Style.RESET_ALL}")
+            continue
+
+        attachments.append({
+            "path": path,
+            "filename": filename,
+            "mime_type": mime_type,
+            "kind": kind,
+            "data_base64": data_b64,
+        })
+
+    return attachments
+################################
 
 
 
@@ -757,6 +820,9 @@ def show_settings():
 
 
     show_setting(f"{Fore.YELLOW}task.modify{Fore.GREEN}.send_files", f"{runtask.settings_modify.send_files}", 1)
+
+    if attach_files:
+        show_setting("Attachments (--attach/-a)", attach_files, 1)
 
     # HEADING
     print(f"{Fore.YELLOW}{sBullet1}AutoGen settings:{sHeadingSuffix}{Style.RESET_ALL}")
@@ -1278,6 +1344,14 @@ def main():
     settings.model_spec = model_spec
     # hmm todo/fixme where does echo_mode belong?
     settings.echo_mode = echo_mode
+
+    # Attachments: load and store in settings for backends
+    settings.attachments = _load_attachments(attach_files)
+    if settings.attachments:
+        print(f"{Fore.YELLOW}Attachments loaded: {len(settings.attachments)}{Style.RESET_ALL}")
+        for a in settings.attachments:
+            print(f"  - {a.get('filename')} ({a.get('mime_type')}) kind={a.get('kind')}")
+
     print('=== BackendSelector setup')
     #print(f"SELECT MODEL {settings.model} {settings.model_spec}")
     show_setting(f"[run] {Fore.YELLOW}MODEL{Fore.GREEN} '{settings.model}' spec", settings.model_spec);
@@ -1732,7 +1806,6 @@ def main():
 
 
 
-    # dj2026 note if tasktype is create but quiet-no-files-output specified, user has given conflicting signals but I think perhaps some core 'main' output files only, but not all the other plentiful output .. todo improve/streamline in testing
     # dj2025-03 list files created and list files first required (e.g. "runai create -o file1.cpp file2.h") so we can see if all files were created
     if runtask.type == djTaskType.create:
         print("🤖create files requested:")

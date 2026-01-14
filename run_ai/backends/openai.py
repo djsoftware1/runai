@@ -31,6 +31,57 @@ class OpenAIBackend(Backend):
             # fallback: legacy/default behavior
             self.client = OpenAI()
 
+    def _build_responses_input(self, task: str):
+        """
+        Build OpenAI Responses API input supporting attachments.
+
+        Returns either:
+          - a string (legacy)
+          - or a list of input items (multimodal)
+        """
+        attachments = getattr(self.ai_settings, "attachments", None) or []
+        if not attachments:
+            return task
+
+        content = []
+        # Primary user text
+        if task and len(task) > 0:
+            content.append({"type": "input_text", "text": task})
+
+        # Attachments
+        for a in attachments:
+            kind = a.get("kind")
+            mime_type = a.get("mime_type") or "application/octet-stream"
+            filename = a.get("filename") or "attachment"
+            data_b64 = a.get("data_base64")
+
+            if not data_b64:
+                continue
+
+            if kind == "image":
+                # OpenAI Responses API expects a data URL for base64 images
+                data_url = f"data:{mime_type};base64,{data_b64}"
+                content.append({
+                    "type": "input_image",
+                    "image_url": data_url
+                })
+            else:
+                # Generic file attachment (PDF/Word/etc.)
+                # Note: model support varies; this at least sends the bytes in a standard way.
+                content.append({
+                    "type": "input_file",
+                    "filename": filename,
+                    "file_data": data_b64,
+                    "mime_type": mime_type
+                })
+
+        return [
+            {
+                "role": "user",
+                "content": content
+            }
+        ]
+
     def do_task(self, task: str) -> str:
         # Implement the logic to interact with OpenAI API
         #print(f"BACKEND[OAI]:do_task: MODEL {self.ai_settings.model} SPEC {self.ai_settings.model_spec}")
@@ -52,10 +103,12 @@ class OpenAIBackend(Backend):
                     "type": "web_search_preview"
                 }
             ]        
+        input_payload = self._build_responses_input(task)
+
         # Call the OpenAI API with the task
         response = self.client.responses.create(
             model=model,#"gpt-4o",#todo model
-            input=task,
+            input=input_payload,
             tools=tools
         )
         self.response = response.output_text

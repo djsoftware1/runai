@@ -1,5 +1,5 @@
 # runai — https://github.com/djsoftware1/runai
-# (c) David Joffe / DJ Software 2023-2025 - Business Source License (BSL 1.1). See LICENSE
+# (c) David Joffe / DJ Software 2023-2026 - Business Source License (BSL 1.1). See LICENSE
 #
 # runai base Backend class
 # dj2025-03
@@ -13,6 +13,20 @@ class djAISettings:
         self.model_spec = parse_model_spec(self.model)#None
         #self.temperature = temperature
         #self.max_tokens = max_tokens
+
+        # Attachments: list of dicts prepared by main() for backends to consume.
+        # Each item is expected to be something like:
+        # {
+        #   "path": "/path/to/file",
+        #   "filename": "file.png",
+        #   "mime_type": "image/png",
+        #   "kind": "image" | "file",
+        #   "data_base64": "<base64>",
+        # }
+        self.attachments = []
+
+        # Optional: echo mode for dummy backend etc. (set elsewhere)
+        self.echo_mode = False
 
 """
 class url_settings:

@@ -31,6 +31,12 @@ class CmdLineParser:
         self.parser.add_argument('--o1-preview', action='store_true', help='Try use model o1-preview')
         self.parser.add_argument('--model', '-m', type=str, help='Specify preferred model to use.')
         self.parser.add_argument('--dryrun', action='store_true', help='Show roughly what would be done but do not actually execute the task.')
+        self.parser.add_argument(
+            '--attach', '-a',
+            action='append',
+            default=[],
+            help='Attach a file (repeatable). Supports images and documents (PDF/Word/etc.) for backends/models that support attachments.'
+        )
 
         """
         # todo-future:
