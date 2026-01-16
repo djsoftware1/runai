@@ -31,6 +31,10 @@ class CmdLineParser:
         self.parser.add_argument('--o1-preview', action='store_true', help='Try use model o1-preview')
         self.parser.add_argument('--model', '-m', type=str, help='Specify preferred model to use.')
         self.parser.add_argument('--dryrun', action='store_true', help='Show roughly what would be done but do not actually execute the task.')
+        # Attachments (repeatable)
+        # Example:
+        #   runai -t "Describe this image" -a cat.png
+        #   runai -t "Summarize these docs" -a a.pdf -a b.docx
         self.parser.add_argument(
             '--attach', '-a',
             action='append',

@@ -66,13 +66,39 @@ class OpenAIBackend(Backend):
                     "image_url": data_url
                 })
             else:
+                # Although curently ollama does not seem to support file, I assume there is a good chance it might in future ... this might 'automatically' then start working on ollama etc.. ..
+                """
+                The real rule (undocumented but enforced)
+                For documents:
+                You must upload the file first, then reference it by file_id.
+                Inline base64 works for:
+                images
+                audio (certain models)
+                It does not work for PDFs
+                NB NB NB: Files accumulate! todo still
+                """
+                uploaded = self.client.files.create(
+                    file=open(filename, "rb"),
+                    purpose="assistants"   # still used by Responses internally
+                )
+                file_id = uploaded.id
+
+
+                # show files uploaded ... need a way to delete (todo)
+                files = self.client.files.list()
+                print(f"NUMBER OF FILES: {len(files.data)}")
+                for f in files.data:
+                    print("!! FILE:")
+                    print(f.id, f.filename, f.bytes, f.created_at)
+
+
                 # Generic file attachment (PDF/Word/etc.)
                 # Note: model support varies; this at least sends the bytes in a standard way.
                 content.append({
                     "type": "input_file",
-                    "filename": filename,
-                    "file_data": data_b64,
-                    "mime_type": mime_type
+                    "file_id": file_id
+                    #"file_data": data_b64,
+                    #"filename": filename
                 })
 
         return [

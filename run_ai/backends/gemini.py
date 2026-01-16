@@ -70,8 +70,8 @@ class GeminiBackend(Backend):
                 content.append({
                     "type": "input_file",
                     "filename": filename,
-                    "file_data": data_b64,
-                    "mime_type": mime_type
+                    "file_data": data_b64
+                    #"mime_type": mime_type
                 })
 
         return [
