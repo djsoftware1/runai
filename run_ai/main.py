@@ -465,6 +465,7 @@ print(f"{Fore.YELLOW}=== {Fore.YELLOW}USAGE: runai (or python main.py) [taskfile
 # dj2026-01 auto-detect warning
 if not has_autogen():
     print(f"{Fore.YELLOW}WARNING autogen modules not found, disabling autogen support{Style.RESET_ALL}")
+#print(f"DBG:done has-autogen check")
 
 # Check if defaultsettings.py exists in runai folder and run it if it does
 default_settings = os.path.join(app.app_dir, "defaultsettings.py")
@@ -473,10 +474,15 @@ if os.path.exists(default_settings):
     settings_py = ''
     with open(default_settings, 'r', encoding='utf-8', errors="replace") as file:
         settings_py = file.read()
+    #print(f"DBG:runai:exec[{default_settings}]: {Fore.GREEN}{settings_py}{Style.RESET_ALL}")
     exec(settings_py)
+    #print(f"DBG:runai:exec done")
 
+#else:
+#	print(f"No default_settings py")
 
 # dj2026-01 UNIX-STYLE PIPED INPUT e.g. cat myfile.txt | runai -t "Summarize this"
+"""
 def read_stdin_if_piped():
     if sys.stdin is None:
         return None
@@ -487,9 +493,63 @@ def read_stdin_if_piped():
     # if we just return sys.stdin.read().strip() we get errors like "UnicodeEncodeError: 'utf-8' codec can't encode character '\udc8f' in position 22036: surrogates not allowed"
     # doing this seems to fix it but we must do more testing ... not sure if it's obscure edge cases or common etc.: dj 2026-01
     return data.decode("utf-8", errors="replace")
+"""
+# dj2026-01 UNIX-STYLE PIPED INPUT e.g. cat myfile.txt | runai -t "Summarize this"
+"""
+def read_stdin_if_piped():
+    try:
+        if sys.stdin is None:
+            return None
+
+        # If running interactively, do not read
+        if sys.stdin.isatty():
+            return None
+
+        # On Windows / embedded shells, stdin may be a pipe with no data
+        # Use non-blocking check
+        if hasattr(sys.stdin, "buffer"):
+            import select
+            if not select.select([sys.stdin], [], [], 0.0)[0]:
+                return None
+
+        data = sys.stdin.buffer.read()
+        if not data:
+            return None
+
+        return data.decode("utf-8", errors="replace")
+
+    except Exception:
+        return None
+"""
+def read_stdin_if_piped():
+    try:
+        stdin = sys.stdin
+
+        if stdin is None:
+            return None
+
+        # Interactive terminal → do not read
+        if stdin.isatty():
+            return None
+
+        # Read everything (safe for pipes & redirects)
+        data = stdin.buffer.read()
+
+        if not data:
+            return None
+
+        return data.decode("utf-8", errors="replace")
+
+    except Exception:
+        return None
 
 # read stdin
+#log = logging.getLogger(__name__)
+#log.debug(f"read stdin")
+
+print(f"read stdin")#DEBUG
 stdin_text = read_stdin_if_piped()
+#print(f"DBG:read stdin done: [{stdin_text}]")#DEBUG
 
 
 # [Application flow control]
@@ -506,10 +566,10 @@ def resolve_setting(key, defaultValue=''):
     if key_env in os.environ:
         #if env.has(f"RUNAI_{key.upper()}"):
         env_value = os.getenv(key_env)
-        print(f"{Fore.CYAN}ENV {Fore.YELLOW}{key_env}{Fore.CYAN}={Fore.GREEN}{env_value}{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}{Fore.YELLOW}{key_env}{Fore.CYAN}={Fore.GREEN}{env_value}{Style.RESET_ALL}",end=' ')
         return env_value
     else:
-        print(f"{Fore.CYAN}ENV {Fore.YELLOW}{key_env}{Fore.CYAN}={Style.RESET_ALL}")
+        print(f"{Fore.CYAN}{Fore.YELLOW}{key_env}{Fore.CYAN}={Style.RESET_ALL}", end=' ')
 
     #if config.has(key):
     #    return config[key], "config"
@@ -523,10 +583,13 @@ SETTINGS = [
     "model", "task", "taskfile", "max_tokens", "temperature", "project", "quiet"
 ]
 """
+print(f"resolve settings")
+print(f"{Fore.CYAN}ENV {Style.RESET_ALL}",end=' ')
 task = resolve_setting('task')
 model = resolve_setting('model')
 project_name = resolve_setting('project')
 taskfile = resolve_setting('taskfile', 'runai.autotask.txt')
+print("")
 if model:
     # we must do this to parse model_spec and set up backend and so on ... though -m may override later again:
     model_spec = do_select_model(model)
@@ -545,9 +608,12 @@ ENV_VARS = {
 }
 """
 
+#print(f"CmdLineParse")
 # More generic new arg parser (dj2025 we must pass appname here so it does noto show "usage: main.py")
 CmdLineParser = djargs.CmdLineParser(app.appname)
+#print(f"DBG:1")
 args = CmdLineParser.parser.parse_args()
+#print(f"DBG:2")
 # Check if a subcommand is provided
 if args.version:
     # Display version and exit
@@ -691,7 +757,8 @@ if args.subcommand:
         print(f"Unknown subcommand: {args.subcommand}")
 
 
-
+"""
+#--enable-startup-script
 # Check if autosettings.py exists in current folder and run it if it does
 if os.path.exists('autosettings.py'):
     autosettings_py = ''
@@ -711,6 +778,7 @@ if settings_pyscript is not None and len(settings_pyscript) > 0:
             settings_py = file.read()
         # Execute the settings.py file
         exec(settings_py)
+"""
 
 # ATTACHMENTS
 def _guess_mime_type(path: str) -> str:
@@ -807,16 +875,16 @@ def show_settings():
     show_setting("runtask.delay_between (seconds, float)", runtask.delay_between, 1)
     show_setting("runtask.start_line", runtask.start_line, 1)
 
-    show_setting("runtask.autogen_task.send_files", runtask.settings.send_files, 1)
-    show_setting("runtask.autogen_task.out_files", runtask.settings.out_files, 1)
+    show_setting("runtask.send_files", runtask.settings.send_files, 1)
+    show_setting("runtask.out_files", runtask.settings.out_files, 1)
 
     show_setting("Files to send", files_to_send, 1)
 
     show_setting(f"{Fore.YELLOW}task.refactor:{Fore.GREEN} refactor_matches", refactor_matches, 1)
-    show_setting("refactor.refactor_matches", refactor_matches, 3)
-    show_setting("refactor.replace_with", replace_with, 3)
-    show_setting("refactor.refactor_wildcards", refactor_wildcards, 3)
-    show_setting("?runtask.settings.send_files", runtask.settings.send_files, 3)
+
+    show_setting("replace_with", replace_with, 2)
+    show_setting("refactor_wildcards", refactor_wildcards, 2)
+    #show_setting("task.settings.send_files", runtask.settings.send_files, 2)
 
 
     show_setting(f"{Fore.YELLOW}task.modify{Fore.GREEN}.send_files", f"{runtask.settings_modify.send_files}", 1)
@@ -825,7 +893,10 @@ def show_settings():
         show_setting("Attachments (--attach/-a)", attach_files, 1)
 
     # HEADING
-    print(f"{Fore.YELLOW}{sBullet1}AutoGen settings:{sHeadingSuffix}{Style.RESET_ALL}")
+    enabled = ''
+    if not using_autogen():
+        enabled = ' [inactive] '
+    print(f"{Fore.YELLOW}{sBullet1}AutoGen settings:{sHeadingSuffix}{Style.RESET_ALL}{enabled}")
     show_setting("no_autogen_user_proxy", autogen_settings.no_autogen_user_proxy, 1)
     show_setting("NoGroup", autogen_settings.NoGroup, 1, "If True do not create autogen GroupChat and GroupChatManager")
     show_setting("use_cache_seed", autogen_settings.use_cache_seed, 1, "random seed for caching and reproducibility")
@@ -837,15 +908,15 @@ def show_settings():
     #print("   " * 2, end="")#indent
     # why showing twice
     # HEADING
-    print(f"{Fore.YELLOW}{sBullet1}AutoGen OpenAI settings:{sHeadingSuffix}{Style.RESET_ALL}")
-    show_setting("USE_OPENAI", 'YES' if use_openai is True else 'NO', 1)
-    show_setting("HAVE_OPENAI_CONFIG?", have_openai_config, 1)
+    print(f"   {Fore.YELLOW}{sBullet1}AutoGen OpenAI settings:{sHeadingSuffix}{Style.RESET_ALL}")
+    show_setting("USE_OPENAI", 'YES' if use_openai is True else 'NO', 2)
+    show_setting("HAVE_OPENAI_CONFIG?", have_openai_config, 2)
     if have_openai_config:
         # NB hide sensitive data like API keys
         s = f"{config_list}"
         #s = re.sub(r'sk-(.*)["\']', "\"(hidden)\"", s, flags=re.MULTILINE)
         #show_setting("openai.config_list", config_list, 1)
-        show_setting("openai.config_list", s, 1)
+        show_setting("openai.config_list", s, 2)
     # HEADING
     # LLM SETTINGS/PREFERENCES/COMMAND-LINE OPTIONS
     print(f"{Fore.YELLOW}{sBullet1}LLM settings:{sHeadingSuffix}{Style.RESET_ALL}")
@@ -970,8 +1041,13 @@ print(f"=== config_list_path: {config_list_path}")
 if os.path.exists(config_list_path):
     print(f"=== config_list_path: {config_list_path} {Fore.GREEN}(file found){Style.RESET_ALL}")
 else:
-    print(f"=== config_list_path: {config_list_path} {Fore.RED}warning: not found - please configure.{Style.RESET_ALL}")
-    print("Will attempt fallback to local AI instances")
+    if using_autogen():
+        print(f"=== config_list_path: {config_list_path} {Fore.RED}warning: not found - please configure.{Style.RESET_ALL}")
+        print("Try attempt fallback to local AI instances")
+        # todo: fallback stuff (autogen and non-autogen paths)
+    else:
+        print(f"=== config_list_path: {config_list_path} {Fore.GREEN}not found (autogen inactive).{Style.RESET_ALL}")
+        #print("Will attempt fallback to local AI instances")
 
     #"deepseek-r1:1.5b""
     # TESTING: Try fall back to local ollama ...
@@ -1179,7 +1255,7 @@ if taskfile!='':
     if os.path.exists(taskfile):
         status='found'
         #color='GREEN'
-        print(f"{Fore.BLUE}■ {Fore.YELLOW}TaskFile: {taskfile}: {Fore.GREEN}{status}{Style.RESET_ALL}")
+        print(f"{Fore.BLUE}■ {Fore.YELLOW}TaskFile: {taskfile}: {Fore.GREEN}{Style.RESET_ALL}{status}")
         print(f"=== {Fore.YELLOW}Loading TaskFile: {taskfile}{Style.RESET_ALL}")
         with open(taskfile, 'r', encoding='utf-8') as file:
             for line in file:
@@ -1201,7 +1277,7 @@ if taskfile!='':
                 status='found'
         else: # FILE DOES NOT EXIST
             if taskfile=='runai.autotask.txt':
-                status='not found, but that is fine as autostart.txt is optional'
+                status='not found (it is optional)'
                 color = 'GREEN'
             else:
                 # file does not exist and name is not "autostart.txt" (likely user used "-tf" to specify a taskfile)
@@ -1215,10 +1291,9 @@ if taskfile!='':
             print(f"{Fore.BLUE}■ {Fore.YELLOW}TaskFile: {taskfile}: {Fore.GREEN}{status}{Style.RESET_ALL}")
 
         # dj2025-03 Hmm I am not sure I am mad about several lines of guidance info like this is good or bad here or if it should move elsewhere (low prio)
-        print("--------------------------[ NOTES ]----------------------------")
-        print("The name \"runai.autotask.txt\" is a special OPTIONAL filename to \"auto-load/start\" the task.")
-        print("It is the default task file name that is used if no task file name is specified.")
-        print("If you want to use a different task file name, please specify it with the -tf parameter.")
+        #print("--------------------------[ NOTES ]----------------------------")
+        print(f"Note: {Fore.CYAN}runai.autotask.txt{Style.RESET_ALL} is an optional default task file that auto-loads/starts if no task file specified.")
+        print(f"Use {Fore.CYAN}-tf <filename>{Style.RESET_ALL} to specify a different task file.")
         print("---------------------------------------------------------------")
 
 
@@ -1839,18 +1914,18 @@ def main():
     print(f"   {Fore.YELLOW}         {Fore.WHITE}completed: {Fore.BLUE}{controller.session_stats.datetime_end}{Style.RESET_ALL}")
     print(f"   {Fore.YELLOW}         {Fore.WHITE}time: {Fore.BLUE}{controller.session_stats.elapsed_time}{Style.RESET_ALL}")
     #show_setting('total tasks', controller.session_stats.total_tasks, 1)
-    show_setting('task_output_folder', task_output_directory, 1)
+    show_setting('task_output_folder', task_output_directory, strEnd=' ')
     show_setting('outfiles', (task_output_directory+'/outfiles') if task_output_directory else '', 1)
     #HEADING: Task info
-    show_setting(f"{Fore.YELLOW}Task settings{Style.RESET_ALL}", "", 1)
-    show_setting("runtask.type", runtask.type, 2)
-    show_setting("files_to_create", files_to_create, 2)
-    show_setting("files_to_send", files_to_send, 2)
+    show_setting(f"{Fore.YELLOW}Task settings{Style.RESET_ALL}", "", strEnd=' ')
+    show_setting("runtask.type", runtask.type, strEnd=' ')
+    show_setting("files_to_create", files_to_create, strEnd=' ')
+    show_setting("files_to_send", files_to_send, strEnd=' ')
 
     #HEADING: File-related info
     #show_setting(f"{Fore.YELLOW}File-related info{Style.RESET_ALL}", '', 1)
-    show_setting("out_files", runtask.settings.out_files, 2)
-    show_setting("send_files", runtask.settings.send_files, 2)
+    show_setting("out_files", runtask.settings.out_files, strEnd=' ')
+    show_setting("send_files", runtask.settings.send_files)
     #show_setting("files_created", files_created, 2)
 
     # Show MODEL SPEC and backend used:

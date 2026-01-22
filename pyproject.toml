@@ -1,6 +1,6 @@
 [project]
 name = "runai-cli"
-version = "1.0.2"
+version = "1.0.4"
 description = "Run and automate AI tasks from anywhere on the command line"
 readme = "README.md"
 requires-python = ">=3.9"
