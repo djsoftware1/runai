@@ -1311,7 +1311,11 @@ if task=="":
 if task == "" or task is None or force_show_prompt:
     sCWD=os.getcwd()#getcwd just for logging
     print(f"• current-directory={sCWD} • working-folder={worktree}")
-    task = input(f"{Fore.CYAN}(Ctrl+C to stop)({sCWD}) {Fore.YELLOW}What would you like to do? Please enter a task:{Style.RESET_ALL} ")
+    if stdin_text:
+        # dj2026-01 if no parameters passed but there is stdin, use it as task - but this may change later ...
+        task = stdin_text
+    else:
+        task = input(f"{Fore.CYAN}(Ctrl+C to stop)({sCWD}) {Fore.YELLOW}What would you like to do? Please enter a task:{Style.RESET_ALL} ")
 
     # Check if the user entered nothing
     if task == "":
