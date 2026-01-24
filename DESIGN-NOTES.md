@@ -64,3 +64,7 @@ ollama
 Another idea for runai code tasks: "Scan this code for todo's that are maybe not implemenetd and make a list, turn them into task strings
 
 i can even find my own old TODOs i forgot :) automate the task of turning them into task strings, creating feedback loops 
+debug and verbosity are not the same thing. local-only dev config is a way i handled things in PHP where we had live, local etc.
+
+ok, one more idea i thinking like --dummy and --echo ... the testing or stress-test should have a mode where the dummy raises exceptions to fake errors like 'no credits ' or 404 not found sitautions causing problems or other bad things? so we can test auto-recoverying from bad stuff 
+what if we add a UI or would that be a separate package? probably .. a layer above .. ? i am busy refactoring with the idea that most the REAL functionality should be in re-usable "run_ai" layer, and main.py a more thin wrapper

@@ -7,3 +7,4 @@ runai -t "Describe this image" -a cat.png
 
 runai -t "Summarize these docs" -a a.pdf -a b.docx
 ```
+cat ../README.md | runai -p out-translations -t "Translate this readme to Afrikaans" 
