@@ -1243,6 +1243,12 @@ if not quiet_file_output:
     if not os.path.exists(task_output_directory):
         os.makedirs(task_output_directory)
 
+#todo fix: .. auto-rename add _2 etc.??
+#    from .main import main
+#  File "C:\Users\david\pipx\venvs\runai-cli\Lib\site-packages\run_ai\main.py", line 1277, in <module>
+#    os.makedirs(task_output_directory)
+#  File "<frozen os>", line 225, in makedirs
+#FileExistsError: [WinError 183] Cannot create a file when that file already exists: 'lexicographer_out\\output_runai\\2026-01-24 00-56-46'
 
 # Read task from tasks.txt
 #with open('tasks.txt', 'r') as file:
