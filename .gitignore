@@ -19,6 +19,8 @@ env/*
 /output_files*
 /output_runai*
 **/output_runai/
+# 'output_runai' is old default, runai_out is just the new (shorter) default output folder name as of 25 Jan 2026 for same thing
+**/runai_out/
 # Not sure yet but leaning towards "._output_files_"
 /_output_files_*
 /._output_files_*

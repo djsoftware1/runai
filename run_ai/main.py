@@ -67,6 +67,9 @@ from run_ai.modelspec import parse_model_spec
 from run_ai.djautogen.settings import djAutoGenSettings
 from run_ai.config.settings import autogen_settings, djSettings
 
+# task_output_directory/outfiles_final: output_runai/2026-01-01 02-14-53/outfiles_final (dj2026-01) .. someday make configurable (todo - low)
+path_runai_out = 'runai_out' # was output_runai
+
 #=== BACKEND SELECTOR:
 #settings = djAISettings()
 selector = None
@@ -520,7 +523,7 @@ def read_stdin_if_piped():
 
     except Exception:
         return None
-"""
+
 def read_stdin_if_piped():
     try:
         stdin = sys.stdin
@@ -542,7 +545,43 @@ def read_stdin_if_piped():
 
     except Exception:
         return None
+"""
 
+# fix blocks inside runai-studio .. dj2026-01
+def read_stdin_if_piped():
+    try:
+        stdin = sys.stdin
+        #DEBUG:print("AAAAA")
+        if stdin is None or stdin.isatty():
+            return None
+
+        #DEBUG:print("AAAAA")
+        # --- UNIX: use select ---
+        if os.name != "nt":
+            import select
+            r, _, _ = select.select([stdin], [], [], 0)
+            if not r:
+                return None
+            #DEBUG:print("AAAAA1")
+            data = stdin.buffer.read()
+            #DEBUG:print("AAAAA2")
+            return data.decode("utf-8", errors="replace") if data else None
+
+        # --- WINDOWS: use msvcrt ---
+        else:
+            import msvcrt
+            #DEBUG:print("wAAAAA")
+
+            # If no key waiting, stdin pipe has no data
+            if not msvcrt.kbhit():
+                return None
+
+            #DEBUG:print("wAAAAA")
+            data = stdin.buffer.read()
+            return data.decode("utf-8", errors="replace") if data else None
+
+    except Exception:
+        return None
 # read stdin
 #log = logging.getLogger(__name__)
 #log.debug(f"read stdin")
@@ -1233,15 +1272,16 @@ show_settings()
 
 # Get date/time to use in filenames and directories and session logfiles etc.
 task_datetime = datetime.datetime.now()
-task_formatted_datetime = task_datetime.strftime("%Y-%m-%d %H-%M-%S")
+task_formatted_datetime = task_datetime.strftime("%Y%m%d-%H%M%S")
 
 # In quiet mode, do not create any output directories/files.
 task_output_directory = ''
 if not quiet_file_output:
-    task_output_directory = os.path.join(project_name, 'output_runai', task_formatted_datetime) if project_name else os.path.join('output_runai', task_formatted_datetime)
+    task_output_directory = os.path.join(project_name, path_runai_out, task_formatted_datetime) if project_name else os.path.join(path_runai_out, task_formatted_datetime)
     # Create the output directory if it doesn't exist
     if not os.path.exists(task_output_directory):
-        os.makedirs(task_output_directory)
+        #  NB even though we just checked if not exists, in tasks like runai studio's 'run multiple commands at once' (for example) this easily really happens that it exists and has just been created .. and that's ok
+        os.makedirs(task_output_directory, exist_ok=True)
 
 #todo fix: .. auto-rename add _2 etc.??
 #    from .main import main
