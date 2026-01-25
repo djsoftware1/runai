@@ -1,6 +1,6 @@
 # runai: DJ Software Task Execution and Automation Framework
 
-* [runai homepage](https://djoffe.com/dj-software/runai/)
+* [runai homepage](https://djoffe.com/dj-software/runai/) [http://djoffe.com.test/runai-studio/](RunAI Studio UI)
 
 A kind of integrated 'AI extension' of your terminal or command prompt.
 
@@ -14,7 +14,7 @@ General AI/LLM-driven task execution and automation tool for tasks such as code 
 
 **Cross-platform:** Integrates into command-line for Windows command prompt, git bash, Linux, or macOS terminal.
 
-Supports either OpenAI or your own custom AI instances (for example your own LiteLLM server(s)).
+Supports either OpenAI (and compatible, such as Claude/Anthropic, Gemini, DeepSeek etc.), or your own custom local AI instances, for example your own ollama or LM Studio server(s).
 
 ### Example:
 
