@@ -1,6 +1,6 @@
 # runai: DJ Software Task Execution and Automation Framework
 
-* [runai homepage](https://djoffe.com/dj-software/runai/) [http://djoffe.com.test/runai-studio/](RunAI Studio UI)
+* [runai homepage](https://djoffe.com/dj-software/runai/) [RunAI Studio UI](https://djoffe.com/runai-studio/)
 
 A kind of integrated 'AI extension' of your terminal or command prompt.
 
