@@ -69,6 +69,9 @@ from run_ai.config.settings import autogen_settings, djSettings
 
 # task_output_directory/outfiles_final: output_runai/2026-01-01 02-14-53/outfiles_final (dj2026-01) .. someday make configurable (todo - low)
 path_runai_out = 'runai_out' # was output_runai
+# per-task output/capture info
+capture_len=0
+capture_output_actual=''
 
 #=== BACKEND SELECTOR:
 #settings = djAISettings()
@@ -353,7 +356,23 @@ def djAutoGenDoTask(task: str, do_handle_task=False):#, settings_ai=settings):
     # If we aren't using ..
     if use_backend!='autogen':
         #result = djAutoGenDoTask(task)
-        result = selector.do_task(task)
+        # todo add exception here but should be doing that centrally we already do it elsewhere .. dj2026-01 .. things like connection err if offline .. should have fallback to local too..
+        #result = selector.do_task(task)
+        try:
+            result = selector.do_task(task)
+            #task_success = True
+        except Exception as e:
+            #task_success = False
+            # this can be as simple as being offline .. eg getaddrinfo failed errors
+            log.error("do_task failed", exc_info=settings_runai.debug)
+            print(f"{Fore.RED}error{Fore.YELLOW}:runai:{str(e)}{Style.RESET_ALL}")
+            # we want the traceback to help debug if debug mode, but normal users it should just display a message but continue operating ... not a crash-y-like traceback
+            if settings_runai.is_debug():
+                import traceback
+                traceback.print_exc()
+                raise   # preserves original traceback
+
+
         backend = selector.get_backend()
 
         if len(backend.error)>0:
@@ -384,6 +403,7 @@ def djAutoGenDoTask(task: str, do_handle_task=False):#, settings_ai=settings):
 
             # this should be optional but add more saving of results
             # todo put project name in here too
+            # should have option to save as xml, maybe with metadata like date?
             global project_name
             if not quiet_file_output:
                 if len(project_name)>0:
@@ -549,6 +569,19 @@ def read_stdin_if_piped():
 
 # fix blocks inside runai-studio .. dj2026-01
 def read_stdin_if_piped():
+    import sys
+
+    if sys.stdin is None or sys.stdin.isatty():
+        return None
+
+    data = sys.stdin.buffer.read()
+    if not data:
+        return None
+
+    return data.decode("utf-8", errors="replace")
+
+"""
+def read_stdin_if_piped():
     try:
         stdin = sys.stdin
         #DEBUG:print("AAAAA")
@@ -582,13 +615,15 @@ def read_stdin_if_piped():
 
     except Exception:
         return None
+"""
+
 # read stdin
 #log = logging.getLogger(__name__)
 #log.debug(f"read stdin")
 
 print(f"read stdin")#DEBUG
 stdin_text = read_stdin_if_piped()
-#print(f"DBG:read stdin done: [{stdin_text}]")#DEBUG
+print(f"read stdin: [{stdin_text}]")#DEBUG
 
 
 # [Application flow control]
@@ -1524,6 +1559,10 @@ def main():
         print("---------------------------------------")
 
     # Log the task to keep a record of what we're doing and help study/analyze results
+    # todo: hm, the eventual task may have a combination of several things e.g.:
+    # cat readme.txt | runai -t "Summarize:" -tf tf.txt
+    # etc. and/or files 'sent' inline ... hmm .. should we have separate log items here to be more precise?
+    # also log the original command line somewhere?
     if not quiet_file_output and task_output_directory:
         log_task = f"{task_output_directory}/tasklog.txt"
         with open(log_task, 'a', encoding='utf-8', errors="replace") as log_file:
@@ -1890,20 +1929,27 @@ def main():
     if not quiet_file_output and ai_output:
         # Create the log filename
         # Not quite sure if this should also be in task_output_directory or not
-        log_filename_base = f"dj_AI_log.txt"
+        log_filename_base = f"dj_AI_log_b.txt"
         # Write the AI output to the log file
         with open(log_filename_base, 'a', encoding='utf-8', errors="replace") as log_file:
-            log_file.write(f"[{formatted_datetime}] Captured AI Output:\n")
+            log_file.write("<log")
+            log_file.write(f' date="{formatted_datetime}"')
+            log_file.write("><out>\n")
+            #log_file.write(f"[{formatted_datetime}] Captured AI Output:\n")
             log_file.write(ai_output)
-            log_file.write("----------------------\n")
+            log_file.write("</out></log>\n")
+            #log_file.write("----------------------\n")
 
         # Create the log filename
-        log_filename1 = f"{task_output_directory}/dj_AI_log.txt"
+        log_filename1 = f"{task_output_directory}/dj_AI_log_1.txt"
         # Write the AI output to the log file
         with open(log_filename1, 'a', encoding='utf-8', errors="replace") as log_file:
-            log_file.write(f"[{formatted_datetime}] Captured AI Output:\n")
+            # pseudo-xml, not real xml ...
+            log_file.write("<log")
+            log_file.write(f' date="{formatted_datetime}"')
+            log_file.write("><out>\n")
             log_file.write(ai_output)
-            log_file.write("----------------------\n")
+            log_file.write("</out></log>\n")
 
     # We're effectively doing below twice now ..
     # Use ai_output with create_files_from_ai_output function in order to actually create any files in the returned code
@@ -1916,6 +1962,8 @@ def main():
 
     # Print the captured output to the console
     #ai_output_actual = dual_output.
+    global capture_len
+    capture_len = 0
     if dual_output is not None and dual_output.get_captured() is not None:
         capture_output_actual = dual_output.get_captured()
         #print(f"runai: Captured AI Output:{len(dual_output.get_captured())}")
@@ -1924,7 +1972,8 @@ def main():
         for line in capture_output_actual:
             #print("[" + line + "]" + f"{len(line)}")
             print(line)#+ f"{len(line)}")
-        print('____________________ END OF AI OUTPUT _______________________')
+            capture_len += len(line)
+        print(f'____________________ END OF AI OUTPUT _______________________ {capture_len}')
     else:
         # eg failure
         print(f"{Fore.YELLOW}No result{Style.RESET_ALL}")
@@ -1965,7 +2014,7 @@ def main():
     print(f"   {Fore.YELLOW}         {Fore.WHITE}time: {Fore.BLUE}{controller.session_stats.elapsed_time}{Style.RESET_ALL}")
     #show_setting('total tasks', controller.session_stats.total_tasks, 1)
     show_setting('task_output_folder', task_output_directory, strEnd=' ')
-    show_setting('outfiles', (task_output_directory+'/outfiles') if task_output_directory else '', 1)
+    show_setting('outfiles', (task_output_directory+'/outfiles') if task_output_directory else '')
     #HEADING: Task info
     show_setting(f"{Fore.YELLOW}Task settings{Style.RESET_ALL}", "", strEnd=' ')
     show_setting("runtask.type", runtask.type, strEnd=' ')

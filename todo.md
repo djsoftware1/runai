@@ -11,6 +11,8 @@
 
 # IDEAS
 
+* shorten: task_output_directory/outfiles_final: output_runai/2026-01-01 02-14-53/outfiles_final
+
 * A --ls or some-such to send current folder listing (likewise a basic 'shell mode' type of thing? limited shell mode with restrictions for security (configurable) to help you do things like let it auto figure out what to try to do, say, fix build errors)
 * A --chat mode?
 * A command-line option or other setting (eg env var) that lets it output the task text just before the AI output, instead of just the AI output, to official stdout for piping/saving etc.
@@ -34,7 +36,7 @@
 * Longevity demo / example multi-pane
 * 'chat with AI' about term?
 * build error helper stuff and colors and 'open in'
-* Be able to feed tasklists in loops to keep busy (and auto-generate 'what to do next here'? plus review code and auto-generate eg find not yet done todos, bugs, security issues or risks in code, or idea generating for next new fetaure)
+* Be able to feed tasklists in loops to keep busy (and auto-generate 'what to do next here'? plus review code and auto-generate eg find not yet done todos, bugs, security issues or risks in code, or idea generating for next new feature)
 
 ----------
 

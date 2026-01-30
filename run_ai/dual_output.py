@@ -91,9 +91,9 @@ class DualOutput:
             if len(ret_created_files) > 0:
                 self.str_building = ''
 
-        if self.ShouldOutputFiles:#self.outfiles_directory:
-            with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8') as log2:
-                log2.write(f" >>> ")
+        #if self.ShouldOutputFiles:#self.outfiles_directory:
+        #    with open(self.outfiles_directory+'/dj_log_capture_output.txt', 'a', encoding='utf-8') as log2:
+        #        log2.write(f">")
 
 
     def getvalue(self):
