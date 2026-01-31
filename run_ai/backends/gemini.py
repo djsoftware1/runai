@@ -45,6 +45,38 @@ class GeminiBackend(Backend):
 
     def _build_responses_input(self, task: str):
         attachments = getattr(self.ai_settings, "attachments", None) or []
+        
+        # If no attachments, just return a simple message list
+        if not attachments:
+            return [{"role": "user", "content": task}]
+
+        content = []
+        if task:
+            content.append({"type": "text", "text": task}) # 'text', not 'input_text'
+
+        for a in attachments:
+            kind = a.get("kind")
+            data_b64 = a.get("data_base64")
+            if not data_b64: continue
+
+            if kind == "image":
+                mime_type = a.get("mime_type") or "image/jpeg"
+                content.append({
+                    "type": "image_url", # 'image_url', not 'input_image'
+                    "image_url": {"url": f"data:{mime_type};base64,{data_b64}"}
+                })
+            else:
+                # Standard OpenAI Chat doesn't support 'input_file' blocks.
+                # For Gemini compatibility, you might need to handle 
+                # document text extraction here or omit it.
+                pass
+
+        return [{"role": "user", "content": content}]
+    
+    
+    """
+    def _build_responses_input(self, task: str):
+        attachments = getattr(self.ai_settings, "attachments", None) or []
         if not attachments:
             return task
 
@@ -80,7 +112,34 @@ class GeminiBackend(Backend):
                 "content": content
             }
         ]
+    """
+    
+    def do_task(self, task: str) -> str:
+        model = self.ai_settings.model
+        print(f"[Gemini-Backend] MODEL:{model} task:{task}")
 
+        try:
+            # Change 'input' to 'messages'
+            messages = self._build_responses_input(task)
+
+            # Use the standard Chat Completions API
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=messages, # Changed from input=input_payload
+            )
+
+            # Access the content via choices[0].message.content
+            output_text = response.choices[0].message.content
+            
+            print(f"{Style.DIM}{model} response: {output_text}{Style.RESET_ALL}")
+            return output_text
+
+        except Exception as e:
+            error_msg = f"Error in GeminiBackend: {str(e)}"
+            print(f"{Fore.RED}{error_msg}{Style.RESET_ALL}")
+            return error_msg
+    
+    """
     def do_task(self, task: str) -> str:
         model = self.ai_settings.model
         print(f"[Gemini-Backend] MODEL:{model} task:{task}")
@@ -108,3 +167,4 @@ class GeminiBackend(Backend):
             error_msg = f"Error in GeminiBackend: {str(e)}"
             print(f"{Fore.RED}{error_msg}{Style.RESET_ALL}")
             return error_msg
+    """
