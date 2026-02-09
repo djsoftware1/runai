@@ -22,6 +22,8 @@
 # todo[main.py djargs.py] - add batcat-if-have support --batcat
 # todo[] stress-tests should have the dummy mode auto-generate exceptions to help test smooth recovery from errors from backends (eg 404s, 'no credit' API situations, other errors)
 
+import uuid
+
 # Import necessary libraries
 import sys
 import io
@@ -72,6 +74,7 @@ path_runai_out = 'runai_out' # was output_runai
 # per-task output/capture info
 capture_len=0
 capture_output_actual=''
+cur_line=''
 
 #=== BACKEND SELECTOR:
 #settings = djAISettings()
@@ -141,7 +144,7 @@ def do_select_model(model: str):
     # we may need to try auto-change selected default backend e.g. for anthropic
     #openai_compatible=['openai','xai','ollama','lmstudio']
     # note though Gemini is technically 'OpenAI compatible' it works differently to our OpenAI backend hence it's handle specially ...
-    OPENAI_COMPATIBLE = {'openai', 'xai', 'ollama', 'lmstudio'}
+    OPENAI_COMPATIBLE = {'openai', 'xai', 'ollama', 'lmstudio'}#, 'vite'}
     global use_backend
     if model_spec:
         provider = model_spec.get("provider")
@@ -404,14 +407,50 @@ def djAutoGenDoTask(task: str, do_handle_task=False):#, settings_ai=settings):
             # this should be optional but add more saving of results
             # todo put project name in here too
             # should have option to save as xml, maybe with metadata like date?
+
+
+
+            u = uuid.uuid4()
+            #print(u)
+            #now = datetime.datetime.utcnow()
+            # Format date as YYYY-MM-DD
+            #entry_date = now.strftime("%Y-%m-%d");
+            str_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            global cur_line
+            curline = cur_line
+            # sanitize for filename (todo improve)
+            curline = curline.replace('/', ' ')
+            curline = curline.replace('\\', ' ')
+            curline = curline.replace(':', ' ')
+            curline = curline.replace('*', ' ')
+            curline = curline.replace('?', ' ')
+            curline = curline.replace('|', ' ')
+            curline = curline.replace('<', ' ')
+            curline = curline.replace('"', ' ')
+
+
+
+            # um very verbose lots of files .. try trim/consolidate and make some cmd line options etc. (todo)
+
             global project_name
             if not quiet_file_output:
                 if len(project_name)>0:
                     with open(f'_runai_out_all-{project_name}.txt', 'a', encoding='utf-8', errors="replace") as f:
                         f.write(f"{result}\n")
+                    with open(f'_runai_out_all-{project_name}-{curline}_{u}.txt', 'a', encoding='utf-8', errors="replace") as f:
+                        f.write(f"{result}\n")
+                    
+                    with open(f'_runai_out_all-{project_name}.xml', 'a', encoding='utf-8', errors="replace") as f:
+                        f.write(f'<entry line="{cur_line}" project="{project_name}" date="{str_datetime}" id="{u}">{result}</entry>\n')
+                    with open(f'_runai_out_all-{project_name}-{curline}.xml', 'a', encoding='utf-8', errors="replace") as f:
+                        f.write(f'<entry line="{cur_line}" project="{project_name}" date="{str_datetime}" id="{u}">{result}</entry>\n')
+                    with open(f'_runai_out_all-{project_name}-{curline}_{u}.xml', 'a', encoding='utf-8', errors="replace") as f:
+                        f.write(f'<entry line="{cur_line}" project="{project_name}" date="{str_datetime}" id="{u}">{result}</entry>\n')
                 else:
                     with open('_runai_out_all.txt', 'a', encoding='utf-8', errors="replace") as f:
                         f.write(f"{result}\n")
+                    with open('_runai_out_all.xml', 'a', encoding='utf-8', errors="replace") as f:
+                        f.write(f'<entry line="{cur_line}" id="{u}">{result}</entry>\n')
 
             # TODO: add safer handlers and checks also eg wrap in exception check etc. in case handle is invalid
             #sys.stdout.flush()
@@ -568,17 +607,31 @@ def read_stdin_if_piped():
 """
 
 # fix blocks inside runai-studio .. dj2026-01
-def read_stdin_if_piped():
+def read_stdin_if_piped_nonblocking(timeout=0.01):
     import sys
+    import threading
 
     if sys.stdin is None or sys.stdin.isatty():
         return None
 
-    data = sys.stdin.buffer.read()
-    if not data:
+    buf = []
+
+    def _reader():
+        try:
+            data = sys.stdin.buffer.read()
+            if data:
+                buf.append(data)
+        except Exception:
+            pass
+
+    t = threading.Thread(target=_reader, daemon=True)
+    t.start()
+    t.join(timeout)
+
+    if not buf:
         return None
 
-    return data.decode("utf-8", errors="replace")
+    return buf[0].decode("utf-8", errors="replace")
 
 """
 def read_stdin_if_piped():
@@ -621,8 +674,8 @@ def read_stdin_if_piped():
 #log = logging.getLogger(__name__)
 #log.debug(f"read stdin")
 
-print(f"read stdin")#DEBUG
-stdin_text = read_stdin_if_piped()
+print(f"read stdin pre:")#DEBUG
+stdin_text = read_stdin_if_piped_nonblocking()
 print(f"read stdin: [{stdin_text}]")#DEBUG
 
 
@@ -1733,6 +1786,9 @@ def main():
                 print(f"{str_pre} LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}]: {inputline} (SKIPPING)")
             else:
                 print(f"{str_pre} LINE {line_number}/{len(inputlines_array)} [start-line:{runtask.start_line}]: {inputline}")
+
+            global cur_line
+            cur_line = inputline
             #if runtask.dryrun:
             #    print(f"=== DRY RUN")
             # BATCH MODE SUBSTITUTIONS:
@@ -1741,6 +1797,11 @@ def main():
             task_line = task_line.replace("{$1}", inputline)
             # Replace ${line} with the line number
             task_line = task_line.replace(r'{$line}', str(line_number))
+            global project_name
+            # dj2026-01 allow project name substitution. then you can use it for things like say -p Germany and it becomes like a variable
+            if project_name:
+                task_line = task_line.replace(r'{$project}', project_name)
+
 
             # Note here we use exact date/time of each line not the start date/time of entire task start (later we might desire options for both)
             # Replace ${date} with the current date YYYY-MM-DD (UCT? I think UCT to prevent timezone unambiguity) .. I suppose we could have different variables for users later eg "$dateutc"
