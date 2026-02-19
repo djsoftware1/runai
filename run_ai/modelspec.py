@@ -64,7 +64,17 @@ def parse_model_spec(spec: str):
             "base_url": "https://api.anthropic.com/v1",
             "api_key": os.getenv("ANTHROPIC_API_KEY"),
         }
-
+    
+    """
+    if provider == "vite":
+        return {
+            "provider": "vite",
+            "model": model,
+            "base_url": "https://api.chatanywhere.tech/v1",
+            "api_key": os.getenv("VITE_API_KEY"),
+        }
+    """
+        
     if provider == "groq":
         return {
             "provider": "groq",
@@ -185,8 +195,8 @@ def parse_model_spec(spec: str):
         return {
             "provider": "xai",
             "model": model,
-            "base_url": "https://api.xai.com/v1",
-            #"base_url": "https://api.x.ai/v1",
+            #"base_url": "https://api.xai.com/v1",
+            "base_url": "https://api.x.ai/v1",
             "api_key": os.getenv("XAI_API_KEY"),
         }
 
