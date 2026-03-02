@@ -385,9 +385,9 @@ Other potential names: dj-runAI, or djrun, or perhaps 'dj-run-tasks' (to reflect
 
 ## Copyright
 
-This project Copyright (C) David Joffe and [DJ Software](https://djoffe.com/dj-software/) 2023-2026
+This project Copyright (C) David Joffe and [DJ Software](https://djsoftware.tech/) 2023-2026
 
-"**DJ Software**" is just short for "David Joffe Software", and is a name I created to place some of my software under (and of 1. a potential entity, and 2. of this [GitHub organization "djsoftware1" I created for DJ Software](https://github.com/djsoftware1/)).
+"**DJ Software**" is short for "David Joffe Software and Technology", and is a name I created to place some of my software under (and of a registered company, and 2. this [GitHub organization "djsoftware1" I created for DJ Software](https://github.com/djsoftware1/)).
 
 See also [djoffe.com/dj-software/](https://djoffe.com/dj-software/)
 
