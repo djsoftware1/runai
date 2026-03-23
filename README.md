@@ -377,6 +377,19 @@ runai -t "Summarize the attached PDF document" -a report.pdf
 
 Note that AutoGen caches results, and sometimes this may cause issues where something appears to not work when it is working. Try removing the cache ('rm -rf .cache') at times and see if that helps.
 
+## Environment Variables
+
+You can set environment variables as follows:
+
+```sh
+export RUNAI_MODEL="gpt-5.2"
+export RUNAI_MODEL="ollama/deepseek-r1:8b"
+export RUNAI_MODEL="gemini/gemini-2.5-flash"
+
+cmd:
+set RUNAI_MODEL="ollama/qwen3.5:9b"
+```
+
 ## About
 
 Multi-purpose automation framework, optionally with AutoGen multi-agents, for AI/LLM and other task automation, created by David Joffe @davidjoffe (beta/early dev)
