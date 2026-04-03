@@ -7,6 +7,52 @@
 
 import os
 
+
+OPENAI_COMPATIBLE_PROVIDERS = {
+    "openai",
+    "ollama",
+    "lmstudio",
+    "xai",
+    "groq",
+    "lite",
+    "azure",
+    "huggingface",
+    "ibm",
+    "aws",
+    "baidu",
+    "tencent",
+    "yandex",
+    "deepseek",
+}
+
+
+def normalize_base_url(base_url: str, provider: str = ""):
+    if not base_url:
+        return base_url
+
+    normalized = base_url.strip().rstrip("/")
+    provider = (provider or "").lower()
+
+    if provider in OPENAI_COMPATIBLE_PROVIDERS:
+        if not normalized.endswith("/v1"):
+            normalized = normalized + "/v1"
+        return normalized
+
+    return normalized
+
+
+def apply_base_url_override(model_spec: dict, base_url_override: str = ""):
+    if not model_spec:
+        return model_spec
+
+    override = (base_url_override or os.getenv("RUNAI_BASE_URL", "")).strip()
+    if not override:
+        return model_spec
+
+    updated_spec = dict(model_spec)
+    updated_spec["base_url"] = normalize_base_url(override, updated_spec.get("provider", ""))
+    return updated_spec
+
 # NB model_spec may contain sensitive keys
 # hmm (low - dj2026-01) should we ever return 'None' here or rather just return a generic thing that at lesat is less likely to trigger exceptions? .. 
 # NB: IMPORTANT: The OpenAI backend has a slightly issue where it gives error if no API key environment variable even if you are completely using local only like ollama .. so we make it return 'dummy' keys here. dj2026-01
@@ -33,37 +79,37 @@ def parse_model_spec(spec: str):
     provider = provider.lower()
 
     if provider == "ollama":
-        return {
+        return apply_base_url_override({
             "provider": "ollama",
             "model": model,
             "base_url": "http://localhost:11434/v1",
             #"api_key": None,  # ollama ignores
             "api_key": "ollama",  # dummy, explicit
-        }
+        })
 
     if provider == "lmstudio":
-        return {
+        return apply_base_url_override({
             "provider": "lmstudio",
             "model": model,
             "base_url": "http://localhost:1234/v1",
             "api_key": "lmstudio"  # dummy, explicit
-        }
+        })
 
     if provider == "openai":
-        return {
+        return apply_base_url_override({
             "provider": "openai",
             "model": model,
             "base_url": "https://api.openai.com/v1",
             "api_key": os.getenv("OPENAI_API_KEY"),
-        }
+        })
 
     if provider == "anthropic":
-        return {
+        return apply_base_url_override({
             "provider": "anthropic",
             "model": model,
             "base_url": "https://api.anthropic.com/v1",
             "api_key": os.getenv("ANTHROPIC_API_KEY"),
-        }
+        })
     
     """
     if provider == "vite":
@@ -76,52 +122,52 @@ def parse_model_spec(spec: str):
     """
         
     if provider == "groq":
-        return {
+        return apply_base_url_override({
             "provider": "groq",
             "model": model,
             "base_url": "https://api.groq.com/v1",
             "api_key": os.getenv("GROQ_API_KEY"),
-        }
+        })
 
     if provider == "grok":
-        return {
+        return apply_base_url_override({
             "provider": "grok",
             "model": model,
             "base_url": "https://api.grok.com/v1",
             "api_key": os.getenv("GROK_API_KEY"),
-        }
+        })
 
     if provider == "lite":
-        return {
+        return apply_base_url_override({
             "provider": "lite",
             "model": model,
             "base_url": "http://localhost:8000/v1",
             "api_key": "LITE_API_KEY",  # Assuming no real key needed for local
-        }
+        })
 
     if provider == "azure":
-        return {
+        return apply_base_url_override({
             "provider": "azure",
             "model": model,
             "base_url": "https://api.azure.com/v1",
             "api_key": os.getenv("AZURE_API_KEY"),
-        }
+        })
 
     if provider == "huggingface":
-        return {
+        return apply_base_url_override({
             "provider": "huggingface",
             "model": model,
             "base_url": "https://api.huggingface.co/v1",
             "api_key": os.getenv("HUGGINGFACE_API_KEY"),
-        }
+        })
 
     if provider == "ibm":
-        return {
+        return apply_base_url_override({
             "provider": "ibm",
             "model": model,
             "base_url": "https://api.ibm.com/v1",
             "api_key": os.getenv("IBM_API_KEY"),
-        }
+        })
 
     # hm .. i think google maybe 'is' gemini?
     # FWIW dj2026-01 According to Gemini:
@@ -132,14 +178,14 @@ def parse_model_spec(spec: str):
     # We can do more testing etc. to clarify and resolve and extend these in future also maybe with more settings/configurability
     # Logic for Google AI Studio (Gemini)
     if provider == "gemini" or provider == "google":
-        return {
+        return apply_base_url_override({
             "provider": "gemini",  # Standardize on one internal name
             "model": model,        # e.g., "gemini-2.5-flash"
             # Use the v1beta/openai/ path for the OpenAI library
             "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/", 
             # Check for both env var styles to be user-friendly
             "api_key": os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"),
-        }    
+        })
     """
     if provider == "google":
         return {
@@ -151,59 +197,59 @@ def parse_model_spec(spec: str):
     """
 
     if provider == "aws":
-        return {
+        return apply_base_url_override({
             "provider": "aws",
             "model": model,
             "base_url": "https://api.aws.com/v1",
             "api_key": os.getenv("AWS_API_KEY"),
-        }
+        })
 
     if provider == "baidu":
-        return {
+        return apply_base_url_override({
             "provider": "baidu",
             "model": model,
             "base_url": "https://api.baidu.com/v1",
             "api_key": os.getenv("BAIDU_API_KEY"),
-        }
+        })
 
     if provider == "tencent":
-        return {
+        return apply_base_url_override({
             "provider": "tencent",
             "model": model,
             "base_url": "https://api.tencent.com/v1",
             "api_key": os.getenv("TENCENT_API_KEY"),
-        }
+        })
 
     if provider == "yandex":
-        return {
+        return apply_base_url_override({
             "provider": "yandex",
             "model": model,
             "base_url": "https://api.yandex.com/v1",
             "api_key": os.getenv("YANDEX_API_KEY"),
-        }
+        })
 
     if provider == "deepseek":
-        return {
+        return apply_base_url_override({
             "provider": "deepseek",
             "model": model,
             #"#base_url": "https://api.deepseek.com/chat/completions",#"https://api.deepseek.com/v1",
             "base_url": "https://api.deepseek.com/v1",
             "api_key": os.getenv("DEEPSEEK_API_KEY"),
-        }
+        })
 
     if provider == "xai":
-        return {
+        return apply_base_url_override({
             "provider": "xai",
             "model": model,
             #"base_url": "https://api.xai.com/v1",
             "base_url": "https://api.x.ai/v1",
             "api_key": os.getenv("XAI_API_KEY"),
-        }
+        })
 
     # Safer not to return None - we return an entry saying 'unknown' or somesuch
-    return {
+    return apply_base_url_override({
         "provider": "unknown",
         "model": model,
         "base_url": "http://127.0.0.1:80/v1",
         "api_key": "_",
-    }
+    })

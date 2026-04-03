@@ -49,6 +49,7 @@ class djSettings:
         #self.model = ''
         # This is maybe now in djAISettings ..:
         self.backend = ''
+        self.base_url = os.getenv("RUNAI_BASE_URL", "")
 
         # Overall application I/O setting and/or debug setting ..
         self.debug = False

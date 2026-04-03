@@ -64,7 +64,7 @@ from run_ai.config.display import show_setting
 from run_ai.backends.selector import BackendSelector
 from run_ai.backends.base import djAISettings
 from run_ai.djapp import App
-from run_ai.modelspec import parse_model_spec
+from run_ai.modelspec import apply_base_url_override, parse_model_spec
 
 from run_ai.djautogen.settings import djAutoGenSettings
 from run_ai.config.settings import autogen_settings, djSettings
@@ -138,6 +138,7 @@ def do_select_model(model: str):
     # in long run these globals should be refactored to live in module ... dj2026-01 todo
     global model_spec
     model_spec = parse_model_spec(model)
+    model_spec = apply_base_url_override(model_spec, settings_runai.base_url)
     # must use show setting to hide keys just in case
     show_setting(f"[DOSELECT] {Fore.YELLOW}MODEL{Fore.GREEN} '{model}' spec", model_spec, strEnd=')');
 
@@ -714,6 +715,7 @@ print(f"resolve settings")
 print(f"{Fore.CYAN}ENV {Style.RESET_ALL}",end=' ')
 task = resolve_setting('task')
 model = resolve_setting('model')
+settings_runai.base_url = resolve_setting('base_url', settings_runai.base_url)
 project_name = resolve_setting('project')
 taskfile = resolve_setting('taskfile', 'runai.autotask.txt')
 print("")
