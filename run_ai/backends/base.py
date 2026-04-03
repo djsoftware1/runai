@@ -9,7 +9,7 @@ from run_ai.modelspec import parse_model_spec
 class djAISettings:
     def __init__(self, model: str=''):#, temperature: float, max_tokens: int):
         #self.model = 'openai/gpt-4o-mini'#model
-        self.model = 'gpt-4o-mini'#model
+        self.model = 'gpt-5.2'#'gpt-4o-mini'#model
         self.model_spec = parse_model_spec(self.model)#None
         #self.temperature = temperature
         #self.max_tokens = max_tokens

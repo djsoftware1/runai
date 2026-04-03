@@ -115,7 +115,25 @@ runai -4 -t "Hi, can you help me?"
 
 ### runai Environment Variables (optional)
 
-You may optionally specify settings in environment variables: RUNAI_MODEL, RUNAI_TASKFILE, RUNAI_TASK, RUNAI_PROJECT. (Options specified on the command line will override these.)
+You may optionally specify settings in environment variables: `RUNAI_MODEL`, `RUNAI_BASE_URL`, `RUNAI_TASKFILE`, `RUNAI_TASK`, `RUNAI_PROJECT`. (Options specified on the command line will override these.)
+
+`RUNAI_BASE_URL` lets you override the backend API base URL used for the selected model/provider. This is useful for LAN or virtual-LAN setups (such as Tailscale), local servers, LiteLLM proxies, LM Studio, Ollama, or your own OpenAI-compatible endpoint.
+
+Examples:
+
+```sh
+export RUNAI_MODEL="ollama/deepseek-r1:8b"
+export RUNAI_BASE_URL="http://mylocalnetwork-amd-computer.tailnet:11434"
+runai -t "Explain this codebase"
+```
+
+```sh
+export RUNAI_MODEL="openai/gpt-4.1-mini"
+export RUNAI_BASE_URL="http://my-litellm-box:4000"
+runai -t "Summarize the attached document"
+```
+
+If `RUNAI_BASE_URL` is set for an OpenAI-compatible backend and you omit `/v1`, runai will automatically append `/v1`. So `http://host:11434` becomes `http://host:11434/v1`.
 
 ### Selecting Model
 
@@ -385,9 +403,11 @@ You can set environment variables as follows:
 export RUNAI_MODEL="gpt-5.2"
 export RUNAI_MODEL="ollama/deepseek-r1:8b"
 export RUNAI_MODEL="gemini/gemini-2.5-flash"
+export RUNAI_BASE_URL="http://localhost:11434"
 
 cmd:
 set RUNAI_MODEL="ollama/qwen3.5:9b"
+set RUNAI_BASE_URL="http://mylocalnetwork-amd-computer.tailnet:11434"
 ```
 
 ## About
