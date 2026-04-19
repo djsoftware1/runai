@@ -4,6 +4,8 @@
 
 A kind of integrated 'AI extension' of your terminal or command prompt.
 
+[![runai and for-each and other examples](https://github.com/djsoftware1/.github/raw/main/media/dj-software-open-utils-for-each-examples.png)](https://github.com/djsoftware1/runai/)
+
 General AI/LLM-driven task execution and automation tool for tasks such as code refactoring (or many other tasks, including non-coding-related tasks), supporting AutoGen.
 
 “Any project you’re working on, runai becomes another tool in your terminal.”
